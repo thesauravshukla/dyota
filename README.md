@@ -1,6 +1,6 @@
 # Project Name
 
-A brief description of your project.
+A simple ecommerce app.
 
 ## Table of Contents
 
