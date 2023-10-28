@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "686273089557",
+    "project_id": "dyota-9a490",
+    "storage_bucket": "dyota-9a490.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:686273089557:android:e95be09a04fd9f65257e1c",
+        "android_client_info": {
+          "package_name": "com.example.dyota"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXxzeNG74wKmQNmYqWOW0e0VilUQ9xdwM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
