@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "686273089557",
+    "project_id": "dyota-9a490",
+    "storage_bucket": "dyota-9a490.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:686273089557:android:e95be09a04fd9f65257e1c",
+        "android_client_info": {
+          "package_name": "com.example.dyota"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "686273089557-ds3fmqqnengho2hi8vtq41ahr5vtfan3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dyota",
+            "certificate_hash": "40d7048b9d7e4e86d3cf76fa07908c204ecf07f3"
+          }
+        },
+        {
+          "client_id": "686273089557-nral0fet6h1tojv23uhq2qlofrh96dc0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXxzeNG74wKmQNmYqWOW0e0VilUQ9xdwM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "686273089557-nral0fet6h1tojv23uhq2qlofrh96dc0.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "686273089557-2svqifccfha42ofercrtbak3o30n7uea.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.dyota"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

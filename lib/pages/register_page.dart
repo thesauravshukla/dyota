@@ -5,23 +5,23 @@ import 'package:dyota/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class LoginPage extends StatefulWidget {
+class RegisterPage extends StatefulWidget {
   final Function()? onTap;
-  const LoginPage({Key? key, required this.onTap}) : super(key: key);
+  const RegisterPage({super.key, required this.onTap});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _RegisterPageState createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   // Text editing controllers
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool showInvalidCredentials =
       false; // Track if invalid credentials should be shown
 
-// Sign user in method
-  void signUserIn() async {
+// Sign user up method
+  void signUserUp() async {
     // Show loading circle
     showDialog(
       context: context,
@@ -35,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
       },
     );
 
-    // Try sign in
+    // Try sign up
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: emailController.text, password: passwordController.text);
@@ -114,38 +114,21 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 10),
 
-                  // Invalid credentials message
-                  if (showInvalidCredentials)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 25.0),
-                      child: Text(
-                        'Invalid credentials',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-
-                  // Forgot password?
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 25.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          'Forgot Password?',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
+                  //Confirm Password Textfield
+                  MyTextField(
+                    controller: passwordController,
+                    hintText: 'Confirm Password',
+                    obscureText: true,
                   ),
 
-                  const SizedBox(height: 35),
+                  const SizedBox(height: 45),
 
-                  // Sign-in button
+                  // Register button
                   MyButton(
-                    onTap: signUserIn,
+                    onTap: signUserUp,
                     buttonColor: Colors.black,
                     textColor: Colors.white,
-                    buttonText: "Sign In",
+                    buttonText: "Register Now",
                   ),
 
                   const SizedBox(height: 50),
@@ -211,12 +194,12 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Not a member?',
+                          'Already have an account?',
                           style: TextStyle(color: Colors.white),
                         ),
                         SizedBox(width: 4),
                         Text(
-                          'Register Now',
+                          'Login Now',
                           style: TextStyle(
                             color: Colors.blue,
                             fontWeight: FontWeight.bold,

@@ -4,12 +4,14 @@ class MyButton extends StatelessWidget {
   final Function()? onTap;
   final Color buttonColor;
   final Color textColor;
+  final String buttonText; // New field for button text
 
   const MyButton({
     Key? key,
     required this.onTap,
     required this.buttonColor,
     required this.textColor,
+    required this.buttonText, // Added buttonText parameter
   }) : super(key: key);
 
   @override
@@ -20,18 +22,18 @@ class MyButton extends StatelessWidget {
         padding: const EdgeInsets.all(25),
         margin: const EdgeInsets.symmetric(horizontal: 25),
         decoration: BoxDecoration(
-          color: buttonColor, // Use the buttonColor input argument
-          borderRadius: BorderRadius.circular(15), // Set the border radius to 8
+          color: buttonColor,
+          borderRadius: BorderRadius.circular(15),
           border: Border.all(
-            color: Colors.white, // Set the border color to white
-            width: 2, // Set the border width
+            color: Colors.white,
+            width: 2,
           ),
         ),
         child: Center(
           child: Text(
-            "Sign In",
+            buttonText, // Use the buttonText input argument
             style: TextStyle(
-              color: textColor, // Use the textColor input argument
+              color: textColor,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),

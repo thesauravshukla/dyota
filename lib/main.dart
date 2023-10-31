@@ -1,5 +1,5 @@
-import 'package:firstapp/firebase_options.dart';
-import 'package:firstapp/pages/auth_page.dart';
+import 'package:dyota/firebase_options.dart';
+import 'package:dyota/pages/auth_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
