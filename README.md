@@ -1,16 +1,26 @@
-# dyota
+# Project Name
 
-A new Flutter project.
+A simple ecommerce app.
 
-## Getting Started
+## Table of Contents
 
-This project is a starting point for a Flutter application.
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
 
-A few resources to get you started if this is your first Flutter project:
+## Installation
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+1. Clone the repository.
+2. Open the project in your preferred IDE.
+3. Run `flutter pub get` to install the dependencies.
+4. Make sure you have a valid Firebase project and update the `firebase_options.dart` file with your Firebase configuration.
+5. Run the project using `flutter run`.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Usage
+
+Provide instructions on how to use your project. Include any relevant information about the app's functionality, features, and how to navigate through it.
+
+## Contributing
+
+Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
