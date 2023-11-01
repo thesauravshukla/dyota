@@ -14,38 +14,53 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  // Text editing controllers
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  bool showInvalidCredentials =
-      false; // Track if invalid credentials should be shown
+  final confirmPasswordController =
+      TextEditingController(); // Add a separate controller for confirm password
+  var showInvalidCredentials = 0;
 
-// Sign user up method
   void signUserUp() async {
-    // Show loading circle
     showDialog(
       context: context,
       builder: (context) {
         return const Center(
           child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(
-                Colors.black), // Change color to black
+              Colors.black,
+            ),
           ),
         );
       },
     );
 
-    // Try sign up
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: emailController.text, password: passwordController.text);
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+      // Registration successful, navigate to the next screen or perform any other necessary actions
     } catch (e) {
       setState(() {
-        showInvalidCredentials = true; // Show invalid credentials message
+        if (e is FirebaseAuthException) {
+          switch (e.code) {
+            case 'invalid-email':
+              showInvalidCredentials = 1;
+              break;
+            case 'weak-password':
+              showInvalidCredentials = 2;
+              break;
+            case 'email-already-in-use':
+              showInvalidCredentials = 3;
+              break;
+            default:
+              showInvalidCredentials = 4;
+              break;
+          }
+        }
       });
     }
 
-    // Pop the loading circle
     Navigator.pop(context);
   }
 
@@ -60,9 +75,8 @@ class _RegisterPageState extends State<RegisterPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 30),
-
-                  // Logo
+                  const SizedBox(height: 10),
+                  // Logo and heading
                   const Column(
                     children: [
                       Icon(
@@ -71,58 +85,82 @@ class _RegisterPageState extends State<RegisterPage> {
                         color: Colors.white,
                       ),
                       SizedBox(height: 10),
-
-                      // Heading "dyota" with cool font
                       Text(
                         'dyota',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
-                          fontFamily:
-                              'CoolFont', // Replace 'CoolFont' with the desired cool font
+                          fontFamily: 'CoolFont',
                         ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 50),
-
-                  // Welcome back, you've been missed
+                  const SizedBox(height: 30),
+                  // Welcome back message
                   const Text(
                     "Welcome back, you've been missed!",
                     style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
-
                   const SizedBox(height: 25),
-
                   // Email textfield
                   MyTextField(
                     controller: emailController,
                     hintText: 'Username',
                     obscureText: false,
                   ),
-
                   const SizedBox(height: 10),
-
                   // Password textfield
                   MyTextField(
                     controller: passwordController,
                     hintText: 'Password',
                     obscureText: true,
                   ),
-
                   const SizedBox(height: 10),
-
-                  //Confirm Password Textfield
+                  // Confirm Password Textfield
                   MyTextField(
-                    controller: passwordController,
+                    controller: confirmPasswordController,
                     hintText: 'Confirm Password',
                     obscureText: true,
                   ),
 
-                  const SizedBox(height: 45),
+                  const SizedBox(height: 20),
 
+                  // Invalid credentials message
+                  if (showInvalidCredentials == 1)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 25.0),
+                      child: Text(
+                        'Invalid Email ID',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  if (showInvalidCredentials == 2)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 25.0),
+                      child: Text(
+                        'Weak Password',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  if (showInvalidCredentials == 3)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 25.0),
+                      child: Text(
+                        'Email already exists',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  if (showInvalidCredentials == 4)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 25.0),
+                      child: Text(
+                        'Registration failed',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+
+                  const SizedBox(height: 45),
                   // Register button
                   MyButton(
                     onTap: signUserUp,
@@ -130,9 +168,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     textColor: Colors.white,
                     buttonText: "Register Now",
                   ),
-
                   const SizedBox(height: 50),
-
                   // Or continue with
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 25.0),
@@ -162,9 +198,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 30),
-
                   // Google + Apple sign-in buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -174,9 +208,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         onTap: () => AuthService().signInWithGoogle(),
                         imagePath: 'lib/images/google.png',
                       ),
-
                       SizedBox(width: 20),
-
                       // Apple sign in
                       SquareTile(
                         onTap: () {},
@@ -184,9 +216,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 50),
-
+                  const SizedBox(height: 20),
                   // Not a member? Register now
                   GestureDetector(
                     onTap: widget.onTap,
