@@ -75,13 +75,14 @@ class _RegisterPageState extends State<RegisterPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 30),
                   // Logo and heading
-                  const Column(
+                  Column(
                     children: [
-                      Icon(
-                        Icons.texture,
-                        size: 100,
+                      Image.asset(
+                        'lib/images/yarn-ball.png',
+                        width: 70,
+                        height: 70,
                         color: Colors.white,
                       ),
                       SizedBox(height: 10),
@@ -123,43 +124,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     hintText: 'Confirm Password',
                     obscureText: true,
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // Invalid credentials message
-                  if (showInvalidCredentials == 1)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 25.0),
-                      child: Text(
-                        'Invalid Email ID',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  if (showInvalidCredentials == 2)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 25.0),
-                      child: Text(
-                        'Weak Password',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  if (showInvalidCredentials == 3)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 25.0),
-                      child: Text(
-                        'Email already exists',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  if (showInvalidCredentials == 4)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 25.0),
-                      child: Text(
-                        'Registration failed',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-
                   const SizedBox(height: 45),
                   // Register button
                   MyButton(

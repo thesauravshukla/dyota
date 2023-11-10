@@ -52,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: ListView(
           children: [
@@ -68,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
                       Icon(
                         Icons.texture,
                         size: 100,
-                        color: Colors.white,
+                        color: Color.fromARGB(255, 75, 36, 247),
                       ),
                       SizedBox(height: 10),
 
@@ -78,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: Color.fromARGB(255, 75, 36, 247),
                           fontFamily:
                               'CoolFont', // Replace 'CoolFont' with the desired cool font
                         ),
