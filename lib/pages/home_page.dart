@@ -16,8 +16,9 @@ class HomePage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // SearchBar(),
-            OfferBanner(text: 'Special Offer Banner', color: Colors.redAccent),
+            OfferBanner(
+                text: 'Special Offer Banner',
+                color: const Color.fromARGB(255, 242, 101, 101)),
             Container(
               color: Colors.grey[300],
               child: Column(

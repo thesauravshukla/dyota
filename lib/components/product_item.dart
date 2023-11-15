@@ -1,3 +1,4 @@
+import 'package:dyota/pages/product_card.dart';
 import 'package:flutter/material.dart';
 
 class ProductItem extends StatelessWidget {
@@ -15,30 +16,41 @@ class ProductItem extends StatelessWidget {
       "Item name #4"
     ];
 
-    return Card(
-      elevation: 2,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Container(
-              color: Colors.blue, // Placeholder for product images
+    return GestureDetector(
+      // Wrap Card with GestureDetector
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  ProductCard()), // Navigate to ProductCard page
+        );
+      },
+      child: Card(
+        elevation: 2,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                color: Colors.blue, // Placeholder for product images
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  productNames[index % productNames.length],
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const Text('From Price'),
-              ],
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    productNames[index % productNames.length],
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const Text('From Price'),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

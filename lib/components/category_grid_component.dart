@@ -8,8 +8,8 @@ class CategoryGrid extends StatelessWidget {
       physics: NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4, childAspectRatio: 1),
-      itemCount: 8,
+          crossAxisCount: 3, childAspectRatio: 1),
+      itemCount: 6,
       itemBuilder: (context, index) => CategoryItem(index: index),
     );
   }
