@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class ProductItem extends StatelessWidget {
   final int index;
 
-  ProductItem({required this.index});
+  const ProductItem({required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +23,7 @@ class ProductItem extends StatelessWidget {
           context,
           MaterialPageRoute(
               builder: (context) =>
-                  ProductCard()), // Navigate to ProductCard page
+                  const ProductCard()), // Navigate to ProductCard page
         );
       },
       child: Card(

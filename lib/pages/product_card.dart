@@ -8,6 +8,8 @@ import 'package:dyota/components/support_section.dart';
 import 'package:flutter/material.dart';
 
 class ProductCard extends StatefulWidget {
+  const ProductCard({super.key});
+
   @override
   _ProductCardState createState() => _ProductCardState();
 }
@@ -19,16 +21,18 @@ class _ProductCardState extends State<ProductCard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Product Card'),
+        title: const Text('Product Card'),
         backgroundColor: Colors.black,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
         actions: <Widget>[
           IconButton(
-              icon: Icon(Icons.shopping_cart), onPressed: () {/* TODO */}),
-          IconButton(icon: Icon(Icons.more_vert), onPressed: () {/* TODO */}),
+              icon: const Icon(Icons.shopping_cart),
+              onPressed: () {/* TODO */}),
+          IconButton(
+              icon: const Icon(Icons.more_vert), onPressed: () {/* TODO */}),
         ],
       ),
       body: ListView(

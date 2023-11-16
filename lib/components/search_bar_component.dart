@@ -6,14 +6,14 @@ class SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(8.0), // Black padding around the search bar
+      padding: const EdgeInsets.all(8.0), // Black padding around the search bar
       color: Colors.black, // Background color for the padding
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white, // White color for the search bar
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Row(
+        child: const Row(
           children: [
             SizedBox(width: 10), // Spacing before the icon
             Icon(Icons.search, color: Colors.black),

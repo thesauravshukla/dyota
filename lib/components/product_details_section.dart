@@ -2,10 +2,12 @@ import 'package:dyota/components/detail_item.dart';
 import 'package:flutter/material.dart';
 
 class ProductDetailsSection extends StatelessWidget {
+  const ProductDetailsSection({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -13,11 +15,11 @@ class ProductDetailsSection extends StatelessWidget {
             color: Colors.grey.withOpacity(0.2),
             spreadRadius: 1,
             blurRadius: 2,
-            offset: Offset(0, 1),
+            offset: const Offset(0, 1),
           ),
         ],
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(

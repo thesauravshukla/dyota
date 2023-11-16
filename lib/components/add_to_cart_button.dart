@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AddToCartButton extends StatelessWidget {
+  const AddToCartButton({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -9,7 +11,8 @@ class AddToCartButton extends StatelessWidget {
         onPressed: () {
           // TODO: Handle add to cart button press
         },
-        child: Text('ADD TO CART'),
+        // ignore: sort_child_properties_last
+        child: const Text('ADD TO CART'),
         style: ElevatedButton.styleFrom(
           primary: Color.fromARGB(255, 0, 0, 0), // Button color set to black
           onPrimary: Colors.white,

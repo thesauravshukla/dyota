@@ -14,8 +14,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               MainAxisAlignment.spaceEvenly, // Distribute space evenly
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SizedBox(height: 8.0), // Add space on top if needed
-            Text(
+            const SizedBox(height: 8.0), // Add space on top if needed
+            const Text(
               'dyota',
               style: TextStyle(
                   fontFamily: 'AlfaSlab', fontSize: 25.0, color: Colors.white),

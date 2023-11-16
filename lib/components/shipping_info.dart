@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ShippingInfo extends StatelessWidget {
+  const ShippingInfo({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -16,7 +18,7 @@ class ShippingInfo extends StatelessWidget {
         ],
       ),
       child: ListTile(
-        title: Text('Shipping info'),
+        title: const Text('Shipping info'),
         onTap: () {
           // TODO: Handle shipping info tap
         },

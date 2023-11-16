@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class OrderSwatchesButton extends StatelessWidget {
+  const OrderSwatchesButton({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Padding(
