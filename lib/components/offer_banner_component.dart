@@ -4,7 +4,7 @@ class OfferBanner extends StatelessWidget {
   final String text;
   final Color? color;
 
-  const OfferBanner({required this.text, this.color});
+  const OfferBanner({super.key, required this.text, this.color});
 
   @override
   Widget build(BuildContext context) {

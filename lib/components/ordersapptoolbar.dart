@@ -5,7 +5,7 @@ import 'rounded_rect_tab_indicator.dart';
 class OrdersTabBar extends StatelessWidget implements PreferredSizeWidget {
   final TabController tabController;
 
-  OrdersTabBar({required this.tabController});
+  const OrdersTabBar({required this.tabController});
 
   @override
   Widget build(BuildContext context) {

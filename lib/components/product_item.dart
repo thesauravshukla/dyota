@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class ProductItem extends StatelessWidget {
   final int index;
 
-  const ProductItem({required this.index});
+  const ProductItem({super.key, required this.index});
 
   @override
   Widget build(BuildContext context) {

@@ -2,6 +2,8 @@ import 'package:dyota/components/product_item.dart';
 import 'package:flutter/material.dart';
 
 class ProductGrid extends StatelessWidget {
+  const ProductGrid({super.key});
+
   @override
   Widget build(BuildContext context) {
     return GridView.builder(

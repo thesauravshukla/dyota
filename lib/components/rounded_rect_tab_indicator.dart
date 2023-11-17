@@ -6,7 +6,7 @@ class PaddedRoundedRectTabIndicator extends Decoration {
   final EdgeInsets padding;
   final double? width; // Optional fixed width
 
-  PaddedRoundedRectTabIndicator({
+  const PaddedRoundedRectTabIndicator({
     required this.color,
     required this.radius,
     required this.padding,

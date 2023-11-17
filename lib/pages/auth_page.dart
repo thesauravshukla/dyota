@@ -1,5 +1,5 @@
 import 'package:dyota/pages/login_or_register_page.dart';
-import 'package:dyota/pages/my_orders.dart';
+import 'package:dyota/pages/order_detail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +14,7 @@ class AuthPage extends StatelessWidget {
         builder: (context, snapshot) {
           // user is logged in
           if (snapshot.hasData) {
-            return MyOrdersPage();
+            return OrderDetails();
           }
           // user is NOT logged in
           else {

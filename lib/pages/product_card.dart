@@ -37,19 +37,19 @@ class _ProductCardState extends State<ProductCard> {
       ),
       body: ListView(
         children: <Widget>[
-          ImagePlaceholder(),
+          const ImagePlaceholder(),
           DropdownLengthSelect(
             selectedValue: selectedLength,
             onChanged: (String? newValue) {
               setState(() => selectedLength = newValue);
             },
           ),
-          ProductInformation(),
-          ProductDetailsSection(),
+          const ProductInformation(),
+          const ProductDetailsSection(),
           // OrderSwatchesButton(),
-          AddToCartButton(),
-          ShippingInfo(),
-          SupportSection(),
+          const AddToCartButton(),
+          const ShippingInfo(),
+          const SupportSection(),
         ],
       ),
     );

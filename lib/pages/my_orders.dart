@@ -30,7 +30,7 @@ class _MyOrdersPageState extends State<MyOrdersPage>
       appBar: OrdersAppBar(tabController: _tabController),
       body: TabBarView(
         controller: _tabController,
-        children: [
+        children: const [
           OrderList(status: 'Delivered'),
           OrderList(status: 'Processing'),
           OrderList(status: 'Cancelled'),

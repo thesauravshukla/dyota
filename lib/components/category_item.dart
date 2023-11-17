@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class CategoryItem extends StatelessWidget {
   final int index;
 
-  CategoryItem({required this.index});
+  const CategoryItem({super.key, required this.index});
 
   @override
   Widget build(BuildContext context) {
