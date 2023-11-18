@@ -10,19 +10,22 @@ class ItemCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.all(16),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(8), // Reduced padding
         child: Row(
+          mainAxisSize: MainAxisSize.min, // Make row take minimum space
           children: [
             Image.network(
               item['imageUrl'],
-              width: 150,
-              height: 150,
+              width: 100, // Reduced width
+              height: 100, // Reduced height
               color: Colors.grey, // Placeholder color
             ),
             SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize:
+                    MainAxisSize.min, // Make column take minimum space
                 children: [
                   Text(
                     item['title'],
@@ -31,22 +34,22 @@ class ItemCard extends StatelessWidget {
                       fontSize: 16,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: 4), // Reduced spacing
                   Text(
                     item['subtitle'],
                     style: TextStyle(fontSize: 16),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: 4), // Reduced spacing
                   Text(
                     'Color: ${item['color']}',
                     style: TextStyle(fontSize: 16),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: 4), // Reduced spacing
                   Text(
                     'Size: ${item['size']}',
                     style: TextStyle(fontSize: 16),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: 4), // Reduced spacing
                   Text(
                     'Price: ${item['price']}',
                     style: TextStyle(
