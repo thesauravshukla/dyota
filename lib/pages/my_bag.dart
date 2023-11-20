@@ -9,7 +9,7 @@ class MyBag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MyBagAppBar(), // Use the new MyBagAppBar class
+      appBar: MyBagAppBar(),
       body: ListView(
         children: [
           ItemCard(),
