@@ -1,5 +1,5 @@
+import 'package:dyota/pages/checkout_screen.dart';
 import 'package:dyota/pages/login_or_register_page.dart';
-import 'package:dyota/pages/settings_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +14,7 @@ class AuthPage extends StatelessWidget {
         builder: (context, snapshot) {
           // user is logged in
           if (snapshot.hasData) {
-            return SettingsScreen();
+            return CheckoutScreen();
           }
           // user is NOT logged in
           else {
