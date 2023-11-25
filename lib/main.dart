@@ -1,7 +1,7 @@
 import 'package:dyota/firebase_options.dart';
-import 'package:dyota/pages/auth_page.dart';
-import 'package:flutter/material.dart';
+import 'package:dyota/pages/Authentication/auth_page.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
