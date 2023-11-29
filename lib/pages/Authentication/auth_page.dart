@@ -1,5 +1,5 @@
 import 'package:dyota/pages/Login_Or_Register/login_or_register_page.dart';
-import 'package:dyota/pages/Select_Shipping_Address/select_shipping_address.dart';
+import 'package:dyota/pages/Shop/shop_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +14,7 @@ class AuthPage extends StatelessWidget {
         builder: (context, snapshot) {
           // user is logged in
           if (snapshot.hasData) {
-            return ShippingAddressesScreen();
+            return ShopPage();
           }
           // user is NOT logged in
           else {

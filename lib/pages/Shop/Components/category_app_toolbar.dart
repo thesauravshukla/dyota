@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 
 import 'rounded_rect_tab_indicator.dart';
 
-class OrdersTabBar extends StatelessWidget implements PreferredSizeWidget {
+class CategoryTabBar extends StatelessWidget implements PreferredSizeWidget {
   final TabController tabController;
 
-  const OrdersTabBar({required this.tabController});
+  const CategoryTabBar({required this.tabController});
 
   @override
   Widget build(BuildContext context) {
     return TabBar(
       controller: tabController,
       tabs: [
-        Tab(text: 'Delivered'),
-        Tab(text: 'Processing'),
-        Tab(text: 'Cancelled'),
+        Tab(text: 'Men'),
+        Tab(text: 'Women'),
+        Tab(text: 'Children'),
       ],
       indicator: PaddedRoundedRectTabIndicator(
         color: Colors.black,
