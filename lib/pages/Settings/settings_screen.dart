@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 class SettingsScreen extends StatelessWidget {
   final TextEditingController dateController = TextEditingController();
 
+  SettingsScreen({super.key});
+
   void _showChangePasswordModal(BuildContext context) {
     PasswordChangeModal.show(context, onSave: () {
       Navigator.pop(context); // Implement your save logic
@@ -31,7 +33,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           TextFieldSection.buildTextFormField(context, 'Password',
               isPassword: true),
-          SectionTitle(
+          const SectionTitle(
               title: 'Notifications'), // No 'onChange' for notifications
           SwitchListTileSection(context, 'Sales', true),
           SwitchListTileSection(context, 'New arrivals', false),
