@@ -1,4 +1,3 @@
-import 'package:dyota/components/bottom_navigation_bar_component.dart';
 import 'package:dyota/pages/Shop/Components/category_appbar.dart';
 import 'package:dyota/pages/Shop/Components/category_list.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +29,6 @@ class _MyShopState extends State<ShopPage> with SingleTickerProviderStateMixin {
       body: TabBarView(
         controller: _tabController,
         children: [
-          // Remove the 'status' parameter since it's no longer needed
           CategoryList(
             statuses: [
               'New Arrival',
@@ -60,7 +58,6 @@ class _MyShopState extends State<ShopPage> with SingleTickerProviderStateMixin {
           ),
         ],
       ),
-      bottomNavigationBar: const CustomBottomNavigationBar(),
     );
   }
 }

@@ -4,12 +4,14 @@ class ProfileListTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback onTap;
 
   const ProfileListTile({
     Key? key,
     required this.icon,
     required this.title,
     required this.subtitle,
+    required this.onTap,
   }) : super(key: key);
 
   @override
@@ -25,9 +27,7 @@ class ProfileListTile extends StatelessWidget {
         style: const TextStyle(color: Colors.black),
       ),
       trailing: const Icon(Icons.navigate_next, color: Colors.black),
-      onTap: () {
-        // Placeholder for tap functionality
-      },
+      onTap: onTap,
     );
   }
 }

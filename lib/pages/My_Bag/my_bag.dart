@@ -1,4 +1,3 @@
-import 'package:dyota/components/bottom_navigation_bar_component.dart';
 import 'package:dyota/components/generic_appbar.dart';
 import 'package:dyota/pages/My_Bag/Components/mybag_itemcard.dart';
 import 'package:dyota/pages/My_Bag/Components/promocodefield.dart';
@@ -17,9 +16,9 @@ class MyBag extends StatelessWidget {
           ItemCard(),
           PromoCodeField(),
           TotalAmountSection(),
+          // Add more pages if you have them
         ],
       ),
-      bottomNavigationBar: const CustomBottomNavigationBar(),
     );
   }
 }

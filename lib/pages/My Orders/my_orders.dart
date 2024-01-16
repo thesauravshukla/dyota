@@ -1,4 +1,3 @@
-import 'package:dyota/components/bottom_navigation_bar_component.dart';
 import 'package:dyota/pages/My%20Orders/Components/orderlist.dart';
 import 'package:dyota/pages/My%20Orders/Components/ordersappbar.dart';
 import 'package:flutter/material.dart';
@@ -34,9 +33,9 @@ class _MyOrdersPageState extends State<MyOrdersPage>
           OrderList(status: 'Delivered'),
           OrderList(status: 'Processing'),
           OrderList(status: 'Cancelled'),
+          // Add more pages if you have them
         ],
       ),
-      bottomNavigationBar: const CustomBottomNavigationBar(),
     );
   }
 }

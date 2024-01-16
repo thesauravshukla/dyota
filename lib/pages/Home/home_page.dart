@@ -1,4 +1,3 @@
-import 'package:dyota/components/bottom_navigation_bar_component.dart';
 import 'package:dyota/pages/Home/Components/app_bar_component.dart';
 import 'package:dyota/pages/Home/Components/category_grid_component.dart';
 import 'package:dyota/pages/Home/Components/category_header_component.dart';
@@ -35,7 +34,7 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(),
+      // Removed bottomNavigationBar from here
     );
   }
 }

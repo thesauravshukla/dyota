@@ -1,4 +1,3 @@
-import 'package:dyota/pages/My%20Orders/Components/ordersapptoolbar.dart';
 import 'package:flutter/material.dart';
 
 class OrdersAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -9,11 +8,11 @@ class OrdersAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      leading: BackButton(color: Colors.black),
-      backgroundColor: Colors.white,
+      leading: BackButton(color: Colors.white),
+      backgroundColor: Colors.black,
       title: Text(
         'My Orders',
-        style: TextStyle(color: Colors.black),
+        style: TextStyle(color: Colors.white),
       ),
       centerTitle: true,
       actions: [
@@ -36,4 +35,30 @@ class OrdersAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => Size.fromHeight(kToolbarHeight + kTextTabBarHeight);
+}
+
+class OrdersTabBar extends StatelessWidget implements PreferredSizeWidget {
+  final TabController tabController;
+
+  OrdersTabBar({required this.tabController});
+
+  @override
+  Widget build(BuildContext context) {
+    return TabBar(
+      controller: tabController,
+      labelColor: Colors.white, // Set text color to black
+      indicatorColor: Colors.white,
+      unselectedLabelColor: Colors.white,
+      labelStyle: TextStyle(fontSize: 16.0), // Set highlight color to white
+      tabs: <Widget>[
+        Tab(text: 'Delivered'),
+        Tab(text: 'Processing'),
+        Tab(text: 'Cancelled'),
+        // Add more tabs if you have them
+      ],
+    );
+  }
+
+  @override
+  Size get preferredSize => Size.fromHeight(kToolbarHeight);
 }
