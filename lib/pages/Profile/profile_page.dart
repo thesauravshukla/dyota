@@ -1,6 +1,7 @@
 import 'package:dyota/pages/My%20Orders/my_orders.dart';
 import 'package:dyota/pages/Profile/Components/profile_list_tile.dart';
 import 'package:dyota/pages/Profile/Components/user_account_header.dart';
+import 'package:dyota/pages/Select_Shipping_Address/select_shipping_address.dart';
 import 'package:dyota/pages/Settings/settings_screen.dart'; // Import the SettingsScreen
 import 'package:flutter/material.dart';
 
@@ -34,7 +35,8 @@ class ProfileScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SettingsScreen()),
+                MaterialPageRoute(
+                    builder: (context) => ShippingAddressesScreen()),
               );
             },
           ),
@@ -42,17 +44,6 @@ class ProfileScreen extends StatelessWidget {
             icon: Icons.payment,
             title: 'Payment methods',
             subtitle: 'Visa **34',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SettingsScreen()),
-              );
-            },
-          ),
-          ProfileListTile(
-            icon: Icons.card_giftcard,
-            title: 'Promocodes',
-            subtitle: 'You have special promocodes',
             onTap: () {
               Navigator.push(
                 context,

@@ -62,7 +62,8 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
         onPressed: () {
           // TODO: Implement add new address logic
         },
-        child: Icon(Icons.add),
+        child: Icon(Icons.add,
+            color: Colors.white), // Change the color of the '+' symbol
         backgroundColor: Colors.black,
       ),
     );

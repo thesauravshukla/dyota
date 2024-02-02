@@ -1,3 +1,4 @@
+import 'package:dyota/pages/Category/category_page.dart';
 import 'package:flutter/material.dart';
 
 class CategoryItem extends StatelessWidget {
@@ -25,7 +26,13 @@ class CategoryItem extends StatelessWidget {
           child: IconButton(
             icon: Icon(Icons.category, size: 50),
             color: Colors.grey[800],
-            onPressed: () {},
+            onPressed: () {
+              // Navigate to CategoryPage when a category is tapped
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CategoryPage()),
+              );
+            },
           ),
         ),
         Text(

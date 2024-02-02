@@ -1,6 +1,5 @@
 import 'package:dyota/components/generic_appbar.dart';
 import 'package:flutter/material.dart';
-// import 'package:dyota/components/generic_appbar.dart'; // Uncomment if you have a custom app bar
 
 void main() {
   runApp(MyApp());
@@ -29,7 +28,7 @@ class FilterScreen extends StatefulWidget {
 
 class _FilterScreenState extends State<FilterScreen> {
   RangeValues _currentRangeValues = const RangeValues(20, 80);
-  Color? _selectedColor;
+  List<Color> _selectedColors = []; // Change to a list
   final List<String> _selectedSizes = [];
   final List<String> _selectedCategories = [];
 
@@ -134,7 +133,11 @@ class _FilterScreenState extends State<FilterScreen> {
             return GestureDetector(
               onTap: () {
                 setState(() {
-                  _selectedColor = color;
+                  if (_selectedColors.contains(color)) {
+                    _selectedColors.remove(color);
+                  } else {
+                    _selectedColors.add(color);
+                  }
                 });
               },
               child: Container(
@@ -142,7 +145,7 @@ class _FilterScreenState extends State<FilterScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: _selectedColor == color
+                    color: _selectedColors.contains(color)
                         ? Colors.red
                         : Colors.transparent,
                     width: 1.5,
@@ -241,7 +244,7 @@ class _FilterScreenState extends State<FilterScreen> {
                 setState(() {
                   // Reset all filters
                   _currentRangeValues = const RangeValues(78, 143);
-                  _selectedColor = null;
+                  _selectedColors.clear();
                   _selectedSizes.clear();
                   _selectedCategories.clear();
                 });

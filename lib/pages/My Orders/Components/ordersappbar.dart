@@ -3,27 +3,27 @@ import 'package:flutter/material.dart';
 class OrdersAppBar extends StatelessWidget implements PreferredSizeWidget {
   final TabController tabController;
 
-  OrdersAppBar({required this.tabController});
+  const OrdersAppBar({required this.tabController});
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      leading: BackButton(color: Colors.white),
+      leading: const BackButton(color: Colors.white),
       backgroundColor: Colors.black,
-      title: Text(
+      title: const Text(
         'My Orders',
         style: TextStyle(color: Colors.white),
       ),
       centerTitle: true,
       actions: [
         IconButton(
-          icon: Icon(Icons.search, color: Colors.black),
+          icon: const Icon(Icons.search, color: Colors.black),
           onPressed: () {
             // Handle search action
           },
         ),
         IconButton(
-          icon: Icon(Icons.more_vert, color: Colors.black),
+          icon: const Icon(Icons.more_vert, color: Colors.black),
           onPressed: () {
             // Handle more actions
           },
@@ -50,7 +50,7 @@ class OrdersTabBar extends StatelessWidget implements PreferredSizeWidget {
       indicatorColor: Colors.white,
       unselectedLabelColor: Colors.white,
       labelStyle: TextStyle(fontSize: 16.0), // Set highlight color to white
-      tabs: <Widget>[
+      tabs: const <Widget>[
         Tab(text: 'Delivered'),
         Tab(text: 'Processing'),
         Tab(text: 'Cancelled'),
@@ -60,5 +60,5 @@ class OrdersTabBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
