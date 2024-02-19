@@ -23,7 +23,7 @@ class PaymentSection extends StatelessWidget {
                 // TODO: Implement change payment logic
               },
               style: TextButton.styleFrom(
-                primary: Colors
+                foregroundColor: Colors
                     .black, // This is the color of the text (button label)
               ),
               child: Text('Change'),

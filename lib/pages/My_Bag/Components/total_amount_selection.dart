@@ -15,8 +15,8 @@ class TotalAmountSection extends StatelessWidget {
           ElevatedButton(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
-              primary: Colors.black, // Button color
-              onPrimary: Colors.white, // Text color
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.black, // Text color
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),

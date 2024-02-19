@@ -68,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
                       Icon(
                         Icons.texture,
                         size: 100,
-                        color: Color.fromARGB(255, 75, 36, 247),
+                        color: Color.fromARGB(255, 0, 0, 0),
                       ),
                       SizedBox(height: 10),
 
@@ -78,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 75, 36, 247),
+                          color: Color.fromARGB(255, 0, 0, 0),
                           fontFamily:
                               'CoolFont', // Replace 'CoolFont' with the desired cool font
                         ),
@@ -97,10 +97,36 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 25),
 
                   // Email textfield
-                  MyTextField(
-                    controller: emailController,
-                    hintText: 'Username',
-                    obscureText: false,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 18.0),
+                    child: TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Username',
+                        floatingLabelBehavior: FloatingLabelBehavior.auto,
+                        contentPadding: EdgeInsets.fromLTRB(20, 20, 20, 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                              color: Colors.black,
+                              width: 2.0), // Black border when typing
+                        ),
+                        labelStyle: TextStyle(
+                            color: Colors.black), // Black label when floating
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                      controller: emailController,
+                      obscureText: false,
+                    ),
                   ),
 
                   const SizedBox(height: 10),

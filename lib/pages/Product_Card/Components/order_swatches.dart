@@ -13,8 +13,8 @@ class OrderSwatchesButton extends StatelessWidget {
         },
         child: Text('ORDER SWATCHES'),
         style: ElevatedButton.styleFrom(
-          primary: Color.fromARGB(255, 0, 0, 0), // Button color set to black
-          onPrimary: Colors.white,
+          foregroundColor: Colors.white,
+          backgroundColor: Color.fromARGB(255, 0, 0, 0),
           shape: StadiumBorder(),
           padding: EdgeInsets.symmetric(horizontal: 32, vertical: 15),
         ),

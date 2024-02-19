@@ -264,9 +264,9 @@ class _FilterScreenState extends State<FilterScreen> {
                 // Implement apply logic
               },
               style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
                 shape: StadiumBorder(),
-                primary: Colors.black,
-                onPrimary: Colors.white,
+                backgroundColor: Colors.black,
               ),
               child: const Text('Apply'),
             ),

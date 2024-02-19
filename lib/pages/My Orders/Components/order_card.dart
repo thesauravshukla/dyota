@@ -42,7 +42,7 @@ class OrderCard extends StatelessWidget {
               },
               child: Text('Details'),
               style: OutlinedButton.styleFrom(
-                primary: Colors.black,
+                foregroundColor: Colors.black,
                 side: BorderSide(color: Colors.black),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
@@ -57,7 +57,8 @@ class OrderCard extends StatelessWidget {
                   // Handle status action
                 },
                 style: TextButton.styleFrom(
-                  primary: status == 'Delivered' ? Colors.green : Colors.black,
+                  foregroundColor:
+                      status == 'Delivered' ? Colors.green : Colors.black,
                 ),
                 child: Text(status),
               ),

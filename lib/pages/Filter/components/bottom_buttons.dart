@@ -32,9 +32,9 @@ class BottomButtons extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onApply,
               style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
                 shape: StadiumBorder(),
-                primary: Colors.black,
-                onPrimary: Colors.white,
+                backgroundColor: Colors.black,
               ),
               child: const Text('Apply'),
             ),
