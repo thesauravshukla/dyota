@@ -2,6 +2,7 @@ import 'package:dyota/components/my_button.dart';
 import 'package:dyota/components/my_textfield.dart';
 import 'package:dyota/components/square_tile.dart';
 import 'package:dyota/pages/Login/Services/auth_service.dart';
+import 'package:dyota/pages/Login/login_page.dart'; // Adjust the path according to your project structure
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -16,8 +17,7 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  final confirmPasswordController =
-      TextEditingController(); // Add a separate controller for confirm password
+  final confirmPasswordController = TextEditingController();
   var showInvalidCredentials = 0;
 
   void signUserUp() async {
@@ -39,8 +39,24 @@ class _RegisterPageState extends State<RegisterPage> {
         email: emailController.text,
         password: passwordController.text,
       );
-      // Registration successful, navigate to the next screen or perform any other necessary actions
+      Navigator.pop(context); // Close the progress dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Registration Successful'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      // Wait for the SnackBar to be displayed for a few seconds
+      await Future.delayed(const Duration(seconds: 2));
+      // Navigate directly to the LoginPage class
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => LoginPage(
+                onTap: widget.onTap)), // Assuming LoginPage constructor
+      );
     } catch (e) {
+      Navigator.pop(context); // Close the progress dialog
       setState(() {
         if (e is FirebaseAuthException) {
           switch (e.code) {
@@ -60,8 +76,6 @@ class _RegisterPageState extends State<RegisterPage> {
         }
       });
     }
-
-    Navigator.pop(context);
   }
 
   @override
@@ -77,31 +91,25 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: [
                   const SizedBox(height: 30),
                   // Logo and heading
-                  Column(
+                  // Logo
+                  const Column(
                     children: [
-                      Image.asset(
-                        'lib/images/yarn-ball.png',
-                        width: 70,
-                        height: 70,
-                        color: Colors.white,
+                      Icon(
+                        Icons.texture,
+                        size: 100,
+                        color: Color.fromARGB(255, 255, 255, 255),
                       ),
                       SizedBox(height: 10),
-                      Text(
+
+                      // Heading "dyota" with cool font
+                      const Text(
                         'dyota',
                         style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontFamily: 'CoolFont',
-                        ),
+                            fontFamily: 'AlfaSlab',
+                            fontSize: 25.0,
+                            color: Colors.white),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 30),
-                  // Welcome back message
-                  const Text(
-                    "Welcome back, you've been missed!",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                   const SizedBox(height: 25),
                   // Email textfield
@@ -132,7 +140,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     textColor: Colors.white,
                     buttonText: "Register Now",
                   ),
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 20),
                   // Or continue with
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 25.0),
@@ -163,7 +171,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  // Google + Apple sign-in buttons
+                  // Google sign-in button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -173,11 +181,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         imagePath: 'lib/images/google.png',
                       ),
                       SizedBox(width: 20),
-                      // Apple sign in
-                      SquareTile(
-                        onTap: () {},
-                        imagePath: 'lib/images/apple.png',
-                      ),
                     ],
                   ),
                   const SizedBox(height: 20),

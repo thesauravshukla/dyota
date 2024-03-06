@@ -1,6 +1,7 @@
 import 'package:dyota/components/my_button.dart';
 import 'package:dyota/components/my_textfield.dart';
 import 'package:dyota/components/square_tile.dart';
+import 'package:dyota/pages/Forgot_Password/forgot_password.dart';
 import 'package:dyota/pages/Login/Services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -52,7 +53,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: ListView(
           children: [
@@ -68,65 +69,38 @@ class _LoginPageState extends State<LoginPage> {
                       Icon(
                         Icons.texture,
                         size: 100,
-                        color: Color.fromARGB(255, 0, 0, 0),
+                        color: Color.fromARGB(255, 255, 255, 255),
                       ),
                       SizedBox(height: 10),
 
                       // Heading "dyota" with cool font
-                      Text(
+                      const Text(
                         'dyota',
                         style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 0, 0, 0),
-                          fontFamily:
-                              'CoolFont', // Replace 'CoolFont' with the desired cool font
-                        ),
+                            fontFamily: 'AlfaSlab',
+                            fontSize: 25.0,
+                            color: Colors.white),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 20),
 
                   // Welcome back, you've been missed
                   const Text(
                     "Welcome back, you've been missed!",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    style: TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255),
+                        fontSize: 16),
                   ),
 
                   const SizedBox(height: 25),
 
                   // Email textfield
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 18.0),
-                    child: TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Username',
-                        floatingLabelBehavior: FloatingLabelBehavior.auto,
-                        contentPadding: EdgeInsets.fromLTRB(20, 20, 20, 12),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                              color: Colors.black,
-                              width: 2.0), // Black border when typing
-                        ),
-                        labelStyle: TextStyle(
-                            color: Colors.black), // Black label when floating
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
-                      controller: emailController,
-                      obscureText: false,
-                    ),
+                  MyTextField(
+                    controller: emailController,
+                    hintText: 'Username',
+                    obscureText: false,
                   ),
 
                   const SizedBox(height: 10),
@@ -149,16 +123,31 @@ class _LoginPageState extends State<LoginPage> {
                         style: TextStyle(color: Colors.red),
                       ),
                     ),
-
+                  const SizedBox(height: 10),
                   // Forgot password?
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 25.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
-                          'Forgot Password?',
-                          style: TextStyle(color: Colors.white),
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      ForgotPassword(onTap: () {
+                                        // Define what happens when you tap on the ForgotPassword screen's onTap
+                                        // For example, navigate back to the login page
+                                      })),
+                            );
+                          },
+                          child: Text(
+                            'Forgot Password?',
+                            style: TextStyle(
+                                color: Colors.white,
+                                decoration: TextDecoration.underline),
+                          ),
                         ),
                       ],
                     ),
@@ -174,7 +163,7 @@ class _LoginPageState extends State<LoginPage> {
                     buttonText: "Sign In",
                   ),
 
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 30),
 
                   // Or continue with
                   Padding(
@@ -206,9 +195,9 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
 
-                  // Google + Apple sign-in buttons
+                  // Google sign-in button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -217,18 +206,11 @@ class _LoginPageState extends State<LoginPage> {
                         onTap: () => AuthService().signInWithGoogle(),
                         imagePath: 'lib/images/google.png',
                       ),
-
                       SizedBox(width: 20),
-
-                      // Apple sign in
-                      SquareTile(
-                        onTap: () {},
-                        imagePath: 'lib/images/apple.png',
-                      ),
                     ],
                   ),
 
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 10),
 
                   // Not a member? Register now
                   GestureDetector(
@@ -238,7 +220,8 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         Text(
                           'Not a member?',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(
+                              color: Color.fromARGB(255, 255, 255, 255)),
                         ),
                         SizedBox(width: 4),
                         Text(

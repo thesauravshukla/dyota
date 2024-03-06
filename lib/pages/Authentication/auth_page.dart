@@ -1,4 +1,3 @@
-import 'package:dyota/components/bottom_navigation_bar_component.dart';
 import 'package:dyota/pages/Login_Or_Register/login_or_register_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +13,7 @@ class AuthPage extends StatelessWidget {
         builder: (context, snapshot) {
           // user is logged in
           if (snapshot.hasData) {
-            return ParentWidget();
+            return LoginOrRegisterPage();
           }
           // user is NOT logged in
           else {
