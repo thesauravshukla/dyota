@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class UserAccountHeader extends StatelessWidget {
@@ -5,19 +6,23 @@ class UserAccountHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const UserAccountsDrawerHeader(
-      decoration: BoxDecoration(
+    User? user =
+        FirebaseAuth.instance.currentUser; // Get the current logged-in user
+    String userEmail = user?.email ??
+        'No email'; // Use the email if available, otherwise show a default message
+    return UserAccountsDrawerHeader(
+      decoration: const BoxDecoration(
         color: Colors.black,
       ),
-      accountName: Text(
+      accountName: const Text(
         "Matilda Brown",
         style: TextStyle(color: Colors.white),
       ),
       accountEmail: Text(
-        "matildabrown@mail.com",
-        style: TextStyle(color: Colors.white),
+        userEmail,
+        style: const TextStyle(color: Colors.white),
       ),
-      currentAccountPicture: CircleAvatar(
+      currentAccountPicture: const CircleAvatar(
         backgroundImage: AssetImage('assets/profile_picture.png'),
       ),
     );
