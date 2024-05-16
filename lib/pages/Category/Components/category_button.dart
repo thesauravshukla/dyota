@@ -19,14 +19,14 @@ class CategoryButton extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.black : Colors.white,
+          color: isSelected ? Colors.white : Colors.black,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Colors.black),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
+            color: isSelected ? Colors.black : Colors.white,
           ),
         ),
       ),

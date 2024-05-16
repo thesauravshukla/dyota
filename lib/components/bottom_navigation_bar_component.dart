@@ -2,7 +2,6 @@
 import 'package:dyota/pages/Home/home_page.dart';
 import 'package:dyota/pages/My_Bag/my_bag.dart';
 import 'package:dyota/pages/Profile/profile_page.dart';
-import 'package:dyota/pages/Shop/shop_page.dart';
 import 'package:flutter/material.dart';
 
 class ParentWidget extends StatefulWidget {
@@ -14,7 +13,6 @@ class _ParentWidgetState extends State<ParentWidget> {
   int _selectedIndex = 0;
   final List<Widget> _widgetOptions = <Widget>[
     HomePage(),
-    ShopPage(),
     MyBag(),
     Text('Favorites Page'), // This can remain const if you want
     ProfileScreen(),
@@ -59,8 +57,6 @@ class CustomBottomNavigationBar extends StatelessWidget {
       type: BottomNavigationBarType.fixed,
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_basket), label: 'Shop'),
         BottomNavigationBarItem(icon: Icon(Icons.shopping_bag), label: 'Bag'),
         BottomNavigationBarItem(
             icon: Icon(Icons.favorite_border), label: 'Favorites'),
