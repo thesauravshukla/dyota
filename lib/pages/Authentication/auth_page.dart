@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/components/bottom_navigation_bar_component.dart';
 import 'package:dyota/pages/Login_Or_Register/login_or_register_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,16 +13,36 @@ class AuthPage extends StatelessWidget {
       body: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          // user is logged in
           if (snapshot.hasData) {
-            return ParentWidget();
-          }
-          // user is NOT logged in
-          else {
+            // User is logged in
+            User? user = snapshot.data;
+            checkAndCreateUserRecord(user);
+            return ParentWidget(); // Your logged-in user's home widget
+          } else {
+            // User is NOT logged in
             return LoginOrRegisterPage();
           }
         },
       ),
     );
+  }
+
+  void checkAndCreateUserRecord(User? user) async {
+    if (user != null) {
+      final usersRef = FirebaseFirestore.instance.collection('users');
+      final docRef = usersRef.doc(user.uid);
+
+      DocumentSnapshot docSnapshot = await docRef.get();
+      if (!docSnapshot.exists) {
+        // Create a new document for the user if it doesn't exist
+        docRef.set({
+          'username': user.email, // Assuming username is the email
+          'addressList': [],
+          'cartItemList': [],
+          'pastOrderList': [],
+          'currentOrderList': []
+        });
+      }
+    }
   }
 }

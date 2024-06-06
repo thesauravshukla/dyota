@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class DropdownLengthSelect extends StatelessWidget {
+class DropdownCountSelect extends StatelessWidget {
   final String? selectedValue;
   final ValueChanged<String?> onChanged;
 
-  const DropdownLengthSelect(
+  const DropdownCountSelect(
       {super.key, this.selectedValue, required this.onChanged});
 
   @override
@@ -13,7 +13,7 @@ class DropdownLengthSelect extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       child: DropdownButtonFormField<String>(
         decoration: const InputDecoration(
-          labelText: 'Order Length',
+          labelText: 'Count Value',
           border: OutlineInputBorder(
             borderSide: BorderSide(
                 color: Colors.black, width: 1.0), // Black border for default

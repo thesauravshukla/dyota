@@ -22,8 +22,9 @@ class ProductItem extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) =>
-                  const ProductCard()), // Navigate to ProductCard page
+              builder: (context) => const ProductCard(
+                    documentId: '13ZZiQM1bdo4UgCULc5S',
+                  )), // Navigate to ProductCard page
         );
       },
       child: Card(

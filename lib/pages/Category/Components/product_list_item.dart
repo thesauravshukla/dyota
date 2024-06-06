@@ -1,27 +1,78 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dyota/pages/Product_Card/product_card.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 class ProductListItem extends StatelessWidget {
-  final String imageUrl;
-  final String title;
-  final String brand;
-  final double price;
-  final double discount;
-  final double rating;
-  final int reviewCount;
+  final String documentId;
 
   const ProductListItem({
     Key? key,
-    required this.imageUrl,
-    required this.title,
-    required this.brand,
-    required this.price,
-    required this.discount,
-    required this.rating,
-    required this.reviewCount,
+    required this.documentId,
   }) : super(key: key);
+
+  Future<Map<String, dynamic>> fetchProductData() async {
+    DocumentSnapshot doc = await FirebaseFirestore.instance
+        .collection('items')
+        .doc(documentId)
+        .get();
+    return doc.data() as Map<String, dynamic>;
+  }
+
+  Future<String> getImageUrl(String path) async {
+    String url = await FirebaseStorage.instance.ref(path).getDownloadURL();
+    return url;
+  }
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: fetchProductData(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
+          var data = snapshot.data!;
+          String imagePath = data['imageLocation'];
+
+          return FutureBuilder<String>(
+            future: getImageUrl(imagePath),
+            builder: (context, imageSnapshot) {
+              if (imageSnapshot.connectionState == ConnectionState.done &&
+                  imageSnapshot.hasData) {
+                String imageUrl = imageSnapshot.data!;
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              ProductCard(documentId: documentId)),
+                    );
+                  },
+                  child: buildProductCard(imageUrl, data),
+                );
+              } else if (imageSnapshot.hasError) {
+                return Text('Failed to load image');
+              } else {
+                return CircularProgressIndicator();
+              }
+            },
+          );
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          return CircularProgressIndicator();
+        }
+      },
+    );
+  }
+
+  Widget buildProductCard(String imageUrl, Map<String, dynamic> data) {
+    String brand = "${data['subCategory']['value']}";
+    String title = data['printType']['value'];
+    double price = data['pricePerMetre']['value'].toDouble();
+    double discount = 0; // Assuming discount is not provided in the data
+
     return Card(
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
@@ -53,45 +104,43 @@ class ProductListItem extends StatelessWidget {
                       '-${discount.toInt()}%',
                       style: TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
             ],
           ),
-          Container(
-            // This container wraps the text information
-            width: double.infinity,
-            color: Colors.white.withOpacity(0.05), // Slightly transparent white
-            padding: const EdgeInsets.all(4.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  brand,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+          Flexible(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(4.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    brand,
+                    style: TextStyle(
+                      fontSize: 13,
+                    ),
                   ),
-                ),
-                SizedBox(height: 1),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
+                  SizedBox(height: 1),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                    ),
                   ),
-                ),
-                SizedBox(height: 1),
-                Text(
-                  '\$${price.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                  SizedBox(height: 1),
+                  Text(
+                    'Rs. ${price.toStringAsFixed(2)}/m',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

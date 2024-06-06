@@ -14,7 +14,6 @@ class _ParentWidgetState extends State<ParentWidget> {
   final List<Widget> _widgetOptions = <Widget>[
     HomePage(),
     MyBag(),
-    Text('Favorites Page'), // This can remain const if you want
     ProfileScreen(),
   ];
 
@@ -58,8 +57,6 @@ class CustomBottomNavigationBar extends StatelessWidget {
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.shopping_bag), label: 'Bag'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border), label: 'Favorites'),
         BottomNavigationBarItem(
             icon: Icon(Icons.person_outline), label: 'Profile'),
       ],

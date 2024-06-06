@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/components/generic_appbar.dart';
 import 'package:dyota/pages/Category/Components/category_button.dart';
+import 'package:dyota/pages/Category/Components/get_document_ids.dart';
 import 'package:dyota/pages/Category/Components/product_list_item.dart';
 import 'package:dyota/pages/Filter/filter_screen.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ class _CategoryPageState extends State<CategoryPage> {
   String selectedSortOption = 'Price: lowest to high'; // Default sort option
   String categoryName = '';
   List<String> subCategories = [];
+  List<String> itemDocumentIds = [];
 
   @override
   void initState() {
@@ -35,6 +37,7 @@ class _CategoryPageState extends State<CategoryPage> {
       } else {
         selectedCategories.add(category);
       }
+      _fetchItems(); // Fetch items after updating selected categories
     });
   }
 
@@ -60,7 +63,26 @@ class _CategoryPageState extends State<CategoryPage> {
     setState(() {
       categoryName = doc['name'];
       subCategories = List<String>.from(doc['subCategories']);
+      selectedCategories = List<String>.from(
+          subCategories); // Select all subcategories by default
     });
+    _fetchItems(); // Fetch items after fetching category data
+  }
+
+  Future<void> _fetchItems() async {
+    FirestoreService firestoreService = FirestoreService();
+    List<String> documentIds = await firestoreService.getDocumentIds(
+      'items',
+      categoryName,
+      selectedCategories,
+    );
+    setState(() {
+      itemDocumentIds = documentIds;
+    });
+    print("Fetched Items: ${itemDocumentIds.length}");
+    for (var id in itemDocumentIds) {
+      print("Item ID: $id");
+    }
   }
 
   @override
@@ -122,28 +144,25 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   Widget buildGridView() {
-    // Replace with your actual GridView builder implementation
+    if (itemDocumentIds.isEmpty) {
+      return Text("No items to display");
+    }
     return GridView.builder(
       physics: NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      itemCount: 10, // Replace with your actual item count
+      itemCount: itemDocumentIds.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 5,
         mainAxisSpacing: 5,
       ),
       itemBuilder: (BuildContext context, int index) {
+        String documentId = itemDocumentIds[index];
         return Padding(
           padding: const EdgeInsets.all(8.0),
           child: ProductListItem(
-              imageUrl:
-                  "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/448447/item/goods_01_448447.jpg?width=750",
-              title: "filler",
-              brand: "filler",
-              price: 0,
-              discount: 20,
-              rating: 4,
-              reviewCount: 0), // Replace with your actual grid item widget
+            documentId: documentId,
+          ),
         );
       },
     );
