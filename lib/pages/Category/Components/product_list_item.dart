@@ -54,14 +54,14 @@ class ProductListItem extends StatelessWidget {
               } else if (imageSnapshot.hasError) {
                 return Text('Failed to load image');
               } else {
-                return CircularProgressIndicator();
+                return Container();
               }
             },
           );
         } else if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         } else {
-          return CircularProgressIndicator();
+          return Container();
         }
       },
     );

@@ -3,7 +3,6 @@ import 'package:dyota/components/generic_appbar.dart';
 import 'package:dyota/pages/Category/Components/category_button.dart';
 import 'package:dyota/pages/Category/Components/get_document_ids.dart';
 import 'package:dyota/pages/Category/Components/product_list_item.dart';
-import 'package:dyota/pages/Filter/filter_screen.dart';
 import 'package:flutter/material.dart';
 
 class CategoryPage extends StatefulWidget {
@@ -19,10 +18,11 @@ class CategoryPage extends StatefulWidget {
 class _CategoryPageState extends State<CategoryPage> {
   bool isGridView = false;
   List<String> selectedCategories = [];
-  String selectedSortOption = 'Price: lowest to high'; // Default sort option
+  String selectedSortOption = 'Sort'; // Default sort option
   String categoryName = '';
   List<String> subCategories = [];
   List<String> itemDocumentIds = [];
+  bool isLoading = true; // Added to track loading state
 
   @override
   void initState() {
@@ -47,8 +47,23 @@ class _CategoryPageState extends State<CategoryPage> {
       builder: (BuildContext context) {
         return Container(
           height: 200,
-          child: Center(
-            child: Text("Sort Options will be displayed here"),
+          child: Column(
+            children: [
+              ListTile(
+                title: Text('Price: lowest to high'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _fetchItems(sortOption: 'Price: lowest to high');
+                },
+              ),
+              ListTile(
+                title: Text('Price: high to low'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _fetchItems(sortOption: 'Price: high to low');
+                },
+              ),
+            ],
           ),
         );
       },
@@ -65,24 +80,49 @@ class _CategoryPageState extends State<CategoryPage> {
       subCategories = List<String>.from(doc['subCategories']);
       selectedCategories = List<String>.from(
           subCategories); // Select all subcategories by default
+      isLoading = false; // Data initially fetched, set loading to false
     });
     _fetchItems(); // Fetch items after fetching category data
   }
 
-  Future<void> _fetchItems() async {
+  Future<void> _fetchItems({String sortOption = 'Sort'}) async {
+    setState(() {
+      isLoading = true; // Show loading indicator
+    });
+
     FirestoreService firestoreService = FirestoreService();
     List<String> documentIds = await firestoreService.getDocumentIds(
       'items',
       categoryName,
       selectedCategories,
     );
-    setState(() {
-      itemDocumentIds = documentIds;
-    });
-    print("Fetched Items: ${itemDocumentIds.length}");
-    for (var id in itemDocumentIds) {
-      print("Item ID: $id");
+
+    List<Map<String, dynamic>> itemsWithPrice = [];
+    for (String id in documentIds) {
+      DocumentSnapshot doc =
+          await FirebaseFirestore.instance.collection('items').doc(id).get();
+      if (doc.exists && doc.data() != null) {
+        itemsWithPrice.add({
+          'id': id,
+          'pricePerMetre': doc['pricePerMetre']['value'],
+        });
+      }
     }
+
+    if (sortOption == 'Price: lowest to high') {
+      itemsWithPrice
+          .sort((a, b) => a['pricePerMetre'].compareTo(b['pricePerMetre']));
+    } else if (sortOption == 'Price: high to low') {
+      itemsWithPrice
+          .sort((a, b) => b['pricePerMetre'].compareTo(a['pricePerMetre']));
+    }
+
+    setState(() {
+      selectedSortOption = sortOption;
+      itemDocumentIds =
+          itemsWithPrice.map((item) => item['id'] as String).toList();
+      isLoading = false; // Hide loading indicator
+    });
   }
 
   @override
@@ -96,7 +136,7 @@ class _CategoryPageState extends State<CategoryPage> {
         child: Column(
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.only(top: 16.0), // Added padding here
+              padding: const EdgeInsets.only(top: 16.0),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -113,30 +153,16 @@ class _CategoryPageState extends State<CategoryPage> {
                 ),
               ),
             ),
-            // Sorting and View toggle
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                TextButton.icon(
-                  icon: Icon(Icons.filter_list, color: Colors.black),
-                  label: Text('Filters', style: TextStyle(color: Colors.black)),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => FilterScreen()),
-                    );
-                  },
-                ),
-                TextButton.icon(
-                  icon: Icon(Icons.sort, color: Colors.black),
-                  label: Text(selectedSortOption,
-                      style: TextStyle(color: Colors.black)),
-                  onPressed: () => _showSortOptions(context),
-                ),
-              ],
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                icon: Icon(Icons.sort, color: Colors.black),
+                label: Text(selectedSortOption,
+                    style: TextStyle(color: Colors.black)),
+                onPressed: () => _showSortOptions(context),
+              ),
             ),
-            // Product List
-            buildGridView(),
+            isLoading ? Container() : buildGridView(),
           ],
         ),
       ),
