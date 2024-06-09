@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
@@ -6,9 +7,9 @@ class AddToCartButton extends StatefulWidget {
   final List<String> documentIds;
 
   const AddToCartButton({
-    super.key,
+    Key? key,
     required this.documentIds,
-  });
+  }) : super(key: key);
 
   @override
   _AddToCartButtonState createState() => _AddToCartButtonState();
@@ -16,8 +17,8 @@ class AddToCartButton extends StatefulWidget {
 
 class _AddToCartButtonState extends State<AddToCartButton> {
   bool showDetails = false;
-  late List<bool> selectedImages; // Declare as late
-  late List<double> selectedLengths; // Declare as late
+  late List<bool> selectedImages;
+  late List<double> selectedLengths;
   List<String> imageUrls = [];
   Map<String, int> minimumOrderLengths = {};
   Map<int, String> validationErrors = {};
@@ -64,6 +65,47 @@ class _AddToCartButtonState extends State<AddToCartButton> {
     setState(() {
       validationErrors = errors;
     });
+  }
+
+  Future<void> _addToCart() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // Handle the case where the user is not logged in
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('You need to be logged in to add items to the cart')),
+      );
+      return;
+    }
+
+    final email = user.email;
+
+    for (int i = 0; i < selectedImages.length; i++) {
+      if (selectedImages[i]) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(email)
+            .collection('cartItemsList')
+            .doc(widget.documentIds[i] +
+                '-textile') // Set the document ID to itemDocumentId
+            .set({
+          'itemType': {
+            'displayName': 'Order Type',
+            'Value': 'Textile Order',
+            'toDisplay': 1,
+          },
+          'orderLength': {
+            'displayName': 'Order Length',
+            'Value': selectedLengths[i],
+            'toDisplay': 1,
+          },
+        }, SetOptions(merge: true));
+      }
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Items added to cart')),
+    );
   }
 
   @override
@@ -251,17 +293,30 @@ class _AddToCartButtonState extends State<AddToCartButton> {
           }).toList(),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
+            child: Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  validateInputs();
+                  if (validationErrors.isEmpty) {
+                    _addToCart();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Please correct the errors before adding to cart')),
+                    );
+                  }
+                },
+                child: const Text('Add Selected Designs to Cart'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.black,
+                  shape: StadiumBorder(),
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 15),
+                ),
               ),
-              onPressed: () {
-                validateInputs();
-              },
-              child: Text('Add Selected Designs to Cart'),
             ),
-          )
+          ),
         ],
       ),
     );

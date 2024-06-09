@@ -80,18 +80,6 @@ class _ProductCardState extends State<ProductCard> {
     }
   }
 
-  void updateReadValue(double newValue) {
-    setState(() {
-      readValue = newValue;
-    });
-  }
-
-  void updatePickValue(double newValue) {
-    setState(() {
-      pickValue = newValue;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

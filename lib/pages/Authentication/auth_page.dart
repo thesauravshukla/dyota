@@ -30,17 +30,18 @@ class AuthPage extends StatelessWidget {
   void checkAndCreateUserRecord(User? user) async {
     if (user != null) {
       final usersRef = FirebaseFirestore.instance.collection('users');
-      final docRef = usersRef.doc(user.uid);
+      final docRef = usersRef.doc(user.email);
 
       DocumentSnapshot docSnapshot = await docRef.get();
       if (!docSnapshot.exists) {
         // Create a new document for the user if it doesn't exist
-        docRef.set({
-          'username': user.email, // Assuming username is the email
-          'addressList': [],
-          'cartItemList': [],
-          'pastOrderList': [],
-          'currentOrderList': []
+        await docRef.set(
+            {'addressList': [], 'pastOrderList': [], 'currentOrderList': []});
+
+        // Create an empty cartItems sub-collection
+        final cartItemsRef = docRef.collection('cartItems');
+        await cartItemsRef.add({
+          // Add an initial empty document or skip this if you want the collection to be empty initially
         });
       }
     }

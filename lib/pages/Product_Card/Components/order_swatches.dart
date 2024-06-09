@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
@@ -39,6 +40,41 @@ class _OrderSwatchesButtonState extends State<OrderSwatchesButton> {
       _imageUrls = urls;
       _selectedImages = List<bool>.filled(_imageUrls.length, false);
     });
+  }
+
+  Future<void> _addSwatchesToCart() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // Handle the case where the user is not logged in
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('You need to be logged in to add items to the cart')),
+      );
+      return;
+    }
+
+    final email = user.email;
+
+    for (int i = 0; i < _selectedImages.length; i++) {
+      if (_selectedImages[i]) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(email)
+            .collection('cartItemsList')
+            .doc(widget.documentIds[i] +
+                '-swatches') // Set the document ID to itemDocumentId
+            .set({
+          'itemType': {
+            'displayName': 'Swatches',
+            'todisplay': '1',
+          },
+        });
+      }
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Swatches added to cart')),
+    );
   }
 
   @override
@@ -103,9 +139,12 @@ class _OrderSwatchesButtonState extends State<OrderSwatchesButton> {
               child: ElevatedButton(
                 onPressed: () {
                   if (_selectedImages.any((selected) => selected)) {
-                    print('Order confirmed for selected swatches.');
+                    _addSwatchesToCart();
                   } else {
-                    print('Please select at least one swatch.');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text('Please select at least one swatch')),
+                    );
                   }
                 },
                 child: const Text('Add Swatches To Cart'),
