@@ -7,6 +7,8 @@ class AddressCard extends StatelessWidget {
   final bool isSelected;
   final Function(int?) onSelected;
   final VoidCallback onEdit;
+  final Function(bool) onMainAddressChanged;
+  final VoidCallback onDelete; // Add this line for delete callback
 
   const AddressCard({
     Key? key,
@@ -16,6 +18,8 @@ class AddressCard extends StatelessWidget {
     required this.isSelected,
     required this.onSelected,
     required this.onEdit,
+    required this.onMainAddressChanged,
+    required this.onDelete, // Add this line
   }) : super(key: key);
 
   @override
@@ -39,14 +43,24 @@ class AddressCard extends StatelessWidget {
                       style:
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
-                TextButton(
-                  onPressed: onEdit,
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero, // Removes default padding
-                    tapTargetSize: MaterialTapTargetSize
-                        .shrinkWrap, // Minimizes tap target size
-                  ),
-                  child: Text('Edit', style: TextStyle(color: Colors.red)),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: onEdit,
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero, // Removes default padding
+                        tapTargetSize: MaterialTapTargetSize
+                            .shrinkWrap, // Minimizes tap target size
+                      ),
+                      child:
+                          Text('Edit', style: TextStyle(color: Colors.black)),
+                    ),
+                    SizedBox(width: 8), // Space between Edit and Delete buttons
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.black),
+                      onPressed: onDelete, // Use the onDelete callback here
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -91,12 +91,12 @@ class _AddToCartButtonState extends State<AddToCartButton> {
             .set({
           'itemType': {
             'displayName': 'Order Type',
-            'Value': 'Textile Order',
+            'value': 'Textile Order',
             'toDisplay': 1,
           },
           'orderLength': {
             'displayName': 'Order Length',
-            'Value': selectedLengths[i],
+            'value': selectedLengths[i],
             'toDisplay': 1,
           },
         }, SetOptions(merge: true));

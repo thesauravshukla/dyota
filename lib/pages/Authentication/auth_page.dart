@@ -37,12 +37,6 @@ class AuthPage extends StatelessWidget {
         // Create a new document for the user if it doesn't exist
         await docRef.set(
             {'addressList': [], 'pastOrderList': [], 'currentOrderList': []});
-
-        // Create an empty cartItems sub-collection
-        final cartItemsRef = docRef.collection('cartItems');
-        await cartItemsRef.add({
-          // Add an initial empty document or skip this if you want the collection to be empty initially
-        });
       }
     }
   }

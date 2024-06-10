@@ -65,7 +65,8 @@ class _OrderSwatchesButtonState extends State<OrderSwatchesButton> {
                 '-swatches') // Set the document ID to itemDocumentId
             .set({
           'itemType': {
-            'displayName': 'Swatches',
+            'displayName': 'Order Type',
+            'Value': 'Swatches',
             'todisplay': '1',
           },
         });
