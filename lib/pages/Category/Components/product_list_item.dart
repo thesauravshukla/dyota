@@ -70,7 +70,7 @@ class ProductListItem extends StatelessWidget {
   Widget buildProductCard(String imageUrl, Map<String, dynamic> data) {
     String brand = "${data['subCategory']['value']}";
     String title = data['printType']['value'];
-    double price = data['pricePerMetre']['value'].toDouble();
+    String price = data['pricePerMetre']['value'];
     double discount = 0; // Assuming discount is not provided in the data
 
     return Card(
@@ -133,7 +133,7 @@ class ProductListItem extends StatelessWidget {
                   ),
                   SizedBox(height: 1),
                   Text(
-                    'Rs. ${price.toStringAsFixed(2)}/m',
+                    'Rs. ${price}/m',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,

@@ -1,4 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:decimal/decimal.dart';
+import 'package:dyota/pages/Product_Card/Components/image_selector.dart';
+import 'package:dyota/pages/Product_Card/Components/length_slider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -82,6 +85,20 @@ class _AddToCartButtonState extends State<AddToCartButton> {
 
     for (int i = 0; i < selectedImages.length; i++) {
       if (selectedImages[i]) {
+        // Fetch the price per metre from the document
+        DocumentSnapshot doc = await FirebaseFirestore.instance
+            .collection('items')
+            .doc(widget.documentIds[i])
+            .get();
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        String pricePerMetre = data['pricePerMetre']['value'];
+        var pricePerMetreDouble = Decimal.parse(pricePerMetre);
+        var selectedLengthsDouble =
+            Decimal.parse(selectedLengths[i].toString());
+
+        // Calculate the price based on the selected length
+        Decimal price = (pricePerMetreDouble * selectedLengthsDouble);
+
         await FirebaseFirestore.instance
             .collection('users')
             .doc(email)
@@ -93,11 +110,19 @@ class _AddToCartButtonState extends State<AddToCartButton> {
             'displayName': 'Order Type',
             'value': 'Textile Order',
             'toDisplay': 1,
+            'priority': 1,
           },
           'orderLength': {
             'displayName': 'Order Length',
-            'value': selectedLengths[i],
+            'value': selectedLengths[i].toString() + " m",
             'toDisplay': 1,
+            'priority': 2,
+          },
+          'price': {
+            'displayName': 'Price (Rs.)',
+            'value': price.toString(),
+            'toDisplay': 1,
+            'priority': 3,
           },
         }, SetOptions(merge: true));
       }
@@ -152,141 +177,28 @@ class _AddToCartButtonState extends State<AddToCartButton> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Divider(color: Colors.grey),
-                GestureDetector(
+                ImageSelector(
+                  imageUrl: imageUrl,
+                  isSelected: selectedImages[index],
                   onTap: () {
                     setState(() {
                       selectedImages[index] = !selectedImages[index];
                     });
                   },
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        margin: EdgeInsets.all(8),
-                        child: Image.network(
-                          imageUrl,
-                          width: 150,
-                          height: 150,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      if (selectedImages[index])
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.check_circle,
-                              color: Colors.white, size: 30),
-                        ),
-                    ],
-                  ),
                 ),
                 Divider(color: Colors.grey),
                 if (selectedImages[index])
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text(
-                            'Order Length',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Container(
-                          width: double
-                              .infinity, // Increase the width of the slider box
-                          padding: EdgeInsets.all(8.0),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200], // Background color
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          child: Stack(
-                            children: [
-                              SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  activeTrackColor: Colors.black,
-                                  inactiveTrackColor:
-                                      Colors.black.withOpacity(0.3),
-                                  trackShape: RoundedRectSliderTrackShape(),
-                                  trackHeight: 8.0,
-                                  thumbShape: RoundSliderThumbShape(
-                                      enabledThumbRadius: 12.0),
-                                  thumbColor: Colors.black,
-                                  overlayColor: Colors.black.withAlpha(32),
-                                  overlayShape: RoundSliderOverlayShape(
-                                      overlayRadius: 28.0),
-                                  tickMarkShape: RoundSliderTickMarkShape(),
-                                  activeTickMarkColor: Colors.black,
-                                  inactiveTickMarkColor:
-                                      Colors.black.withOpacity(0.3),
-                                  valueIndicatorShape:
-                                      PaddleSliderValueIndicatorShape(),
-                                  valueIndicatorColor: Colors.black,
-                                  valueIndicatorTextStyle: TextStyle(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                child: Slider(
-                                  value: selectedLengths[index],
-                                  min: minOrderLength.toDouble(),
-                                  max: maxOrderLength
-                                      .toDouble(), // Ensure max is greater than min
-                                  divisions: 50, // Adjust based on your needs
-                                  label:
-                                      selectedLengths[index].round().toString(),
-                                  onChanged: (double value) {
-                                    setState(() {
-                                      selectedLengths[index] = value;
-                                    });
-                                  },
-                                ),
-                              ),
-                              Positioned(
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: labels
-                                      .map((label) => Column(
-                                            children: [
-                                              Text('$label m',
-                                                  style:
-                                                      TextStyle(fontSize: 12)),
-                                              Container(
-                                                width: 1,
-                                                height: 8,
-                                                color: Colors.black,
-                                              ),
-                                            ],
-                                          ))
-                                      .toList(),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text(
-                            'Current Order Length: ${selectedLengths[index].toStringAsFixed(2)} m',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        if (validationErrors.containsKey(index))
-                          Text(
-                            validationErrors[index]!,
-                            style: TextStyle(color: Colors.red, fontSize: 10),
-                          ),
-                      ],
-                    ),
+                  LengthSlider(
+                    minOrderLength: minOrderLength,
+                    maxOrderLength: maxOrderLength,
+                    selectedLength: selectedLengths[index],
+                    labels: labels,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLengths[index] = value;
+                      });
+                    },
+                    validationError: validationErrors[index],
                   ),
               ],
             );

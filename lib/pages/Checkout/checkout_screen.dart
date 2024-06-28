@@ -4,7 +4,7 @@ import 'package:dyota/pages/Checkout/Components/checkout_payment_section.dart';
 import 'package:dyota/pages/Checkout/Components/checkout_submit_button.dart';
 import 'package:dyota/pages/Checkout/Components/checkout_summary_section.dart';
 import 'package:dyota/pages/Checkout/Components/delivery_method_section.dart';
-import 'package:dyota/pages/Settings/Components/section_title.dart';
+import 'package:dyota/pages/Checkout/Components/section_title.dart';
 import 'package:flutter/material.dart';
 
 class CheckoutScreen extends StatelessWidget {

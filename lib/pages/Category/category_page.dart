@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/components/generic_appbar.dart';
-import 'package:dyota/pages/Category/Components/category_button.dart';
 import 'package:dyota/pages/Category/Components/get_document_ids.dart';
 import 'package:dyota/pages/Category/Components/product_list_item.dart';
+import 'package:dyota/pages/Category/Components/sort_button.dart';
+import 'package:dyota/pages/Category/Components/sub_category_list.dart';
 import 'package:flutter/material.dart';
 
 class CategoryPage extends StatefulWidget {
@@ -48,121 +49,116 @@ class _CategoryPageState extends State<CategoryPage> {
         return Container(
           height: 200,
           child: Column(
-            children: [
-              ListTile(
-                title: Text('Price: lowest to high'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _fetchItems(sortOption: 'Price: lowest to high');
-                },
-              ),
-              ListTile(
-                title: Text('Price: high to low'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _fetchItems(sortOption: 'Price: high to low');
-                },
-              ),
-            ],
+            children: _buildSortOptions(context),
           ),
         );
       },
     );
   }
 
+  List<Widget> _buildSortOptions(BuildContext context) {
+    return [
+      _buildSortOption(context, 'Price: lowest to high'),
+      _buildSortOption(context, 'Price: high to low'),
+    ];
+  }
+
+  Widget _buildSortOption(BuildContext context, String option) {
+    return ListTile(
+      title: Text(option),
+      onTap: () {
+        Navigator.pop(context);
+        _fetchItems(sortOption: option);
+      },
+    );
+  }
+
   Future<void> _fetchCategoryData() async {
-    DocumentSnapshot doc = await FirebaseFirestore.instance
-        .collection('categories')
-        .doc(widget.categoryDocumentId)
-        .get();
-    setState(() {
-      categoryName = doc['name'];
-      subCategories = List<String>.from(doc['subCategories']);
-      selectedCategories = List<String>.from(
-          subCategories); // Select all subcategories by default
-      isLoading = false; // Data initially fetched, set loading to false
-    });
-    _fetchItems(); // Fetch items after fetching category data
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('categories')
+          .doc(widget.categoryDocumentId)
+          .get();
+      setState(() {
+        categoryName = doc['name'];
+        subCategories = List<String>.from(doc['subCategories']);
+        selectedCategories = List<String>.from(subCategories);
+        isLoading = false;
+      });
+      _fetchItems();
+    } catch (e) {
+      // Handle error
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   Future<void> _fetchItems({String sortOption = 'Sort'}) async {
     setState(() {
-      isLoading = true; // Show loading indicator
+      isLoading = true;
     });
 
-    FirestoreService firestoreService = FirestoreService();
-    List<String> documentIds = await firestoreService.getDocumentIds(
-      'items',
-      categoryName,
-      selectedCategories,
-    );
+    try {
+      FirestoreService firestoreService = FirestoreService();
+      List<String> documentIds = await firestoreService.getDocumentIds(
+        'items',
+        categoryName,
+        selectedCategories,
+      );
 
-    List<Map<String, dynamic>> itemsWithPrice = [];
-    for (String id in documentIds) {
-      DocumentSnapshot doc =
-          await FirebaseFirestore.instance.collection('items').doc(id).get();
-      if (doc.exists && doc.data() != null) {
-        itemsWithPrice.add({
-          'id': id,
-          'pricePerMetre': doc['pricePerMetre']['value'],
-        });
+      List<Map<String, dynamic>> itemsWithPrice = [];
+      for (String id in documentIds) {
+        DocumentSnapshot doc =
+            await FirebaseFirestore.instance.collection('items').doc(id).get();
+        if (doc.exists && doc.data() != null) {
+          itemsWithPrice.add({
+            'id': id,
+            'pricePerMetre': doc['pricePerMetre']['value'],
+          });
+        }
       }
-    }
 
-    if (sortOption == 'Price: lowest to high') {
-      itemsWithPrice
-          .sort((a, b) => a['pricePerMetre'].compareTo(b['pricePerMetre']));
-    } else if (sortOption == 'Price: high to low') {
-      itemsWithPrice
-          .sort((a, b) => b['pricePerMetre'].compareTo(a['pricePerMetre']));
-    }
+      if (sortOption == 'Price: lowest to high') {
+        itemsWithPrice
+            .sort((a, b) => a['pricePerMetre'].compareTo(b['pricePerMetre']));
+      } else if (sortOption == 'Price: high to low') {
+        itemsWithPrice
+            .sort((a, b) => b['pricePerMetre'].compareTo(a['pricePerMetre']));
+      }
 
-    setState(() {
-      selectedSortOption = sortOption;
-      itemDocumentIds =
-          itemsWithPrice.map((item) => item['id'] as String).toList();
-      isLoading = false; // Hide loading indicator
-    });
+      setState(() {
+        selectedSortOption = sortOption;
+        itemDocumentIds =
+            itemsWithPrice.map((item) => item['id'] as String).toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      // Handle error
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: genericAppbar(
-          title: categoryName.isEmpty
-              ? 'Loading...'
-              : categoryName), // Use categoryName in the app bar title
+          title: categoryName.isEmpty ? 'Loading...' : categoryName),
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: subCategories.map((subCategory) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: CategoryButton(
-                        label: subCategory,
-                        isSelected: selectedCategories.contains(subCategory),
-                        onTap: () => _selectCategory(subCategory),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
+            SubCategoryList(
+              subCategories: subCategories,
+              selectedCategories: selectedCategories,
+              onSelectCategory: _selectCategory,
             ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                icon: Icon(Icons.sort, color: Colors.black),
-                label: Text(selectedSortOption,
-                    style: TextStyle(color: Colors.black)),
-                onPressed: () => _showSortOptions(context),
-              ),
+            SortButton(
+              selectedSortOption: selectedSortOption,
+              onShowSortOptions: () => _showSortOptions(context),
             ),
-            isLoading ? Container() : buildGridView(),
+            isLoading ? CircularProgressIndicator() : buildGridView(),
           ],
         ),
       ),

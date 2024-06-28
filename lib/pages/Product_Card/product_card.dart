@@ -2,7 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/components/generic_appbar.dart';
 import 'package:dyota/pages/Product_Card/Components/add_to_cart_button.dart';
 import 'package:dyota/pages/Product_Card/Components/dynamic_fields_display.dart';
+import 'package:dyota/pages/Product_Card/Components/image_placeholder.dart';
+import 'package:dyota/pages/Product_Card/Components/image_thumbnails.dart';
 import 'package:dyota/pages/Product_Card/Components/order_swatches.dart';
+import 'package:dyota/pages/Product_Card/Components/product_name.dart';
 import 'package:dyota/pages/Product_Card/Components/shipping_info.dart';
 import 'package:dyota/pages/Product_Card/Components/support_section.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -19,8 +22,6 @@ class ProductCard extends StatefulWidget {
 
 class _ProductCardState extends State<ProductCard> {
   int selectedImageIndex = 0;
-  double readValue = 0.0;
-  double pickValue = 0.0;
   List<Map<String, String>> imageDetails = [];
   bool isLoading = true;
 
@@ -32,7 +33,6 @@ class _ProductCardState extends State<ProductCard> {
 
   Future<void> fetchImages() async {
     try {
-      // Fetch the initial document
       DocumentSnapshot doc = await FirebaseFirestore.instance
           .collection('items')
           .doc(widget.documentId)
@@ -42,7 +42,6 @@ class _ProductCardState extends State<ProductCard> {
         String parentId = data['parentId'];
         String initialImageLocation = data['imageLocation'];
 
-        // Fetch the initial image URL from Firestore Storage
         String initialImageUrl = await FirebaseStorage.instance
             .ref(initialImageLocation)
             .getDownloadURL();
@@ -50,7 +49,6 @@ class _ProductCardState extends State<ProductCard> {
           {'imageUrl': initialImageUrl, 'documentId': widget.documentId}
         ];
 
-        // Fetch all documents with the same parentId and different documentId
         QuerySnapshot querySnapshot = await FirebaseFirestore.instance
             .collection('items')
             .where('parentId', isEqualTo: parentId)
@@ -96,60 +94,18 @@ class _ProductCardState extends State<ProductCard> {
                 ? Center(child: Text('No images available'))
                 : ListView(
                     children: <Widget>[
-                      Padding(
-                        padding: EdgeInsets.only(left: 16, right: 16, top: 16),
-                        child: Text(
-                          'Product Name', // Replace 'Product Name' with your dynamic product name variable if needed
-                          style: TextStyle(
-                            fontSize: 24.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: ImagePlaceholder(
-                            imageUrl: imageDetails[selectedImageIndex]
-                                ['imageUrl']!),
-                      ),
-                      SizedBox(
-                        height: 80,
-                        child: Center(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children:
-                                  List.generate(imageDetails.length, (index) {
-                                return GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      selectedImageIndex = index;
-                                    });
-                                  },
-                                  child: Container(
-                                    margin:
-                                        EdgeInsets.symmetric(horizontal: 8.0),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: selectedImageIndex == index
-                                            ? Colors.black
-                                            : Colors.transparent,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: Image.network(
-                                      imageDetails[index]['imageUrl']!,
-                                      width: 60,
-                                      height: 60,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ),
-                          ),
-                        ),
+                      ProductName(),
+                      ImagePlaceholder(
+                          imageUrl: imageDetails[selectedImageIndex]
+                              ['imageUrl']!),
+                      ImageThumbnails(
+                        imageDetails: imageDetails,
+                        selectedImageIndex: selectedImageIndex,
+                        onThumbnailTap: (index) {
+                          setState(() {
+                            selectedImageIndex = index;
+                          });
+                        },
                       ),
                       DynamicFieldsDisplay(
                           documentId: imageDetails[selectedImageIndex]
@@ -171,16 +127,5 @@ class _ProductCardState extends State<ProductCard> {
         ],
       ),
     );
-  }
-}
-
-class ImagePlaceholder extends StatelessWidget {
-  final String imageUrl;
-
-  const ImagePlaceholder({Key? key, required this.imageUrl}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.network(imageUrl, fit: BoxFit.cover);
   }
 }

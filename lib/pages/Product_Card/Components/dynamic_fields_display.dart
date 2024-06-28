@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart'; // Ensure this import points to the correct path
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/pages/Product_Card/Components/detail_item.dart';
 import 'package:flutter/material.dart';
 
@@ -26,22 +26,29 @@ class DynamicFieldsDisplay extends StatelessWidget {
 
         Map<String, dynamic> data =
             snapshot.data!.data() as Map<String, dynamic>;
-        List<Widget> fieldsToDisplay = [];
+        List<Map<String, dynamic>> fields = [];
 
         data.forEach((key, value) {
           if (value is Map<String, dynamic> &&
               value.containsKey('displayName') &&
               value.containsKey('toDisplay') &&
               value.containsKey('value') &&
+              value.containsKey('priority') &&
               value['toDisplay'] == 1) {
-            fieldsToDisplay.add(
-              DetailItem(
-                title: value['displayName'],
-                value: value['value'].toString(),
-              ),
-            );
+            fields.add(value);
           }
         });
+
+        // Sort fields by priority
+        fields.sort(
+            (a, b) => (a['priority'] as int).compareTo(b['priority'] as int));
+
+        List<Widget> fieldsToDisplay = fields
+            .map((field) => DetailItem(
+                  title: field['displayName'],
+                  value: field['value'].toString(),
+                ))
+            .toList();
 
         return Container(
           padding: const EdgeInsets.all(16.0),

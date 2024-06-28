@@ -1,4 +1,4 @@
-import 'package:dyota/pages/Settings/Components/section_title.dart';
+import 'package:dyota/pages/Checkout/Components/section_title.dart';
 import 'package:flutter/material.dart';
 
 class DeliveryMethodSection extends StatelessWidget {

@@ -27,11 +27,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _fetchAddressCount() async {
     String email = FirebaseAuth.instance.currentUser?.email ?? '';
     if (email.isNotEmpty) {
-      DocumentSnapshot userDoc =
-          await FirebaseFirestore.instance.collection('users').doc(email).get();
-      setState(() {
-        _addressCount = userDoc['addressCount'] ?? 0;
-      });
+      try {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(email)
+            .get();
+        setState(() {
+          _addressCount = userDoc['addressCount'] ?? 0;
+        });
+      } catch (e) {
+        print('Error fetching address count: $e');
+      }
     }
   }
 
@@ -46,40 +52,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: ListView(
         children: <Widget>[
           const UserAccountHeader(),
-          ProfileListTile(
+          _buildProfileListTile(
             icon: Icons.shopping_cart,
             title: 'My orders',
             subtitle: 'Already have 12 orders',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MyOrdersPage()),
-              );
-            },
+            onTap: () => _navigateTo(context, MyOrdersPage()),
           ),
-          ProfileListTile(
+          _buildProfileListTile(
             icon: Icons.location_on,
             title: 'Shipping addresses',
             subtitle: '$_addressCount addresses',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => ShippingAddressesScreen()),
-              );
-            },
+            onTap: () => _navigateTo(context, ShippingAddressesScreen()),
           ),
-          ProfileListTile(
+          _buildProfileListTile(
             icon: Icons.payment,
             title: 'Payment methods',
             subtitle: 'Visa **34',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => ShippingAddressesScreen()),
-              );
-            },
+            onTap: () => _navigateTo(context, ShippingAddressesScreen()),
           ),
           // Logout button
           ListTile(
@@ -87,9 +76,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: Text('Logout'),
             onTap: () => _handleLogout(context),
           ),
-          // Add more pages if you have them
         ],
       ),
+    );
+  }
+
+  Widget _buildProfileListTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ProfileListTile(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      onTap: onTap,
+    );
+  }
+
+  void _navigateTo(BuildContext context, Widget page) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => page),
     );
   }
 }

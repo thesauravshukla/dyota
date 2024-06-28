@@ -1,23 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/components/generic_appbar.dart';
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_card.dart';
+import 'package:dyota/pages/Select_Shipping_Address/Components/address_dialogs.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-void main() => runApp(MyApp());
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Shipping Addresses',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: ShippingAddressesScreen(),
-    );
-  }
-}
 
 class ShippingAddressesScreen extends StatefulWidget {
   @override
@@ -57,18 +43,22 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
     final email = user.email;
     final userDocRef =
         FirebaseFirestore.instance.collection('users').doc(email);
-    DocumentSnapshot userDoc = await userDocRef.get();
-    int addressCount = userDoc['addressCount'] ?? 0;
+    try {
+      DocumentSnapshot userDoc = await userDocRef.get();
+      int addressCount = userDoc['addressCount'] ?? 0;
 
-    List<Map<String, dynamic>> fetchedAddresses = [];
-    for (int i = 1; i <= addressCount; i++) {
-      Map<String, dynamic> addressData = userDoc['address$i'];
-      fetchedAddresses.add(addressData);
+      List<Map<String, dynamic>> fetchedAddresses = [];
+      for (int i = 1; i <= addressCount; i++) {
+        Map<String, dynamic> addressData = userDoc['address$i'];
+        fetchedAddresses.add(addressData);
+      }
+
+      setState(() {
+        addresses = fetchedAddresses;
+      });
+    } catch (e) {
+      print('Error fetching addresses: $e');
     }
-
-    setState(() {
-      addresses = fetchedAddresses;
-    });
   }
 
   Future<void> _addNewAddress(String title, String address) async {
@@ -83,19 +73,23 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
     final email = user.email;
     final userDocRef =
         FirebaseFirestore.instance.collection('users').doc(email);
-    DocumentSnapshot userDoc = await userDocRef.get();
-    int addressCount = userDoc['addressCount'] ?? 0;
+    try {
+      DocumentSnapshot userDoc = await userDocRef.get();
+      int addressCount = userDoc['addressCount'] ?? 0;
 
-    await userDocRef.update({
-      'addressCount': addressCount + 1,
-      'address${addressCount + 1}': {
-        'Title': title,
-        'Address': address,
-        'isMainAddress': addressCount == 0 ? 1 : 0,
-      },
-    });
+      await userDocRef.update({
+        'addressCount': addressCount + 1,
+        'address${addressCount + 1}': {
+          'Title': title,
+          'Address': address,
+          'isMainAddress': addressCount == 0 ? 1 : 0,
+        },
+      });
 
-    _fetchAddresses(); // Refresh the addresses list
+      _fetchAddresses(); // Refresh the addresses list
+    } catch (e) {
+      print('Error adding new address: $e');
+    }
   }
 
   Future<void> _editAddress(int index, String title, String address) async {
@@ -110,15 +104,19 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
     final email = user.email;
     final userDocRef =
         FirebaseFirestore.instance.collection('users').doc(email);
-    await userDocRef.update({
-      'address${index + 1}': {
-        'Title': title,
-        'Address': address,
-        'isMainAddress': addresses[index]['isMainAddress'],
-      },
-    });
+    try {
+      await userDocRef.update({
+        'address${index + 1}': {
+          'Title': title,
+          'Address': address,
+          'isMainAddress': addresses[index]['isMainAddress'],
+        },
+      });
 
-    _fetchAddresses(); // Refresh the addresses list
+      _fetchAddresses(); // Refresh the addresses list
+    } catch (e) {
+      print('Error editing address: $e');
+    }
   }
 
   Future<void> _setMainAddress(int index) async {
@@ -136,107 +134,18 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
         FirebaseFirestore.instance.collection('users').doc(email);
     WriteBatch batch = FirebaseFirestore.instance.batch();
 
-    for (int i = 0; i < addresses.length; i++) {
-      batch.update(userDocRef, {
-        'address${i + 1}.isMainAddress': i == index ? 1 : 0,
-      });
+    try {
+      for (int i = 0; i < addresses.length; i++) {
+        batch.update(userDocRef, {
+          'address${i + 1}.isMainAddress': i == index ? 1 : 0,
+        });
+      }
+
+      await batch.commit();
+      _fetchAddresses(); // Refresh the addresses list
+    } catch (e) {
+      print('Error setting main address: $e');
     }
-
-    await batch.commit();
-    _fetchAddresses(); // Refresh the addresses list
-  }
-
-  void _showAddAddressDialog() {
-    String title = '';
-    String address = '';
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Add New Address'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: InputDecoration(labelText: 'Title'),
-                onChanged: (value) {
-                  title = value;
-                },
-              ),
-              TextField(
-                decoration: InputDecoration(labelText: 'Address'),
-                onChanged: (value) {
-                  address = value;
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                await _addNewAddress(title, address);
-                Navigator.of(context).pop();
-                setState(() {}); // Refresh the UI
-              },
-              child: Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showEditAddressDialog(int index) {
-    TextEditingController titleController =
-        TextEditingController(text: addresses[index]['Title']);
-    TextEditingController addressController =
-        TextEditingController(text: addresses[index]['Address']);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Edit Address'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: InputDecoration(labelText: 'Title'),
-              ),
-              TextField(
-                controller: addressController,
-                decoration: InputDecoration(labelText: 'Address'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                await _editAddress(
-                    index, titleController.text, addressController.text);
-                Navigator.of(context).pop();
-                setState(() {}); // Refresh the UI
-              },
-              child: Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -276,6 +185,40 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
         child: Icon(Icons.add, color: Colors.white),
         backgroundColor: Colors.black,
       ),
+    );
+  }
+
+  void _showAddAddressDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AddressDialog(
+          title: 'Add New Address',
+          onSave: (title, address) async {
+            await _addNewAddress(title, address);
+            Navigator.of(context).pop();
+            setState(() {}); // Refresh the UI
+          },
+        );
+      },
+    );
+  }
+
+  void _showEditAddressDialog(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AddressDialog(
+          title: 'Edit Address',
+          initialTitle: addresses[index]['Title'],
+          initialAddress: addresses[index]['Address'],
+          onSave: (title, address) async {
+            await _editAddress(index, title, address);
+            Navigator.of(context).pop();
+            setState(() {}); // Refresh the UI
+          },
+        );
+      },
     );
   }
 
