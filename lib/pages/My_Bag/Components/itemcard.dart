@@ -1,7 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dyota/pages/My_Bag/Components/delete_confirmation_dialog.dart';
+import 'package:dyota/pages/My_Bag/Components/fetch_data.dart';
+import 'package:dyota/pages/My_Bag/Components/image_loader.dart';
 import 'package:dyota/pages/Product_Card/product_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 class ItemCard extends StatefulWidget {
@@ -20,71 +21,6 @@ class _ItemCardState extends State<ItemCard> {
     return input.split('-')[0];
   }
 
-  Future<Map<String, dynamic>?> _fetchDocumentData(String docId) async {
-    DocumentSnapshot doc =
-        await FirebaseFirestore.instance.collection('items').doc(docId).get();
-    return doc.data() as Map<String, dynamic>?;
-  }
-
-  Future<String> _getImageUrl(String imageLocation) async {
-    return await FirebaseStorage.instance.ref(imageLocation).getDownloadURL();
-  }
-
-  Future<Map<String, dynamic>?> _fetchCartData(
-      String email, String unparsedDocumentId) async {
-    DocumentSnapshot doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(email)
-        .collection('cartItemsList')
-        .doc(unparsedDocumentId)
-        .get();
-    return doc.data() as Map<String, dynamic>?;
-  }
-
-  Future<void> _deleteItem(
-      BuildContext context, String email, String unparsedDocumentId) async {
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(email)
-        .collection('cartItemsList')
-        .doc(unparsedDocumentId)
-        .delete();
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Item removed from bag')));
-    setState(() {
-      _isDeleted = true;
-    });
-  }
-
-  void _showDeleteConfirmationDialog(
-      BuildContext context, String email, String unparsedDocumentId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Remove Item'),
-          content:
-              Text('Are you sure you want to remove this item from the bag?'),
-          actions: [
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Yes'),
-              onPressed: () {
-                _deleteItem(context, email, unparsedDocumentId);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isDeleted) {
@@ -101,7 +37,7 @@ class _ItemCardState extends State<ItemCard> {
     final email = user.email!;
 
     return FutureBuilder<Map<String, dynamic>?>(
-      future: _fetchCartData(email, unparsedDocumentId),
+      future: fetchCartData(email, unparsedDocumentId),
       builder: (context, cartSnapshot) {
         if (cartSnapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -121,7 +57,7 @@ class _ItemCardState extends State<ItemCard> {
             (a, b) => (a['priority'] as int).compareTo(b['priority'] as int));
 
         return FutureBuilder<Map<String, dynamic>?>(
-          future: _fetchDocumentData(parsedDocumentId),
+          future: fetchDocumentData(parsedDocumentId),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(child: CircularProgressIndicator());
@@ -144,34 +80,25 @@ class _ItemCardState extends State<ItemCard> {
 
             String imageLocation = data['imageLocation'] ?? '';
 
-            return FutureBuilder<String>(
-              future: _getImageUrl(imageLocation),
-              builder: (context, imageSnapshot) {
-                if (imageSnapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (imageSnapshot.hasError) {
-                  return Center(child: Text('Error: ${imageSnapshot.error}'));
-                } else if (!imageSnapshot.hasData) {
-                  return Center(child: Text(''));
-                }
-
-                String imageUrl = imageSnapshot.data!;
-
+            return ImageLoader(
+              imageLocation: imageLocation,
+              builder: (context, imageUrl) {
                 return InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ProductCard(documentId: parsedDocumentId),
-                        ),
-                      );
-                    },
-                    child: Card(
-                      margin: EdgeInsets.all(5),
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Row(children: [
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ProductCard(documentId: parsedDocumentId),
+                      ),
+                    );
+                  },
+                  child: Card(
+                    margin: EdgeInsets.all(5),
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        children: [
                           Image.network(
                             imageUrl,
                             width: 100,
@@ -219,13 +146,19 @@ class _ItemCardState extends State<ItemCard> {
                           IconButton(
                             icon: Icon(Icons.delete),
                             onPressed: () {
-                              _showDeleteConfirmationDialog(
-                                  context, email, unparsedDocumentId);
+                              showDeleteConfirmationDialog(
+                                  context, email, unparsedDocumentId, () {
+                                setState(() {
+                                  _isDeleted = true;
+                                });
+                              });
                             },
                           ),
-                        ]),
+                        ],
                       ),
-                    ));
+                    ),
+                  ),
+                );
               },
             );
           },

@@ -120,11 +120,13 @@ class _CategoryPageState extends State<CategoryPage> {
       }
 
       if (sortOption == 'Price: lowest to high') {
-        itemsWithPrice
-            .sort((a, b) => a['pricePerMetre'].compareTo(b['pricePerMetre']));
+        itemsWithPrice.sort((a, b) =>
+            double.parse(a['pricePerMetre'].toString())
+                .compareTo(double.parse(b['pricePerMetre'].toString())));
       } else if (sortOption == 'Price: high to low') {
-        itemsWithPrice
-            .sort((a, b) => b['pricePerMetre'].compareTo(a['pricePerMetre']));
+        itemsWithPrice.sort((a, b) =>
+            double.parse(b['pricePerMetre'].toString())
+                .compareTo(double.parse(a['pricePerMetre'].toString())));
       }
 
       setState(() {

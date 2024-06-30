@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class CategoryButton extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
+  final String label; // Text label for the button
+  final bool isSelected; // Indicates if the button is selected
+  final VoidCallback onTap; // Callback function for tap event
 
   const CategoryButton({
     Key? key,
@@ -15,32 +15,38 @@ class CategoryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: onTap, // Handle tap event
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(
+            horizontal: 12, vertical: 8), // Padding inside the container
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color.fromARGB(255, 0, 0, 0)
-              : const Color.fromARGB(255, 255, 255, 255),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.black),
+              ? const Color.fromARGB(
+                  255, 0, 0, 0) // Background color when selected
+              : const Color.fromARGB(
+                  255, 255, 255, 255), // Background color when not selected
+          borderRadius: BorderRadius.circular(20), // Rounded corners
+          border: Border.all(color: Colors.black), // Border color
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.min, // Row takes minimum space
           children: [
             Text(
-              label,
+              label, // Display the label text
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.black,
+                color: isSelected
+                    ? Colors.white
+                    : Colors.black, // Text color based on selection
               ),
             ),
             if (isSelected)
               Padding(
-                padding: const EdgeInsets.only(left: 4.0),
+                padding: const EdgeInsets.only(
+                    left: 4.0), // Padding between text and icon
                 child: Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 16,
+                  Icons.close, // Close icon
+                  color: Colors.white, // Icon color
+                  size: 16, // Icon size
                 ),
               ),
           ],

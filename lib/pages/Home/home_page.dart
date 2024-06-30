@@ -14,9 +14,6 @@ class HomePage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // OfferBanner(
-            //     text: 'Special Offer Banner',
-            //     color: const Color.fromARGB(255, 242, 101, 101)),
             Container(
               color: Colors.grey[300],
               child: Column(
@@ -27,13 +24,9 @@ class HomePage extends StatelessWidget {
               ),
             ),
             ProductGrid(),
-            // OfferBanner(
-            //     text: 'Offer #2 blah blah blah blah blah blah',
-            //     color: Colors.yellowAccent[700]),
           ],
         ),
       ),
-      // Removed bottomNavigationBar from here
     );
   }
 }
