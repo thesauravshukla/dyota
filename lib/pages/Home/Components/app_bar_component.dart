@@ -1,3 +1,4 @@
+import 'package:dyota/pages/Search/search_page.dart';
 import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -5,6 +6,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController searchController = TextEditingController();
+
     return AppBar(
       backgroundColor: Colors.black,
       elevation: 0,
@@ -29,6 +32,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: TextField(
+                controller: searchController,
                 decoration: InputDecoration(
                   hintText: 'Search...',
                   hintStyle: TextStyle(color: Colors.grey),
@@ -40,6 +44,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   contentPadding: EdgeInsets.symmetric(vertical: 0),
                 ),
                 style: const TextStyle(color: Colors.black),
+                onSubmitted: (query) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SearchPage(searchInput: query),
+                    ),
+                  );
+                },
               ),
             ),
             SizedBox(height: 8.0), // Add space at the bottom if needed

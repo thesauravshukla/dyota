@@ -6,8 +6,6 @@ class FirestoreService {
     String categoryName,
     List<String> selectedCategories,
   ) async {
-    // Implement the logic to fetch document IDs based on the category and selected categories
-    // This is a placeholder implementation
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection(collection)
         .where('category', isEqualTo: categoryName)
