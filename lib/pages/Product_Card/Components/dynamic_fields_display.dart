@@ -43,12 +43,19 @@ class DynamicFieldsDisplay extends StatelessWidget {
         fields.sort(
             (a, b) => (a['priority'] as int).compareTo(b['priority'] as int));
 
-        List<Widget> fieldsToDisplay = fields
-            .map((field) => DetailItem(
-                  title: field['displayName'],
-                  value: field['value'].toString(),
-                ))
-            .toList();
+        List<Widget> fieldsToDisplay = fields.map((field) {
+          String getFieldValue(Map<String, dynamic> field) {
+            String value = field['value'].toString() ?? '';
+            String prefix = field['prefix'] ?? '';
+            String suffix = field['suffix'] ?? '';
+            return '$prefix$value$suffix';
+          }
+
+          return DetailItem(
+            title: field['displayName'],
+            value: getFieldValue(field),
+          );
+        }).toList();
 
         return Container(
           padding: const EdgeInsets.all(16.0),
