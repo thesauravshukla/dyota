@@ -35,8 +35,11 @@ class AuthPage extends StatelessWidget {
       DocumentSnapshot docSnapshot = await docRef.get();
       if (!docSnapshot.exists) {
         // Create a new document for the user if it doesn't exist
-        await docRef.set(
-            {'addressList': [], 'pastOrderList': [], 'currentOrderList': []});
+        await docRef.set({
+          'addressList': [],
+          'deliveredOrderList': [],
+          'processingOrderList': [],
+        });
       }
     }
   }

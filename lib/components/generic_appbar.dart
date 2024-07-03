@@ -18,10 +18,7 @@ class genericAppbar extends StatelessWidget implements PreferredSizeWidget {
         onPressed: () =>
             Navigator.of(context).pop(), // Action to pop the current screen
       ),
-      actions: [
-        IconButton(icon: const Icon(Icons.search), onPressed: () {}),
-        IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
-      ],
+      actions: [],
     );
   }
 
