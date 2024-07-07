@@ -114,12 +114,14 @@ class _AddToCartButtonState extends State<AddToCartButton> {
           },
           'orderLength': {
             'displayName': 'Order Length',
-            'value': selectedLengths[i].toString() + " m",
+            'value': selectedLengths[i].toString(),
+            'suffix': "m",
             'toDisplay': 1,
             'priority': 2,
           },
           'price': {
-            'displayName': 'Price (Rs.)',
+            'displayName': 'Price',
+            'prefix': "Rs. ",
             'value': price.toString(),
             'toDisplay': 1,
             'priority': 3,

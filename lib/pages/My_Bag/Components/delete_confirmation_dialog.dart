@@ -20,6 +20,7 @@ void showDeleteConfirmationDialog(BuildContext context, String email,
           TextButton(
             child: Text('Yes'),
             onPressed: () async {
+              Navigator.of(context).pop(); // Close the dialog first
               await FirebaseFirestore.instance
                   .collection('users')
                   .doc(email)
@@ -29,7 +30,6 @@ void showDeleteConfirmationDialog(BuildContext context, String email,
               ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Item removed from bag')));
               onDelete();
-              Navigator.of(context).pop();
             },
           ),
         ],

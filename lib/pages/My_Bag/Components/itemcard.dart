@@ -7,8 +7,9 @@ import 'package:flutter/material.dart';
 
 class ItemCard extends StatefulWidget {
   final String documentId;
+  final VoidCallback onDelete;
 
-  ItemCard({required this.documentId});
+  ItemCard({required this.documentId, required this.onDelete});
 
   @override
   _ItemCardState createState() => _ItemCardState();
@@ -19,6 +20,13 @@ class _ItemCardState extends State<ItemCard> {
 
   String _parseDocumentId(String input) {
     return input.split('-')[0];
+  }
+
+  String _getFieldValue(Map<String, dynamic> field) {
+    String value = field['value']?.toString() ?? '';
+    String prefix = field['prefix']?.toString() ?? '';
+    String suffix = field['suffix']?.toString() ?? '';
+    return '$prefix$value$suffix';
   }
 
   @override
@@ -130,7 +138,7 @@ class _ItemCardState extends State<ItemCard> {
                                           SizedBox(width: 8),
                                           Flexible(
                                             child: Text(
-                                              field['value'].toString() ?? '',
+                                              _getFieldValue(field),
                                               style: TextStyle(fontSize: 12),
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -151,6 +159,7 @@ class _ItemCardState extends State<ItemCard> {
                                 setState(() {
                                   _isDeleted = true;
                                 });
+                                widget.onDelete();
                               });
                             },
                           ),

@@ -6,7 +6,12 @@ import 'package:dyota/pages/My_Bag/Components/total_amount_selection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class MyBag extends StatelessWidget {
+class MyBag extends StatefulWidget {
+  @override
+  _MyBagState createState() => _MyBagState();
+}
+
+class _MyBagState extends State<MyBag> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -38,7 +43,12 @@ class MyBag extends StatelessWidget {
           }
 
           List<Widget> itemCards = snapshot.data!.docs.map<Widget>((document) {
-            return ItemCard(documentId: document.id);
+            return ItemCard(
+              documentId: document.id,
+              onDelete: () {
+                setState(() {});
+              },
+            );
           }).toList();
 
           return ListView(
