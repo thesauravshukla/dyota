@@ -99,6 +99,21 @@ class _AddToCartButtonState extends State<AddToCartButton> {
         // Calculate the price based on the selected length
         Decimal price = (pricePerMetreDouble * selectedLengthsDouble);
 
+        // Get the top 3 priority fields and concatenate their values
+        List<MapEntry<String, dynamic>> sortedFields = data.entries
+            .where((entry) =>
+                entry.value is Map<String, dynamic> &&
+                entry.value.containsKey('priority'))
+            .map((entry) =>
+                MapEntry(entry.key, entry.value as Map<String, dynamic>))
+            .toList();
+        sortedFields.sort((a, b) =>
+            (a.value['priority'] as int).compareTo(b.value['priority'] as int));
+        String itemName = sortedFields
+            .take(2)
+            .map((entry) => entry.value['value'].toString())
+            .join(', ');
+
         await FirebaseFirestore.instance
             .collection('users')
             .doc(email)
@@ -110,21 +125,27 @@ class _AddToCartButtonState extends State<AddToCartButton> {
             'displayName': 'Order Type',
             'value': 'Textile Order',
             'toDisplay': 1,
-            'priority': 1,
+            'priority': 2,
           },
           'orderLength': {
             'displayName': 'Order Length',
             'value': selectedLengths[i].toString(),
             'suffix': "m",
             'toDisplay': 1,
-            'priority': 2,
+            'priority': 3,
           },
           'price': {
             'displayName': 'Price',
             'prefix': "Rs. ",
             'value': price.toString(),
             'toDisplay': 1,
-            'priority': 3,
+            'priority': 4,
+          },
+          'itemName': {
+            'displayName': 'Item Name',
+            'value': itemName,
+            'toDisplay': 0,
+            'priority': 1,
           },
         }, SetOptions(merge: true));
       }

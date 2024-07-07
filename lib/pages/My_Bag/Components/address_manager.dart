@@ -1,37 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dyota/components/generic_appbar.dart';
-import 'package:dyota/pages/Select_Shipping_Address/Components/address_card.dart';
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_dialogs.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class ShippingAddressesScreen extends StatefulWidget {
-  @override
-  _ShippingAddressesScreenState createState() =>
-      _ShippingAddressesScreenState();
-}
-
-class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
-  int? _selectedAddress; // It can be null when no address is selected
+class AddressManager {
+  int? selectedAddress; // It can be null when no address is selected
   List<Map<String, dynamic>> addresses = [];
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchAddresses();
-  }
-
-  void _toggleSelection(int? index) {
-    setState(() {
-      if (_selectedAddress == index) {
-        _selectedAddress = null;
-      } else {
-        _selectedAddress = index;
-      }
-    });
-  }
-
-  Future<void> _fetchAddresses() async {
+  Future<void> fetchAddresses(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,15 +29,17 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
         fetchedAddresses.add(addressData);
       }
 
-      setState(() {
-        addresses = fetchedAddresses;
-      });
+      addresses = fetchedAddresses;
+      if (addresses.isNotEmpty) {
+        selectedAddress = 0; // Automatically select the first address
+      }
     } catch (e) {
       print('Error fetching addresses: $e');
     }
   }
 
-  Future<void> _addNewAddress(String title, String address) async {
+  Future<void> addNewAddress(
+      BuildContext context, String title, String address) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -79,8 +57,6 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
       int addressCount =
           userData.containsKey('addressCount') ? userData['addressCount'] : 0;
 
-      print('Adding new address: $title, $address'); // Debug print
-
       await userDocRef.update({
         'addressCount': addressCount + 1,
         'address${addressCount + 1}': {
@@ -90,15 +66,15 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
         },
       });
 
-      print('Address added successfully'); // Debug print
-
-      _fetchAddresses(); // Refresh the addresses list
+      fetchAddresses(context); // Refresh the addresses list
+      selectedAddress = addressCount; // Automatically select the new address
     } catch (e) {
       print('Error adding new address: $e');
     }
   }
 
-  Future<void> _editAddress(int index, String title, String address) async {
+  Future<void> editAddress(
+      BuildContext context, int index, String title, String address) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -119,13 +95,13 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
         },
       });
 
-      _fetchAddresses(); // Refresh the addresses list
+      fetchAddresses(context); // Refresh the addresses list
     } catch (e) {
       print('Error editing address: $e');
     }
   }
 
-  Future<void> _setMainAddress(int index) async {
+  Future<void> setMainAddress(BuildContext context, int index) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -148,114 +124,13 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
       }
 
       await batch.commit();
-      _fetchAddresses(); // Refresh the addresses list
+      fetchAddresses(context); // Refresh the addresses list
     } catch (e) {
       print('Error setting main address: $e');
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: genericAppbar(title: 'Shipping Address'),
-      body: ListView.builder(
-        padding: EdgeInsets.all(8),
-        itemCount: addresses.length,
-        itemBuilder: (context, index) {
-          final address = addresses[index];
-          bool isMain = address['isMainAddress'] ==
-              1; // Check if the address is marked as main
-          return AddressCard(
-            index: index,
-            name: address['Title'],
-            address: address['Address'],
-            isSelected:
-                isMain, // Use isMain to determine if the address is selected
-            onSelected: (idx) {
-              if (idx != null) {
-                _setMainAddress(idx); // Ensure idx is not null before passing
-              }
-            },
-            onEdit: () => _showEditAddressDialog(index),
-            onDelete: () => _showDeleteConfirmationDialog(index),
-            onMainAddressChanged: (bool isMain) {
-              if (isMain) {
-                _setMainAddress(index);
-              }
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddAddressDialog,
-        child: Icon(Icons.add, color: Colors.white),
-        backgroundColor: Colors.black,
-      ),
-    );
-  }
-
-  void _showAddAddressDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AddressDialog(
-          title: 'Add New Address',
-          onSave: (title, address) async {
-            await _addNewAddress(title, address);
-            Navigator.of(context).pop();
-            setState(() {}); // Refresh the UI
-          },
-        );
-      },
-    );
-  }
-
-  void _showEditAddressDialog(int index) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AddressDialog(
-          title: 'Edit Address',
-          initialTitle: addresses[index]['Title'],
-          initialAddress: addresses[index]['Address'],
-          onSave: (title, address) async {
-            await _editAddress(index, title, address);
-            Navigator.of(context).pop();
-            setState(() {}); // Refresh the UI
-          },
-        );
-      },
-    );
-  }
-
-  void _showDeleteConfirmationDialog(int index) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text("Do you really want to delete this address?"),
-          actions: <Widget>[
-            TextButton(
-              child: Text("No"),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-            ),
-            TextButton(
-              child: Text("Yes"),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                _deleteAddress(index); // Proceed with deleting the address
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _deleteAddress(int indexToDelete) async {
+  Future<void> deleteAddress(BuildContext context, int indexToDelete) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -296,6 +171,88 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
     }
 
     await batch.commit();
-    _fetchAddresses(); // Refresh the addresses list
+    fetchAddresses(context); // Refresh the addresses list
+  }
+
+  void showAddAddressDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AddressDialog(
+          title: 'Add New Address',
+          onSave: (title, address) async {
+            if (title.isEmpty || address.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('All fields are required')),
+              );
+              return;
+            }
+            await addNewAddress(context, title, address);
+            Navigator.of(context).pop();
+          },
+        );
+      },
+    );
+  }
+
+  void showEditAddressDialog(BuildContext context, int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AddressDialog(
+          title: 'Edit Address',
+          initialTitle: addresses[index]['Title'],
+          initialAddress: addresses[index]['Address'],
+          onSave: (title, address) async {
+            if (title.isEmpty || address.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('All fields are required')),
+              );
+              return;
+            }
+            await editAddress(context, index, title, address);
+            Navigator.of(context).pop();
+          },
+        );
+      },
+    );
+  }
+
+  void showDeleteConfirmationDialog(BuildContext context, int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text("Do you really want to delete this address?"),
+          actions: <Widget>[
+            TextButton(
+              child: Text("No"),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+            TextButton(
+              child: Text("Yes"),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                deleteAddress(
+                    context, index); // Proceed with deleting the address
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void handlePay(BuildContext context) {
+    if (addresses.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Select at least one address')),
+      );
+      return;
+    }
+    // Implement your payment logic here
   }
 }

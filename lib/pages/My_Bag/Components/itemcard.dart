@@ -120,7 +120,9 @@ class _ItemCardState extends State<ItemCard> {
                               children: [
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: cartFields.map((field) {
+                                  children: cartFields
+                                      .where((field) => field['toDisplay'] == 1)
+                                      .map((field) {
                                     return Padding(
                                       padding:
                                           const EdgeInsets.only(bottom: 4.0),
