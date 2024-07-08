@@ -4,6 +4,7 @@ import 'package:dyota/pages/Select_Shipping_Address/Components/address_card.dart
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_dialogs.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart'; // Add this import for generating unique IDs
 
 class PaymentPage extends StatefulWidget {
   @override
@@ -14,14 +15,99 @@ class _PaymentPageState extends State<PaymentPage> {
   int? _selectedAddress; // It can be null when no address is selected
   List<Map<String, dynamic>> addresses = [];
 
-  void _handlePay() {
+  void _handlePay() async {
     if (addresses.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Select at least one address')),
       );
       return;
     }
-    // Implement your payment logic here
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.email == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('You need to be logged in to make a payment')),
+      );
+      return;
+    }
+
+    final email = user.email!;
+    final cartItemsSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(email)
+        .collection('cartItemsList')
+        .get();
+
+    final cartItemIds = cartItemsSnapshot.docs.map((doc) => doc.id).toList();
+    final orderId = Uuid().v4(); // Generate a unique order ID
+    final timestamp = FieldValue.serverTimestamp();
+
+    // Calculate total amount
+    double subtotal = cartItemsSnapshot.docs.fold(0.0, (sum, doc) {
+      final data = doc.data();
+      final priceMap = data['price'] as Map<String, dynamic>? ?? {'value': 0.0};
+      final priceValue = double.tryParse(priceMap['value'].toString()) ?? 0.0;
+      return sum + priceValue;
+    });
+
+    double tax = 0.0;
+    for (var doc in cartItemsSnapshot.docs) {
+      final data = doc.data();
+      if (data.containsKey('tax') && data['tax'] is Map<String, dynamic>) {
+        final taxMap = data['tax'] as Map<String, dynamic>;
+        if (taxMap.containsKey('value')) {
+          final taxValue = double.tryParse(taxMap['value'].toString()) ?? 0.0;
+          tax += taxValue;
+        }
+      }
+    }
+
+    final totalAmount = subtotal + tax;
+
+    final selectedAddressData = addresses[_selectedAddress!];
+
+    final orderData = {
+      'cartItems': cartItemIds,
+      'deliveryAddress': {
+        'displayName': 'Delivery Address',
+        'toDisplay': 1,
+        'title': selectedAddressData['Title'],
+        'address': selectedAddressData['Address'],
+      },
+      'orderId': {
+        'displayName': 'Order ID',
+        'toDisplay': 1,
+        'value': orderId,
+      },
+      'orderTimestamp': timestamp,
+      'totalAmount': {
+        'displayName': 'Total Amount',
+        'toDisplay': 1,
+        'value': totalAmount,
+      },
+    };
+
+    final orderDocRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(email)
+        .collection('processingOrderList')
+        .doc(orderId);
+
+    WriteBatch batch = FirebaseFirestore.instance.batch();
+
+    // Add the order data
+    batch.set(orderDocRef, orderData);
+
+    // Delete all cart items
+    for (var doc in cartItemsSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    await batch.commit();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Order placed successfully')),
+    );
   }
 
   @override

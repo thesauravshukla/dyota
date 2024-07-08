@@ -64,6 +64,9 @@ class _ItemCardState extends State<ItemCard> {
         cartFields.sort(
             (a, b) => (a['priority'] as int).compareTo(b['priority'] as int));
 
+        // Debug print to check cartFields
+        print('Cart Fields: $cartFields');
+
         return FutureBuilder<Map<String, dynamic>?>(
           future: fetchDocumentData(parsedDocumentId),
           builder: (context, snapshot) {

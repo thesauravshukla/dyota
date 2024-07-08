@@ -67,7 +67,7 @@ class _OrderSwatchesButtonState extends State<OrderSwatchesButton> {
           'itemType': {
             'displayName': 'Order Type',
             'value': 'Swatches',
-            'todisplay': '1',
+            'toDisplay': 1,
             'priority': 1,
           },
         });
