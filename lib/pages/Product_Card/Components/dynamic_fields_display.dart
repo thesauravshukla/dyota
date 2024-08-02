@@ -76,6 +76,7 @@ class DynamicFieldsDisplay extends StatelessWidget {
               const Text(
                 'Product Details',
                 style: TextStyle(
+                  fontFamily: 'Lato',
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),

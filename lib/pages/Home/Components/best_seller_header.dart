@@ -10,7 +10,10 @@ class BestSellerHeader extends StatelessWidget {
       child: Text(
         'Best Sellers',
         style: TextStyle(
-            fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+            fontFamily: 'Lato',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black),
       ),
     );
   }

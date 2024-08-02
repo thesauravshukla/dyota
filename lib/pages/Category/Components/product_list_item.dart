@@ -142,6 +142,7 @@ class ProductListItem extends StatelessWidget {
                   Text(
                     price,
                     style: TextStyle(
+                      fontFamily: 'Lato',
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),

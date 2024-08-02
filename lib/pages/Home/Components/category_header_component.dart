@@ -10,7 +10,10 @@ class CategoryHeader extends StatelessWidget {
       child: Text(
         'Categories',
         style: TextStyle(
-            fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+            fontFamily: 'Lato',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black),
       ),
     );
   }

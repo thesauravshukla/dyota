@@ -5,6 +5,7 @@ import 'package:dyota/pages/Product_Card/Components/length_slider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 
 class AddToCartButton extends StatefulWidget {
   final List<String> documentIds;
@@ -19,6 +20,7 @@ class AddToCartButton extends StatefulWidget {
 }
 
 class _AddToCartButtonState extends State<AddToCartButton> {
+  final Logger logger = Logger();
   bool showDetails = false;
   late List<bool> selectedImages;
   late List<double> selectedLengths;
@@ -29,6 +31,8 @@ class _AddToCartButtonState extends State<AddToCartButton> {
   @override
   void initState() {
     super.initState();
+    logger.i(
+        'AddToCartButton initialized with documentIds: ${widget.documentIds}');
     fetchImageUrls();
     selectedImages = List<bool>.filled(widget.documentIds.length, false);
     selectedLengths = List<double>.filled(widget.documentIds.length, 0);
@@ -36,24 +40,32 @@ class _AddToCartButtonState extends State<AddToCartButton> {
 
   Future<void> fetchImageUrls() async {
     List<String> urls = [];
-    for (String docId in widget.documentIds) {
-      DocumentSnapshot doc =
-          await FirebaseFirestore.instance.collection('items').doc(docId).get();
-      if (doc.exists) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        String imageLocation = data['imageLocation'];
-        String imageUrl =
-            await FirebaseStorage.instance.ref(imageLocation).getDownloadURL();
-        urls.add(imageUrl);
-        int minimumOrderLength = data['minimumOrderLength']['value'] ?? 0;
-        minimumOrderLengths[docId] = minimumOrderLength;
-        selectedLengths[widget.documentIds.indexOf(docId)] =
-            minimumOrderLength.toDouble();
+    try {
+      for (String docId in widget.documentIds) {
+        DocumentSnapshot doc = await FirebaseFirestore.instance
+            .collection('items')
+            .doc(docId)
+            .get();
+        if (doc.exists) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          String imageLocation = data['imageLocation'];
+          String imageUrl = await FirebaseStorage.instance
+              .ref(imageLocation)
+              .getDownloadURL();
+          urls.add(imageUrl);
+          int minimumOrderLength = data['minimumOrderLength']['value'] ?? 0;
+          minimumOrderLengths[docId] = minimumOrderLength;
+          selectedLengths[widget.documentIds.indexOf(docId)] =
+              minimumOrderLength.toDouble();
+        }
       }
+      setState(() {
+        imageUrls = urls;
+      });
+      logger.i('Image URLs fetched successfully');
+    } catch (e) {
+      logger.e('Error fetching image URLs', e);
     }
-    setState(() {
-      imageUrls = urls;
-    });
   }
 
   void validateInputs() {
@@ -68,6 +80,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
     setState(() {
       validationErrors = errors;
     });
+    logger.i('Inputs validated with errors: $validationErrors');
   }
 
   Future<void> _addToCart() async {
@@ -78,82 +91,91 @@ class _AddToCartButtonState extends State<AddToCartButton> {
         SnackBar(
             content: Text('You need to be logged in to add items to the cart')),
       );
+      logger.w('User not logged in');
       return;
     }
 
     final email = user.email;
 
-    for (int i = 0; i < selectedImages.length; i++) {
-      if (selectedImages[i]) {
-        // Fetch the price per metre from the document
-        DocumentSnapshot doc = await FirebaseFirestore.instance
-            .collection('items')
-            .doc(widget.documentIds[i])
-            .get();
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        String pricePerMetre = data['pricePerMetre']['value'];
-        var pricePerMetreDouble = Decimal.parse(pricePerMetre);
-        var selectedLengthsDouble =
-            Decimal.parse(selectedLengths[i].toString());
+    try {
+      for (int i = 0; i < selectedImages.length; i++) {
+        if (selectedImages[i]) {
+          // Fetch the price per metre from the document
+          DocumentSnapshot doc = await FirebaseFirestore.instance
+              .collection('items')
+              .doc(widget.documentIds[i])
+              .get();
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          String pricePerMetre = data['pricePerMetre']['value'];
+          var pricePerMetreDouble = Decimal.parse(pricePerMetre);
+          var selectedLengthsDouble =
+              Decimal.parse(selectedLengths[i].toString());
 
-        // Calculate the price based on the selected length
-        Decimal price = (pricePerMetreDouble * selectedLengthsDouble);
+          // Calculate the price based on the selected length
+          Decimal price = (pricePerMetreDouble * selectedLengthsDouble);
 
-        // Get the top 3 priority fields and concatenate their values
-        List<MapEntry<String, dynamic>> sortedFields = data.entries
-            .where((entry) =>
-                entry.value is Map<String, dynamic> &&
-                entry.value.containsKey('priority'))
-            .map((entry) =>
-                MapEntry(entry.key, entry.value as Map<String, dynamic>))
-            .toList();
-        sortedFields.sort((a, b) =>
-            (a.value['priority'] as int).compareTo(b.value['priority'] as int));
-        String itemName = sortedFields
-            .take(2)
-            .map((entry) => entry.value['value'].toString())
-            .join(', ');
+          // Get the top 3 priority fields and concatenate their values
+          List<MapEntry<String, dynamic>> sortedFields = data.entries
+              .where((entry) =>
+                  entry.value is Map<String, dynamic> &&
+                  entry.value.containsKey('priority'))
+              .map((entry) =>
+                  MapEntry(entry.key, entry.value as Map<String, dynamic>))
+              .toList();
+          sortedFields.sort((a, b) => (a.value['priority'] as int)
+              .compareTo(b.value['priority'] as int));
+          String itemName = sortedFields
+              .take(2)
+              .map((entry) => entry.value['value'].toString())
+              .join(', ');
 
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(email)
-            .collection('cartItemsList')
-            .doc(widget.documentIds[i] +
-                '-textile') // Set the document ID to itemDocumentId
-            .set({
-          'itemType': {
-            'displayName': 'Order Type',
-            'value': 'Textile Order',
-            'toDisplay': 1,
-            'priority': 2,
-          },
-          'orderLength': {
-            'displayName': 'Order Length',
-            'value': selectedLengths[i].toString(),
-            'suffix': "m",
-            'toDisplay': 1,
-            'priority': 3,
-          },
-          'price': {
-            'displayName': 'Price',
-            'prefix': "Rs. ",
-            'value': price.toString(),
-            'toDisplay': 1,
-            'priority': 4,
-          },
-          'itemName': {
-            'displayName': 'Item Name',
-            'value': itemName,
-            'toDisplay': 0,
-            'priority': 1,
-          },
-        }, SetOptions(merge: true));
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(email)
+              .collection('cartItemsList')
+              .doc(widget.documentIds[i] +
+                  '-textile') // Set the document ID to itemDocumentId
+              .set({
+            'itemType': {
+              'displayName': 'Order Type',
+              'value': 'Textile Order',
+              'toDisplay': 1,
+              'priority': 2,
+            },
+            'orderLength': {
+              'displayName': 'Order Length',
+              'value': selectedLengths[i].toString(),
+              'suffix': "m",
+              'toDisplay': 1,
+              'priority': 3,
+            },
+            'price': {
+              'displayName': 'Price',
+              'prefix': "Rs. ",
+              'value': price.toString(),
+              'toDisplay': 1,
+              'priority': 4,
+            },
+            'itemName': {
+              'displayName': 'Item Name',
+              'value': itemName,
+              'toDisplay': 0,
+              'priority': 1,
+            },
+          }, SetOptions(merge: true));
+          logger.i('Item added to cart: ${widget.documentIds[i]}');
+        }
       }
-    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Items added to cart')),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Items added to cart')),
+      );
+    } catch (e) {
+      logger.e('Error adding items to cart', e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding items to cart')),
+      );
+    }
   }
 
   @override
@@ -177,6 +199,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
           setState(() {
             showDetails = expanded;
           });
+          logger.i('ExpansionTile expanded: $expanded');
         },
         children: [
           Padding(
@@ -207,6 +230,8 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                     setState(() {
                       selectedImages[index] = !selectedImages[index];
                     });
+                    logger.i(
+                        'Image selected: $index, documentId: ${widget.documentIds[index]}, isSelected: ${selectedImages[index]}');
                   },
                 ),
                 Divider(color: Colors.grey),
@@ -220,6 +245,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                       setState(() {
                         selectedLengths[index] = value;
                       });
+                      logger.i('LengthSlider changed: $value');
                     },
                     validationError: validationErrors[index],
                   ),
@@ -240,6 +266,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                           content: Text(
                               'Please correct the errors before adding to cart')),
                     );
+                    logger.w('Validation errors: $validationErrors');
                   }
                 },
                 child: const Text('Add Selected Designs to Cart'),
