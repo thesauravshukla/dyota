@@ -5,6 +5,7 @@ import 'package:dyota/pages/Category/Components/product_list_item.dart';
 import 'package:dyota/pages/Category/Components/sort_button.dart';
 import 'package:dyota/pages/Category/Components/sub_category_list.dart';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 
 class CategoryPage extends StatefulWidget {
   final String categoryDocumentId;
@@ -17,6 +18,7 @@ class CategoryPage extends StatefulWidget {
 }
 
 class _CategoryPageState extends State<CategoryPage> {
+  final Logger _logger = Logger('CategoryPage');
   bool isGridView = false;
   List<String> selectedCategories = [];
   String selectedSortOption = 'Sort'; // Default sort option
@@ -28,7 +30,16 @@ class _CategoryPageState extends State<CategoryPage> {
   @override
   void initState() {
     super.initState();
-    _fetchCategoryData();
+    try {
+      _fetchCategoryData();
+      _logger.info(
+          'CategoryPage initialized with categoryDocumentId: ${widget.categoryDocumentId}');
+    } catch (e) {
+      _logger.severe('Error fetching category data', e);
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   void _selectCategory(String category) {
@@ -38,6 +49,7 @@ class _CategoryPageState extends State<CategoryPage> {
       } else {
         selectedCategories.add(category);
       }
+      _logger.info('Selected categories updated: $selectedCategories');
       _fetchItems(); // Fetch items after updating selected categories
     });
   }
@@ -68,6 +80,7 @@ class _CategoryPageState extends State<CategoryPage> {
       title: Text(option),
       onTap: () {
         Navigator.pop(context);
+        _logger.info('Sort option selected: $option');
         _fetchItems(sortOption: option);
       },
     );
@@ -85,9 +98,10 @@ class _CategoryPageState extends State<CategoryPage> {
         selectedCategories = List<String>.from(subCategories);
         isLoading = false;
       });
+      _logger.info('Category data fetched successfully: $categoryName');
       _fetchItems();
     } catch (e) {
-      // Handle error
+      _logger.severe('Error fetching category data', e);
       setState(() {
         isLoading = false;
       });
@@ -98,78 +112,78 @@ class _CategoryPageState extends State<CategoryPage> {
     setState(() {
       isLoading = true;
     });
+    FirestoreService firestoreService = FirestoreService();
+    List<String> documentIds = await firestoreService.getDocumentIds(
+      'items',
+      categoryName,
+      selectedCategories,
+    );
 
-    try {
-      FirestoreService firestoreService = FirestoreService();
-      List<String> documentIds = await firestoreService.getDocumentIds(
-        'items',
-        categoryName,
-        selectedCategories,
-      );
-
-      List<Map<String, dynamic>> itemsWithPrice = [];
-      for (String id in documentIds) {
-        DocumentSnapshot doc =
-            await FirebaseFirestore.instance.collection('items').doc(id).get();
-        if (doc.exists && doc.data() != null) {
-          itemsWithPrice.add({
-            'id': id,
-            'pricePerMetre': doc['pricePerMetre']['value'],
-          });
-        }
+    List<Map<String, dynamic>> itemsWithPrice = [];
+    for (String id in documentIds) {
+      DocumentSnapshot doc =
+          await FirebaseFirestore.instance.collection('items').doc(id).get();
+      if (doc.exists && doc.data() != null) {
+        itemsWithPrice.add({
+          'id': id,
+          'pricePerMetre': doc['pricePerMetre']['value'],
+        });
       }
-
-      if (sortOption == 'Price: lowest to high') {
-        itemsWithPrice.sort((a, b) =>
-            double.parse(a['pricePerMetre'].toString())
-                .compareTo(double.parse(b['pricePerMetre'].toString())));
-      } else if (sortOption == 'Price: high to low') {
-        itemsWithPrice.sort((a, b) =>
-            double.parse(b['pricePerMetre'].toString())
-                .compareTo(double.parse(a['pricePerMetre'].toString())));
-      }
-
-      setState(() {
-        selectedSortOption = sortOption;
-        itemDocumentIds =
-            itemsWithPrice.map((item) => item['id'] as String).toList();
-        isLoading = false;
-      });
-    } catch (e) {
-      // Handle error
-      setState(() {
-        isLoading = false;
-      });
     }
+
+    if (sortOption == 'Price: lowest to high') {
+      itemsWithPrice.sort((a, b) => double.parse(a['pricePerMetre'].toString())
+          .compareTo(double.parse(b['pricePerMetre'].toString())));
+    } else if (sortOption == 'Price: high to low') {
+      itemsWithPrice.sort((a, b) => double.parse(b['pricePerMetre'].toString())
+          .compareTo(double.parse(a['pricePerMetre'].toString())));
+    }
+
+    setState(() {
+      selectedSortOption = sortOption;
+      itemDocumentIds =
+          itemsWithPrice.map((item) => item['id'] as String).toList();
+      isLoading = false;
+    });
+    _logger.info('Items fetched and sorted by $sortOption');
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: genericAppbar(
-          title: categoryName.isEmpty ? 'Loading...' : categoryName),
-      body: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            SubCategoryList(
-              subCategories: subCategories,
-              selectedCategories: selectedCategories,
-              onSelectCategory: _selectCategory,
-            ),
-            SortButton(
-              selectedSortOption: selectedSortOption,
-              onShowSortOptions: () => _showSortOptions(context),
-            ),
-            isLoading ? CircularProgressIndicator() : buildGridView(),
-          ],
+    try {
+      return Scaffold(
+        appBar: genericAppbar(
+            title: categoryName.isEmpty ? 'Loading...' : categoryName),
+        body: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              SubCategoryList(
+                subCategories: subCategories,
+                selectedCategories: selectedCategories,
+                onSelectCategory: _selectCategory,
+              ),
+              SortButton(
+                selectedSortOption: selectedSortOption,
+                onShowSortOptions: () => _showSortOptions(context),
+              ),
+              isLoading ? const Center(child: Text('')) : buildGridView(),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      _logger.severe('Error building CategoryPage widget', e);
+      setState(() {
+        isLoading = false;
+      });
+      return const Center(child: Text(''));
+    }
   }
 
   Widget buildGridView() {
     if (itemDocumentIds.isEmpty) {
-      return Text("No items to display");
+      _logger.info('No items to display');
+      return Text("");
     }
     return GridView.builder(
       physics: NeverScrollableScrollPhysics(),

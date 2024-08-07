@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 
 class CategoryButton extends StatelessWidget {
   final String label; // Text label for the button
   final bool isSelected; // Indicates if the button is selected
   final VoidCallback onTap; // Callback function for tap event
+  final Logger _logger = Logger('CategoryButton');
 
-  const CategoryButton({
+  CategoryButton({
     Key? key,
     required this.label,
     required this.isSelected,
@@ -14,8 +16,13 @@ class CategoryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    _logger.info(
+        'Building CategoryButton with label: $label, isSelected: $isSelected');
     return GestureDetector(
-      onTap: onTap, // Handle tap event
+      onTap: () {
+        _logger.info('CategoryButton tapped with label: $label');
+        onTap();
+      }, // Handle tap event
       child: Container(
         padding: EdgeInsets.symmetric(
             horizontal: 12, vertical: 8), // Padding inside the container
