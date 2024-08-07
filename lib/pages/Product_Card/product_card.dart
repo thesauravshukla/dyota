@@ -10,7 +10,7 @@ import 'package:dyota/pages/Product_Card/Components/shipping_info.dart';
 import 'package:dyota/pages/Product_Card/Components/support_section.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
+import 'package:logging/logging.dart';
 
 class ProductCard extends StatefulWidget {
   final String documentId;
@@ -22,7 +22,7 @@ class ProductCard extends StatefulWidget {
 }
 
 class _ProductCardState extends State<ProductCard> {
-  final Logger logger = Logger();
+  final Logger _logger = Logger('ProductCard');
   int selectedImageIndex = 0;
   List<Map<String, String>> imageDetails = [];
   bool isLoading = true;
@@ -30,19 +30,20 @@ class _ProductCardState extends State<ProductCard> {
   @override
   void initState() {
     super.initState();
-    logger.i('ProductCard initialized with documentId: ${widget.documentId}');
+    _logger
+        .info('ProductCard initialized with documentId: ${widget.documentId}');
     fetchImages();
   }
 
   Future<void> fetchImages() async {
     try {
-      logger.i('Fetching images for documentId: ${widget.documentId}');
+      _logger.info('Fetching images for documentId: ${widget.documentId}');
       DocumentSnapshot doc = await FirebaseFirestore.instance
           .collection('items')
           .doc(widget.documentId)
           .get();
       if (doc.exists) {
-        logger.i('Document exists for documentId: ${widget.documentId}');
+        _logger.info('Document exists for documentId: ${widget.documentId}');
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         String parentId = data['parentId'];
         String initialImageLocation = data['imageLocation'];
@@ -74,14 +75,15 @@ class _ProductCardState extends State<ProductCard> {
           imageDetails = details;
           isLoading = false;
         });
-        logger.i(
+        _logger.info(
             'Images fetched successfully for documentId: ${widget.documentId}');
       } else {
-        logger
-            .w('Document does not exist for documentId: ${widget.documentId}');
+        _logger.warning(
+            'Document does not exist for documentId: ${widget.documentId}');
       }
     } catch (e) {
-      logger.e('Error fetching images for documentId: ${widget.documentId}', e);
+      _logger.severe(
+          'Error fetching images for documentId: ${widget.documentId}', e);
       setState(() {
         isLoading = false;
       });
@@ -115,7 +117,7 @@ class _ProductCardState extends State<ProductCard> {
                           setState(() {
                             selectedImageIndex = index;
                           });
-                          logger.i(
+                          _logger.info(
                               'Thumbnail tapped, selectedImageIndex: $selectedImageIndex');
                         },
                       ),

@@ -5,7 +5,7 @@ import 'package:dyota/pages/Product_Card/Components/length_slider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
+import 'package:logging/logging.dart';
 
 class AddToCartButton extends StatefulWidget {
   final List<String> documentIds;
@@ -20,7 +20,7 @@ class AddToCartButton extends StatefulWidget {
 }
 
 class _AddToCartButtonState extends State<AddToCartButton> {
-  final Logger logger = Logger();
+  final Logger _logger = Logger('AddToCartButton');
   bool showDetails = false;
   late List<bool> selectedImages;
   late List<double> selectedLengths;
@@ -31,7 +31,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
   @override
   void initState() {
     super.initState();
-    logger.i(
+    _logger.info(
         'AddToCartButton initialized with documentIds: ${widget.documentIds}');
     fetchImageUrls();
     selectedImages = List<bool>.filled(widget.documentIds.length, false);
@@ -62,9 +62,9 @@ class _AddToCartButtonState extends State<AddToCartButton> {
       setState(() {
         imageUrls = urls;
       });
-      logger.i('Image URLs fetched successfully');
+      _logger.info('Image URLs fetched successfully');
     } catch (e) {
-      logger.e('Error fetching image URLs', e);
+      _logger.severe('Error fetching image URLs', e);
     }
   }
 
@@ -80,7 +80,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
     setState(() {
       validationErrors = errors;
     });
-    logger.i('Inputs validated with errors: $validationErrors');
+    _logger.info('Inputs validated with errors: $validationErrors');
   }
 
   Future<void> _addToCart() async {
@@ -91,7 +91,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
         SnackBar(
             content: Text('You need to be logged in to add items to the cart')),
       );
-      logger.w('User not logged in');
+      _logger.warning('User not logged in');
       return;
     }
 
@@ -163,7 +163,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
               'priority': 1,
             },
           }, SetOptions(merge: true));
-          logger.i('Item added to cart: ${widget.documentIds[i]}');
+          _logger.info('Item added to cart: ${widget.documentIds[i]}');
         }
       }
 
@@ -171,7 +171,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
         SnackBar(content: Text('Items added to cart')),
       );
     } catch (e) {
-      logger.e('Error adding items to cart', e);
+      _logger.shout('Error adding items to cart', e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error adding items to cart')),
       );
@@ -199,7 +199,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
           setState(() {
             showDetails = expanded;
           });
-          logger.i('ExpansionTile expanded: $expanded');
+          _logger.info('ExpansionTile expanded: $expanded');
         },
         children: [
           Padding(
@@ -230,7 +230,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                     setState(() {
                       selectedImages[index] = !selectedImages[index];
                     });
-                    logger.i(
+                    _logger.info(
                         'Image selected: $index, documentId: ${widget.documentIds[index]}, isSelected: ${selectedImages[index]}');
                   },
                 ),
@@ -245,7 +245,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                       setState(() {
                         selectedLengths[index] = value;
                       });
-                      logger.i('LengthSlider changed: $value');
+                      _logger.info('LengthSlider changed: $value');
                     },
                     validationError: validationErrors[index],
                   ),
@@ -266,7 +266,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                           content: Text(
                               'Please correct the errors before adding to cart')),
                     );
-                    logger.w('Validation errors: $validationErrors');
+                    _logger.warning('Validation errors: $validationErrors');
                   }
                 },
                 child: const Text('Add Selected Designs to Cart'),

@@ -2,11 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/pages/Product_Card/product_card.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 
 class ProductListItem extends StatelessWidget {
   final String documentId;
+  final Logger _logger = Logger('ProductListItem');
 
-  const ProductListItem({
+  ProductListItem({
     Key? key,
     required this.documentId,
   }) : super(key: key);
@@ -52,14 +54,15 @@ class ProductListItem extends StatelessWidget {
                   child: buildProductCard(imageUrl, data),
                 );
               } else if (imageSnapshot.hasError) {
-                return Text('Failed to load image');
+                throw Exception(
+                    'Error in imageSnapshot: ${imageSnapshot.error}');
               } else {
                 return Container();
               }
             },
           );
         } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
+          throw Exception('Error in snapshot: ${snapshot.error}');
         } else {
           return Container();
         }

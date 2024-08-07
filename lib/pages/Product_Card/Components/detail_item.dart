@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
+import 'package:logging/logging.dart';
 
 class DetailItem extends StatelessWidget {
   final String title;
   final String value;
-  final Logger _logger = Logger();
+  final Logger _logger = Logger('DetailItem');
 
   DetailItem({Key? key, required this.title, required this.value})
       : super(key: key);
@@ -12,7 +12,7 @@ class DetailItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     try {
-      _logger.i('Building DetailItem with title: $title and value: $value');
+      _logger.info('Building DetailItem with title: $title and value: $value');
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 2.0),
         decoration: BoxDecoration(
@@ -50,7 +50,7 @@ class DetailItem extends StatelessWidget {
         ),
       );
     } catch (e, stackTrace) {
-      _logger.e('Error building DetailItem', e, stackTrace);
+      _logger.severe('Error building DetailItem', e, stackTrace);
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 2.0),
         decoration: BoxDecoration(
