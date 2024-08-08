@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 
 class PaymentSection extends StatelessWidget {
+  final Logger _logger = Logger('PaymentSection');
+
   @override
   Widget build(BuildContext context) {
+    _logger.info('Building PaymentSection');
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16),
       child: Padding(
@@ -20,6 +24,7 @@ class PaymentSection extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
+                _logger.info('Change payment method tapped');
                 // TODO: Implement change payment logic
               },
               style: TextButton.styleFrom(

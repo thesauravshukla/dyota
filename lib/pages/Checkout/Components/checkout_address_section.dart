@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 
 class AddressSection extends StatelessWidget {
+  final Logger _logger = Logger('AddressSection');
+
   @override
   Widget build(BuildContext context) {
+    _logger.info('Building AddressSection');
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16),
       shape: RoundedRectangleBorder(
@@ -38,6 +42,7 @@ class AddressSection extends StatelessWidget {
             ),
             InkWell(
               onTap: () {
+                _logger.info('Change address tapped');
                 // TODO: Implement change address logic
               },
               child: Padding(
