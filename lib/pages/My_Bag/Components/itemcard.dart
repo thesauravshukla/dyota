@@ -89,7 +89,8 @@ class _ItemCardState extends State<ItemCard> {
 
             List<Map<String, dynamic>> topFields = fields.take(2).toList();
 
-            String imageLocation = data['imageLocation'] ?? '';
+            List<dynamic> imageLocations = data['imageLocation'];
+            String imageLocation = imageLocations[0] ?? '';
 
             return ImageLoader(
               imageLocation: imageLocation,

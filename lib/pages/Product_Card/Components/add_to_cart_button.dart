@@ -48,7 +48,8 @@ class _AddToCartButtonState extends State<AddToCartButton> {
             .get();
         if (doc.exists) {
           Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-          String imageLocation = data['imageLocation'];
+          List<dynamic> imageLocations = data['imageLocation'];
+          String imageLocation = imageLocations[0];
           String imageUrl = await FirebaseStorage.instance
               .ref(imageLocation)
               .getDownloadURL();

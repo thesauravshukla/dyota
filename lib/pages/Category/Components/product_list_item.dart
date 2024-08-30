@@ -34,7 +34,8 @@ class ProductListItem extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasData) {
           var data = snapshot.data!;
-          String imagePath = data['imageLocation'];
+          List<dynamic> imageLocations = data['imageLocation'];
+          String imagePath = imageLocations[0];
 
           return FutureBuilder<String>(
             future: getImageUrl(imagePath),

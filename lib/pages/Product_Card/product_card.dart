@@ -46,7 +46,8 @@ class _ProductCardState extends State<ProductCard> {
         _logger.info('Document exists for documentId: ${widget.documentId}');
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         String parentId = data['parentId'];
-        String initialImageLocation = data['imageLocation'];
+        List<dynamic> imageLocations = data['imageLocation'];
+        String initialImageLocation = imageLocations[0];
 
         String initialImageUrl = await FirebaseStorage.instance
             .ref(initialImageLocation)
@@ -64,8 +65,9 @@ class _ProductCardState extends State<ProductCard> {
           Map<String, dynamic> docData =
               document.data() as Map<String, dynamic>;
           if (docData.containsKey('imageLocation')) {
+            List<dynamic> docImageLocations = docData['imageLocation'];
             String imageUrl = await FirebaseStorage.instance
-                .ref(docData['imageLocation'])
+                .ref(docImageLocations[0])
                 .getDownloadURL();
             details.add({'imageUrl': imageUrl, 'documentId': document.id});
           }

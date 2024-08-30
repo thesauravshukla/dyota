@@ -30,7 +30,8 @@ class _OrderSwatchesButtonState extends State<OrderSwatchesButton> {
           await FirebaseFirestore.instance.collection('items').doc(docId).get();
       if (doc.exists) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        String imageLocation = data['imageLocation'];
+        List<dynamic> imageLocations = data['imageLocation'];
+        String imageLocation = imageLocations[0];
         String imageUrl =
             await FirebaseStorage.instance.ref(imageLocation).getDownloadURL();
         urls.add(imageUrl);
