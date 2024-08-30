@@ -8,6 +8,7 @@ import 'package:dyota/pages/Product_Card/Components/order_swatches.dart';
 import 'package:dyota/pages/Product_Card/Components/product_name.dart';
 import 'package:dyota/pages/Product_Card/Components/shipping_info.dart';
 import 'package:dyota/pages/Product_Card/Components/support_section.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
@@ -27,6 +28,7 @@ class _ProductCardState extends State<ProductCard> {
   int selectedParentImageIndex = 0; // New variable for parent images
   List<Map<String, String>> imageDetails = [];
   List<String> allImageUrls = [];
+  List<Map<String, String>> recentlyViewedDetails = [];
   bool isLoading = true;
   late String currentDocumentId;
 
@@ -37,6 +39,8 @@ class _ProductCardState extends State<ProductCard> {
     _logger
         .info('ProductCard initialized with documentId: ${widget.documentId}');
     fetchImages(widget.documentId);
+    updateRecentlyViewedProducts(widget.documentId);
+    fetchRecentlyViewedProducts();
   }
 
   Future<void> fetchImages(String documentId) async {
@@ -104,6 +108,80 @@ class _ProductCardState extends State<ProductCard> {
     }
   }
 
+  Future<void> updateRecentlyViewedProducts(String documentId) async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        String email = user.email!;
+        DocumentReference userDocRef =
+            FirebaseFirestore.instance.collection('users').doc(email);
+
+        DocumentSnapshot userDoc = await userDocRef.get();
+        if (userDoc.exists) {
+          List<dynamic> recentlyViewedProducts =
+              userDoc['recentlyViewedProducts'] ?? [];
+
+          if (!recentlyViewedProducts.contains(documentId)) {
+            if (recentlyViewedProducts.length >= 5) {
+              recentlyViewedProducts.removeAt(0); // Remove the oldest item
+            }
+            recentlyViewedProducts.add(documentId); // Add the new item
+
+            await userDocRef.update({
+              'recentlyViewedProducts': recentlyViewedProducts,
+            });
+          }
+        } else {
+          await userDocRef.set({
+            'recentlyViewedProducts': [documentId],
+          });
+        }
+      }
+    } catch (e) {
+      _logger.severe('Error updating recently viewed products', e);
+    }
+  }
+
+  Future<void> fetchRecentlyViewedProducts() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        String email = user.email!;
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(email)
+            .get();
+
+        if (userDoc.exists) {
+          List<dynamic> recentlyViewedProducts =
+              userDoc['recentlyViewedProducts'] ?? [];
+          List<Map<String, String>> details = [];
+
+          for (String documentId in recentlyViewedProducts) {
+            DocumentSnapshot doc = await FirebaseFirestore.instance
+                .collection('items')
+                .doc(documentId)
+                .get();
+            if (doc.exists) {
+              Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+              List<dynamic> imageLocations = data['imageLocation'];
+              String imageUrl = await FirebaseStorage.instance
+                  .ref(imageLocations[0])
+                  .getDownloadURL();
+              details.add({'imageUrl': imageUrl, 'documentId': documentId});
+            }
+          }
+
+          setState(() {
+            recentlyViewedDetails = details;
+          });
+        }
+      }
+    } catch (e) {
+      _logger.severe('Error fetching recently viewed products', e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -141,8 +219,7 @@ class _ProductCardState extends State<ProductCard> {
                         },
                       ),
                       // Empty box of size 20
-                      Divider(), // Inserted line below the "More Colours" text
-
+                      SizedBox(height: 20),
                       // Section for images with the same parentId
                       Container(
                         color: Colors.grey[100], // Different background color
@@ -159,6 +236,7 @@ class _ProductCardState extends State<ProductCard> {
                                 ),
                               ),
                             ),
+                            Divider(), // Inserted line below the "More Colours" text
                             ImageThumbnails(
                               imageDetails: imageDetails,
                               selectedImageIndex:
@@ -170,6 +248,8 @@ class _ProductCardState extends State<ProductCard> {
                                   currentDocumentId =
                                       imageDetails[index]['documentId']!;
                                   fetchImages(currentDocumentId);
+                                  updateRecentlyViewedProducts(
+                                      currentDocumentId);
                                 });
                                 _logger.info(
                                     'Thumbnail tapped, new documentId: $currentDocumentId');
@@ -190,6 +270,45 @@ class _ProductCardState extends State<ProductCard> {
                       ),
                       const ShippingInfo(),
                       const SupportSection(),
+                      // Recently Viewed Section
+                      if (recentlyViewedDetails.isNotEmpty) ...[
+                        SizedBox(height: 20),
+                        Container(
+                          color: Colors.grey[200], // Different background color
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  'Recently Viewed',
+                                  style: TextStyle(
+                                    fontFamily: 'Lato',
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Divider(), // Inserted line below the "Recently Viewed" text
+                              ImageThumbnails(
+                                imageDetails: recentlyViewedDetails,
+                                selectedImageIndex: -1, // No selection
+                                onThumbnailTap: (index) {
+                                  String documentId =
+                                      recentlyViewedDetails[index]
+                                          ['documentId']!;
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ProductCard(documentId: documentId),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
           ),

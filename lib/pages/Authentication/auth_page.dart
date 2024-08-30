@@ -39,6 +39,7 @@ class AuthPage extends StatelessWidget {
           'addressList': [],
           'deliveredOrderList': [],
           'processingOrderList': [],
+          'recentlyViewedProducts': [],
         });
       }
     }
