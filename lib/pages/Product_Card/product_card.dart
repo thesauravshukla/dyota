@@ -24,42 +24,55 @@ class ProductCard extends StatefulWidget {
 class _ProductCardState extends State<ProductCard> {
   final Logger _logger = Logger('ProductCard');
   int selectedImageIndex = 0;
+  int selectedParentImageIndex = 0; // New variable for parent images
   List<Map<String, String>> imageDetails = [];
+  List<String> allImageUrls = [];
   bool isLoading = true;
+  late String currentDocumentId;
 
   @override
   void initState() {
     super.initState();
+    currentDocumentId = widget.documentId;
     _logger
         .info('ProductCard initialized with documentId: ${widget.documentId}');
-    fetchImages();
+    fetchImages(widget.documentId);
   }
 
-  Future<void> fetchImages() async {
+  Future<void> fetchImages(String documentId) async {
     try {
-      _logger.info('Fetching images for documentId: ${widget.documentId}');
+      _logger.info('Fetching images for documentId: $documentId');
       DocumentSnapshot doc = await FirebaseFirestore.instance
           .collection('items')
-          .doc(widget.documentId)
+          .doc(documentId)
           .get();
       if (doc.exists) {
-        _logger.info('Document exists for documentId: ${widget.documentId}');
+        _logger.info('Document exists for documentId: $documentId');
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         String parentId = data['parentId'];
         List<dynamic> imageLocations = data['imageLocation'];
-        String initialImageLocation = imageLocations[0];
 
+        // Fetch all images from imageLocation array
+        List<String> fetchedImageUrls = [];
+        for (String imageLocation in imageLocations) {
+          String imageUrl = await FirebaseStorage.instance
+              .ref(imageLocation)
+              .getDownloadURL();
+          fetchedImageUrls.add(imageUrl);
+        }
+
+        String initialImageLocation = imageLocations[0];
         String initialImageUrl = await FirebaseStorage.instance
             .ref(initialImageLocation)
             .getDownloadURL();
         List<Map<String, String>> details = [
-          {'imageUrl': initialImageUrl, 'documentId': widget.documentId}
+          {'imageUrl': initialImageUrl, 'documentId': documentId}
         ];
 
         QuerySnapshot querySnapshot = await FirebaseFirestore.instance
             .collection('items')
             .where('parentId', isEqualTo: parentId)
-            .where(FieldPath.documentId, isNotEqualTo: widget.documentId)
+            .where(FieldPath.documentId, isNotEqualTo: documentId)
             .get();
         for (var document in querySnapshot.docs) {
           Map<String, dynamic> docData =
@@ -74,18 +87,17 @@ class _ProductCardState extends State<ProductCard> {
         }
 
         setState(() {
+          allImageUrls = fetchedImageUrls;
           imageDetails = details;
           isLoading = false;
+          selectedImageIndex = 0;
         });
-        _logger.info(
-            'Images fetched successfully for documentId: ${widget.documentId}');
+        _logger.info('Images fetched successfully for documentId: $documentId');
       } else {
-        _logger.warning(
-            'Document does not exist for documentId: ${widget.documentId}');
+        _logger.warning('Document does not exist for documentId: $documentId');
       }
     } catch (e) {
-      _logger.severe(
-          'Error fetching images for documentId: ${widget.documentId}', e);
+      _logger.severe('Error fetching images for documentId: $documentId', e);
       setState(() {
         isLoading = false;
       });
@@ -110,10 +122,15 @@ class _ProductCardState extends State<ProductCard> {
                     children: <Widget>[
                       ProductName(),
                       ImagePlaceholder(
-                          imageUrl: imageDetails[selectedImageIndex]
-                              ['imageUrl']!),
+                          imageUrl: allImageUrls[selectedImageIndex]),
+                      // Carousel for all images in imageLocation array
                       ImageThumbnails(
-                        imageDetails: imageDetails,
+                        imageDetails: allImageUrls
+                            .map((url) => {
+                                  'imageUrl': url,
+                                  'documentId': currentDocumentId
+                                })
+                            .toList(),
                         selectedImageIndex: selectedImageIndex,
                         onThumbnailTap: (index) {
                           setState(() {
@@ -123,9 +140,45 @@ class _ProductCardState extends State<ProductCard> {
                               'Thumbnail tapped, selectedImageIndex: $selectedImageIndex');
                         },
                       ),
-                      DynamicFieldsDisplay(
-                          documentId: imageDetails[selectedImageIndex]
-                              ['documentId']!),
+                      // Empty box of size 20
+                      Divider(), // Inserted line below the "More Colours" text
+
+                      // Section for images with the same parentId
+                      Container(
+                        color: Colors.grey[100], // Different background color
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                'More Colours',
+                                style: TextStyle(
+                                  fontFamily: 'Lato',
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ImageThumbnails(
+                              imageDetails: imageDetails,
+                              selectedImageIndex:
+                                  selectedParentImageIndex, // Use new variable
+                              onThumbnailTap: (index) {
+                                setState(() {
+                                  selectedParentImageIndex =
+                                      index; // Update new variable
+                                  currentDocumentId =
+                                      imageDetails[index]['documentId']!;
+                                  fetchImages(currentDocumentId);
+                                });
+                                _logger.info(
+                                    'Thumbnail tapped, new documentId: $currentDocumentId');
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      DynamicFieldsDisplay(documentId: currentDocumentId),
                       OrderSwatchesButton(
                           documentIds: imageDetails
                               .map((detail) => detail['documentId']!)
