@@ -11,71 +11,56 @@ class CategoryItem extends StatelessWidget {
   CategoryItem({super.key, required this.index});
 
   Future<String> getImageUrl(String imageName) async {
-    try {
-      // Get the download URL from Firebase Storage
-      final ref =
-          FirebaseStorage.instance.ref().child('categoryPhotos/$imageName');
-      return await ref.getDownloadURL();
-    } catch (e) {
-      _logger.severe('Error getting image URL', e);
-      rethrow;
-    }
+    // Get the download URL from Firebase Storage
+    final ref =
+        FirebaseStorage.instance.ref().child('categoryPhotos/$imageName');
+    return await ref.getDownloadURL();
   }
 
   Future<List<Map<String, String>>> getCategoryData() async {
-    try {
-      // Fetch category names, image file names, and document IDs from Firestore
-      QuerySnapshot snapshot =
-          await FirebaseFirestore.instance.collection('categories').get();
-      return snapshot.docs.map((doc) {
-        return {
-          'id': doc.id,
-          'name': doc['name'] as String,
-          'imageFileName': doc['imageFileName'] as String,
-        };
-      }).toList();
-    } catch (e) {
-      _logger.severe('Error getting category data', e);
-      rethrow;
-    }
+    // Fetch category names, image file names, and document IDs from Firestore
+    QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('categories').get();
+    return snapshot.docs.map((doc) {
+      return {
+        'id': doc.id,
+        'name': doc['name'] as String,
+        'imageFileName': doc['imageFileName'] as String,
+      };
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, String>>>(
-      future: getCategoryData(),
-      builder: (context, categorySnapshot) {
-        try {
+        future: getCategoryData(),
+        builder: (context, categorySnapshot) {
           if (categorySnapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator(); // Show a loading indicator while waiting for the data
+            return Text(''); // Show nothing while waiting for the data
           } else if (categorySnapshot.hasError) {
-            _logger.severe('Error in categorySnapshot', categorySnapshot.error);
-            return Text(
-                'Error: ${categorySnapshot.error}'); // Handle the error state
+            throw Exception(
+                'Error in categorySnapshot: ${categorySnapshot.error}');
           } else if (!categorySnapshot.hasData ||
               categorySnapshot.data!.isEmpty) {
-            return Text(
-                'No categories found'); // Handle the case where there is no data
+            _logger.warning('No data found');
+            return Text(''); // Handle the case where there is no data
           } else {
             List<Map<String, String>> categoryData = categorySnapshot.data!;
 
             return FutureBuilder<String>(
-              future: getImageUrl(categoryData[index]['imageFileName']!),
-              builder: (context, imageSnapshot) {
-                try {
+                future: getImageUrl(categoryData[index]['imageFileName']!),
+                builder: (context, imageSnapshot) {
                   if (imageSnapshot.connectionState ==
                       ConnectionState.waiting) {
                     return const Center(
-                        child: Text(
-                            '')); // Show a loading indicator while waiting for the data
+                        child: Text('')); // Show nothing when loading
                   } else if (imageSnapshot.hasError) {
-                    _logger.severe(
-                        'Error in imageSnapshot', imageSnapshot.error);
-                    return Text(
-                        'Error: ${imageSnapshot.error}'); // Handle the error state
+                    throw Exception(
+                        'Error in imageSnapshot: ${imageSnapshot.error}');
                   } else if (!imageSnapshot.hasData) {
-                    return Text(
-                        'No image found'); // Handle the case where there is no data
+                    _logger.warning('No image found');
+                    return const Center(
+                        child: Text('')); // Show no data on screen
                   } else {
                     String imageUrl = imageSnapshot
                         .data!; // The image URL from Firebase Storage
@@ -116,18 +101,8 @@ class CategoryItem extends StatelessWidget {
                       ],
                     );
                   }
-                } catch (e) {
-                  _logger.severe('Error building image widget', e);
-                  return Text('Error: $e');
-                }
-              },
-            );
+                });
           }
-        } catch (e) {
-          _logger.severe('Error building category widget', e);
-          return Text('Error: $e');
-        }
-      },
-    );
+        });
   }
 }

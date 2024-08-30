@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/pages/Home/Components/category_item.dart';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 
 class CategoryGrid extends StatelessWidget {
-  const CategoryGrid({super.key});
+  CategoryGrid({super.key});
+  final Logger _logger = Logger('CategoryGridComponent');
 
   Future<List<DocumentSnapshot>> getCategoryDocuments() async {
     // Fetch category documents from Firestore
@@ -18,12 +20,13 @@ class CategoryGrid extends StatelessWidget {
       future: getCategoryDocuments(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator(); // Show a loading indicator while waiting for the data
+          return Text(''); // Show nothing while waiting for the data
         } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}'); // Handle the error state
+          throw Exception(
+              'Error in snapshot: ${snapshot.error}'); // Handle the error state
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Text(
-              'No categories found'); // Handle the case where there is no data
+          _logger.severe('No data found');
+          return Text(''); // Handle the case where there is no data
         } else {
           List<DocumentSnapshot> categoryDocuments = snapshot.data!;
 
