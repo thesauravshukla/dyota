@@ -2,12 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/components/generic_appbar.dart';
 import 'package:dyota/pages/Product_Card/Components/add_to_cart_button.dart';
 import 'package:dyota/pages/Product_Card/Components/dynamic_fields_display.dart';
-import 'package:dyota/pages/Product_Card/Components/image_placeholder.dart';
-import 'package:dyota/pages/Product_Card/Components/image_thumbnails.dart';
+import 'package:dyota/pages/Product_Card/Components/image_carousel.dart';
+import 'package:dyota/pages/Product_Card/Components/more_colours_section.dart';
 import 'package:dyota/pages/Product_Card/Components/order_swatches.dart';
 import 'package:dyota/pages/Product_Card/Components/product_name.dart';
+import 'package:dyota/pages/Product_Card/Components/recently_viewed_section.dart';
 import 'package:dyota/pages/Product_Card/Components/shipping_info.dart';
 import 'package:dyota/pages/Product_Card/Components/support_section.dart';
+import 'package:dyota/pages/Product_Card/Components/users_also_viewed_section.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -228,16 +230,8 @@ class _ProductCardState extends State<ProductCard> {
                 : ListView(
                     children: <Widget>[
                       ProductName(),
-                      ImagePlaceholder(
-                          imageUrl: allImageUrls[selectedImageIndex]),
-                      // Carousel for all images in imageLocation array
-                      ImageThumbnails(
-                        imageDetails: allImageUrls
-                            .map((url) => {
-                                  'imageUrl': url,
-                                  'documentId': currentDocumentId
-                                })
-                            .toList(),
+                      ImageCarousel(
+                        allImageUrls: allImageUrls,
                         selectedImageIndex: selectedImageIndex,
                         onThumbnailTap: (index) {
                           setState(() {
@@ -249,40 +243,20 @@ class _ProductCardState extends State<ProductCard> {
                       ),
                       // Empty box of size 20
                       SizedBox(height: 20),
-                      Container(
-                        color: Colors.grey[100],
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                'More Colours',
-                                style: TextStyle(
-                                  fontFamily: 'Lato',
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Divider(),
-                            ImageThumbnails(
-                              imageDetails: imageDetails,
-                              selectedImageIndex: selectedParentImageIndex,
-                              onThumbnailTap: (index) {
-                                setState(() {
-                                  selectedParentImageIndex = index;
-                                  currentDocumentId =
-                                      imageDetails[index]['documentId']!;
-                                  fetchImages(currentDocumentId);
-                                  updateRecentlyViewedProducts(
-                                      currentDocumentId);
-                                });
-                                _logger.info(
-                                    'Thumbnail tapped, new documentId: $currentDocumentId');
-                              },
-                            ),
-                          ],
-                        ),
+                      MoreColoursSection(
+                        imageDetails: imageDetails,
+                        selectedParentImageIndex: selectedParentImageIndex,
+                        onThumbnailTap: (index) {
+                          setState(() {
+                            selectedParentImageIndex = index;
+                            currentDocumentId =
+                                imageDetails[index]['documentId']!;
+                            fetchImages(currentDocumentId);
+                            updateRecentlyViewedProducts(currentDocumentId);
+                          });
+                          _logger.info(
+                              'Thumbnail tapped, new documentId: $currentDocumentId');
+                        },
                       ),
                       DynamicFieldsDisplay(documentId: currentDocumentId),
                       OrderSwatchesButton(
@@ -297,83 +271,38 @@ class _ProductCardState extends State<ProductCard> {
                       const ShippingInfo(),
                       const SupportSection(),
                       // Users Also Viewed Section
-                      if (usersAlsoViewedDetails.isNotEmpty) ...[
-                        SizedBox(height: 20),
-                        Container(
-                          color: Colors.grey[200], // Different background color
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  'Users Also Viewed',
-                                  style: TextStyle(
-                                    fontFamily: 'Lato',
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                      if (usersAlsoViewedDetails.isNotEmpty)
+                        UsersAlsoViewedSection(
+                          usersAlsoViewedDetails: usersAlsoViewedDetails,
+                          onThumbnailTap: (index) {
+                            String documentId =
+                                usersAlsoViewedDetails[index]['documentId']!;
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ProductCard(documentId: documentId),
                               ),
-                              Divider(),
-                              ImageThumbnails(
-                                imageDetails: usersAlsoViewedDetails,
-                                selectedImageIndex: -1, // No selection
-                                onThumbnailTap: (index) {
-                                  String documentId =
-                                      usersAlsoViewedDetails[index]
-                                          ['documentId']!;
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          ProductCard(documentId: documentId),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                      ],
+                      SizedBox(height: 20),
                       // Recently Viewed Section
-                      if (recentlyViewedDetails.isNotEmpty) ...[
-                        SizedBox(height: 20),
-                        Container(
-                          color: Colors.grey[200], // Different background color
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  'Recently Viewed',
-                                  style: TextStyle(
-                                    fontFamily: 'Lato',
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                      if (recentlyViewedDetails.isNotEmpty)
+                        RecentlyViewedSection(
+                          recentlyViewedDetails: recentlyViewedDetails,
+                          onThumbnailTap: (index) {
+                            String documentId =
+                                recentlyViewedDetails[index]['documentId']!;
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ProductCard(documentId: documentId),
                               ),
-                              Divider(),
-                              ImageThumbnails(
-                                imageDetails: recentlyViewedDetails,
-                                selectedImageIndex: -1, // No selection
-                                onThumbnailTap: (index) {
-                                  String documentId =
-                                      recentlyViewedDetails[index]
-                                          ['documentId']!;
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          ProductCard(documentId: documentId),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                      ],
                     ],
                   ),
           ),
