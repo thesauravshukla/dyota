@@ -29,8 +29,10 @@ class _ProductCardState extends State<ProductCard> {
   List<Map<String, String>> imageDetails = [];
   List<String> allImageUrls = [];
   List<Map<String, String>> recentlyViewedDetails = [];
+  List<Map<String, String>> usersAlsoViewedDetails = [];
   bool isLoading = true;
   late String currentDocumentId;
+  String? currentCategoryValue;
 
   @override
   void initState() {
@@ -55,6 +57,7 @@ class _ProductCardState extends State<ProductCard> {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         String parentId = data['parentId'];
         List<dynamic> imageLocations = data['imageLocation'];
+        currentCategoryValue = data['category']['value'];
 
         // Fetch all images from imageLocation array
         List<String> fetchedImageUrls = [];
@@ -97,6 +100,7 @@ class _ProductCardState extends State<ProductCard> {
           selectedImageIndex = 0;
         });
         _logger.info('Images fetched successfully for documentId: $documentId');
+        fetchUsersAlsoViewedProducts(currentCategoryValue!);
       } else {
         _logger.warning('Document does not exist for documentId: $documentId');
       }
@@ -182,6 +186,31 @@ class _ProductCardState extends State<ProductCard> {
     }
   }
 
+  Future<void> fetchUsersAlsoViewedProducts(String categoryValue) async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('items')
+          .where('category.value', isEqualTo: categoryValue)
+          .get();
+
+      List<Map<String, String>> details = [];
+      for (var document in querySnapshot.docs) {
+        Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+        List<dynamic> imageLocations = data['imageLocation'];
+        String imageUrl = await FirebaseStorage.instance
+            .ref(imageLocations[0])
+            .getDownloadURL();
+        details.add({'imageUrl': imageUrl, 'documentId': document.id});
+      }
+
+      setState(() {
+        usersAlsoViewedDetails = details;
+      });
+    } catch (e) {
+      _logger.severe('Error fetching users also viewed products', e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -220,9 +249,8 @@ class _ProductCardState extends State<ProductCard> {
                       ),
                       // Empty box of size 20
                       SizedBox(height: 20),
-                      // Section for images with the same parentId
                       Container(
-                        color: Colors.grey[100], // Different background color
+                        color: Colors.grey[100],
                         child: Column(
                           children: [
                             Padding(
@@ -236,15 +264,13 @@ class _ProductCardState extends State<ProductCard> {
                                 ),
                               ),
                             ),
-                            Divider(), // Inserted line below the "More Colours" text
+                            Divider(),
                             ImageThumbnails(
                               imageDetails: imageDetails,
-                              selectedImageIndex:
-                                  selectedParentImageIndex, // Use new variable
+                              selectedImageIndex: selectedParentImageIndex,
                               onThumbnailTap: (index) {
                                 setState(() {
-                                  selectedParentImageIndex =
-                                      index; // Update new variable
+                                  selectedParentImageIndex = index;
                                   currentDocumentId =
                                       imageDetails[index]['documentId']!;
                                   fetchImages(currentDocumentId);
@@ -270,6 +296,45 @@ class _ProductCardState extends State<ProductCard> {
                       ),
                       const ShippingInfo(),
                       const SupportSection(),
+                      // Users Also Viewed Section
+                      if (usersAlsoViewedDetails.isNotEmpty) ...[
+                        SizedBox(height: 20),
+                        Container(
+                          color: Colors.grey[200], // Different background color
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  'Users Also Viewed',
+                                  style: TextStyle(
+                                    fontFamily: 'Lato',
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Divider(),
+                              ImageThumbnails(
+                                imageDetails: usersAlsoViewedDetails,
+                                selectedImageIndex: -1, // No selection
+                                onThumbnailTap: (index) {
+                                  String documentId =
+                                      usersAlsoViewedDetails[index]
+                                          ['documentId']!;
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ProductCard(documentId: documentId),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       // Recently Viewed Section
                       if (recentlyViewedDetails.isNotEmpty) ...[
                         SizedBox(height: 20),
@@ -288,7 +353,7 @@ class _ProductCardState extends State<ProductCard> {
                                   ),
                                 ),
                               ),
-                              Divider(), // Inserted line below the "Recently Viewed" text
+                              Divider(),
                               ImageThumbnails(
                                 imageDetails: recentlyViewedDetails,
                                 selectedImageIndex: -1, // No selection
