@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:decimal/decimal.dart';
 import 'package:dyota/components/generic_appbar.dart';
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_card.dart';
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_dialogs.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart'; 
+import 'package:uuid/uuid.dart';
 
 class PaymentPage extends StatefulWidget {
   @override
@@ -43,26 +44,26 @@ class _PaymentPageState extends State<PaymentPage> {
     final timestamp = FieldValue.serverTimestamp();
 
     // Calculate total amount
-    double subtotal = cartItemsSnapshot.docs.fold(0.0, (sum, doc) {
+    Decimal subtotal = cartItemsSnapshot.docs.fold(Decimal.zero, (sum, doc) {
       final data = doc.data();
       final priceMap = data['price'] as Map<String, dynamic>? ?? {'value': 0.0};
-      final priceValue = double.tryParse(priceMap['value'].toString()) ?? 0.0;
+      Decimal priceValue = Decimal.parse(priceMap['value']);
       return sum + priceValue;
     });
 
-    double tax = 0.0;
+    Decimal tax = Decimal.zero;
     for (var doc in cartItemsSnapshot.docs) {
       final data = doc.data();
       if (data.containsKey('tax') && data['tax'] is Map<String, dynamic>) {
         final taxMap = data['tax'] as Map<String, dynamic>;
         if (taxMap.containsKey('value')) {
-          final taxValue = double.tryParse(taxMap['value'].toString()) ?? 0.0;
+          Decimal taxValue = Decimal.parse(taxMap['value'].toString());
           tax += taxValue;
         }
       }
     }
 
-    final totalAmount = subtotal + tax;
+    final totalAmount = subtotal;
 
     final selectedAddressData = addresses[_selectedAddress!];
 
@@ -83,7 +84,7 @@ class _PaymentPageState extends State<PaymentPage> {
       'totalAmount': {
         'displayName': 'Total Amount',
         'toDisplay': 1,
-        'value': totalAmount,
+        'value': totalAmount.toString(),
       },
     };
 
@@ -386,7 +387,7 @@ class _PaymentPageState extends State<PaymentPage> {
       final itemTypeMap =
           data['itemType'] as Map<String, dynamic>? ?? {'value': 'Unknown'};
 
-      final priceValue = double.tryParse(priceMap['value'].toString()) ?? 0.0;
+      final priceValue = Decimal.parse(priceMap['value'].toString()) ?? 0.0;
       final itemName = itemNameMap['value'] ?? 'Unknown';
       final itemType = itemTypeMap['value'] ?? 'Unknown';
 
@@ -400,10 +401,10 @@ class _PaymentPageState extends State<PaymentPage> {
     return items;
   }
 
-  Future<double> _calculateTax() async {
+  Future<Decimal> _calculateTax() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.email == null) {
-      return 0.0;
+      return Decimal.zero;
     }
 
     final email = user.email!;
@@ -413,14 +414,14 @@ class _PaymentPageState extends State<PaymentPage> {
         .collection('cartItemsList')
         .get();
 
-    double totalTax = 0.0;
+    Decimal totalTax = Decimal.zero;
 
     for (var doc in cartItemsSnapshot.docs) {
       final data = doc.data();
       if (data.containsKey('tax') && data['tax'] is Map<String, dynamic>) {
         final taxMap = data['tax'] as Map<String, dynamic>;
         if (taxMap.containsKey('value')) {
-          final taxValue = double.tryParse(taxMap['value'].toString()) ?? 0.0;
+          Decimal taxValue = Decimal.parse(taxMap['value'].toString());
           totalTax += taxValue;
         }
       }
@@ -452,10 +453,10 @@ class _PaymentPageState extends State<PaymentPage> {
                 }
 
                 final items = snapshot.data ?? [];
-                double subtotal =
-                    items.fold(0.0, (sum, item) => sum + item['price']);
+                Decimal subtotal = items.fold(
+                    Decimal.zero, (sum, item) => sum + item['price']);
 
-                return FutureBuilder<double>(
+                return FutureBuilder<Decimal>(
                   future: _calculateTax(),
                   builder: (context, taxSnapshot) {
                     if (taxSnapshot.connectionState ==
@@ -465,8 +466,8 @@ class _PaymentPageState extends State<PaymentPage> {
                       return Center(child: Text('Error: ${taxSnapshot.error}'));
                     }
 
-                    final tax = taxSnapshot.data ?? 0.0;
-                    final totalAmount = subtotal + tax;
+                    Decimal tax = taxSnapshot.data ?? Decimal.zero;
+                    Decimal totalAmount = subtotal + tax;
 
                     return Container(
                       padding: EdgeInsets.all(16),

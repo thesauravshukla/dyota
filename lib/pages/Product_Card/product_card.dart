@@ -129,9 +129,9 @@ class _ProductCardState extends State<ProductCard> {
 
           if (!recentlyViewedProducts.contains(documentId)) {
             if (recentlyViewedProducts.length >= 5) {
-              recentlyViewedProducts.removeAt(0); // Remove the oldest item
+              recentlyViewedProducts.removeAt(0);
             }
-            recentlyViewedProducts.add(documentId); // Add the new item
+            recentlyViewedProducts.add(documentId);
 
             await userDocRef.update({
               'recentlyViewedProducts': recentlyViewedProducts,

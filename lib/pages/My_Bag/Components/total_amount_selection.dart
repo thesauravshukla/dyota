@@ -1,13 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:decimal/decimal.dart';
 import 'package:dyota/pages/My_Bag/Components/payment_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class TotalAmountSection extends StatelessWidget {
-  Future<double> _calculateTotalAmount() async {
+  Future<Decimal> _calculateSubtotal() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.email == null) {
-      return 0.0;
+      return Decimal.zero;
     }
 
     final email = user.email!;
@@ -17,26 +18,55 @@ class TotalAmountSection extends StatelessWidget {
         .collection('cartItemsList')
         .get();
 
-    double totalAmount = 0.0;
+    Decimal subtotal = cartItemsSnapshot.docs.fold(Decimal.zero, (sum, doc) {
+      final data = doc.data();
+      final priceMap =
+          data['price'] as Map<String, dynamic>? ?? {'value': '0.0'};
+      Decimal priceValue = Decimal.parse(priceMap['value'].toString());
+      return sum + priceValue;
+    });
+
+    return subtotal;
+  }
+
+  Future<Decimal> _calculateTax() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.email == null) {
+      return Decimal.zero;
+    }
+
+    final email = user.email!;
+    final cartItemsSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(email)
+        .collection('cartItemsList')
+        .get();
+
+    Decimal totalTax = Decimal.zero;
 
     for (var doc in cartItemsSnapshot.docs) {
       final data = doc.data();
-      if (data.containsKey('price') && data['price'] is Map<String, dynamic>) {
-        final priceMap = data['price'] as Map<String, dynamic>;
-        if (priceMap.containsKey('value')) {
-          final priceValue =
-              double.tryParse(priceMap['value'].toString()) ?? 0.0;
-          totalAmount += priceValue;
+      if (data.containsKey('tax') && data['tax'] is Map<String, dynamic>) {
+        final taxMap = data['tax'] as Map<String, dynamic>;
+        if (taxMap.containsKey('value')) {
+          Decimal taxValue = Decimal.parse(taxMap['value'].toString());
+          totalTax += taxValue;
         }
       }
     }
 
-    return totalAmount;
+    return totalTax;
+  }
+
+  Future<Decimal> _calculateTotalAmount() async {
+    final subtotal = await _calculateSubtotal();
+    final tax = await _calculateTax();
+    return subtotal + tax;
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<double>(
+    return FutureBuilder<Decimal>(
       future: _calculateTotalAmount(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -45,7 +75,7 @@ class TotalAmountSection extends StatelessWidget {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
 
-        final totalAmount = snapshot.data ?? 0.0;
+        final totalAmount = snapshot.data ?? Decimal.zero;
 
         return Container(
           padding: EdgeInsets.all(16),

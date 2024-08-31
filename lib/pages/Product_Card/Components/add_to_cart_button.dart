@@ -101,7 +101,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
     try {
       for (int i = 0; i < selectedImages.length; i++) {
         if (selectedImages[i]) {
-          // Fetch the price per metre from the document
+          // Fetch the price per metre and tax from the document
           DocumentSnapshot doc = await FirebaseFirestore.instance
               .collection('items')
               .doc(widget.documentIds[i])
@@ -114,6 +114,12 @@ class _AddToCartButtonState extends State<AddToCartButton> {
 
           // Calculate the price based on the selected length
           Decimal price = (pricePerMetreDouble * selectedLengthsDouble);
+
+          // Calculate the tax
+          String taxPercentageStr = data['tax']['value'];
+          Decimal taxPercentage = Decimal.parse(taxPercentageStr);
+          Decimal tax =
+              price * (taxPercentage / Decimal.fromInt(100)).toDecimal();
 
           // Get the top 3 priority fields and concatenate their values
           List<MapEntry<String, dynamic>> sortedFields = data.entries
@@ -134,8 +140,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
               .collection('users')
               .doc(email)
               .collection('cartItemsList')
-              .doc(widget.documentIds[i] +
-                  '-textile') // Set the document ID to itemDocumentId
+              .doc(widget.documentIds[i] + '-textile')
               .set({
             'itemType': {
               'displayName': 'Order Type',
@@ -157,6 +162,13 @@ class _AddToCartButtonState extends State<AddToCartButton> {
               'toDisplay': 1,
               'priority': 4,
             },
+            'tax': {
+              'displayName': 'Tax',
+              'prefix': "Rs. ",
+              'value': tax.toString(),
+              'toDisplay': 1,
+              'priority': 5,
+            },
             'itemName': {
               'displayName': 'Item Name',
               'value': itemName,
@@ -169,12 +181,12 @@ class _AddToCartButtonState extends State<AddToCartButton> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Items added to cart')),
+        const SnackBar(content: Text('Items added to cart')),
       );
     } catch (e) {
       _logger.shout('Error adding items to cart', e);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding items to cart')),
+        const SnackBar(content: Text('Error adding items to cart')),
       );
     }
   }
@@ -203,8 +215,8 @@ class _AddToCartButtonState extends State<AddToCartButton> {
           _logger.info('ExpansionTile expanded: $expanded');
         },
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
             child: Text(
               'Tap the designs to place order',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -223,7 +235,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Divider(color: Colors.grey),
+                const Divider(color: Colors.grey),
                 ImageSelector(
                   imageUrl: imageUrl,
                   isSelected: selectedImages[index],
@@ -235,7 +247,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                         'Image selected: $index, documentId: ${widget.documentIds[index]}, isSelected: ${selectedImages[index]}');
                   },
                 ),
-                Divider(color: Colors.grey),
+                const Divider(color: Colors.grey),
                 if (selectedImages[index])
                   LengthSlider(
                     minOrderLength: minOrderLength,
@@ -263,20 +275,21 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                     _addToCart();
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
+                      const SnackBar(
                           content: Text(
                               'Please correct the errors before adding to cart')),
                     );
                     _logger.warning('Validation errors: $validationErrors');
                   }
                 },
-                child: const Text('Add Selected Designs to Cart'),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: Colors.black,
-                  shape: StadiumBorder(),
-                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 15),
+                  shape: const StadiumBorder(),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 15),
                 ),
+                child: const Text('Add Selected Designs to Cart'),
               ),
             ),
           ),
