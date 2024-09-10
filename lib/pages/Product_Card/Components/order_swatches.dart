@@ -97,6 +97,13 @@ class _OrderSwatchesButtonState extends State<OrderSwatchesButton> {
       child: ExpansionTile(
         title: const Text('Order Swatches'),
         children: [
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Tap the designs to place order',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
           Wrap(
             children: List<Widget>.generate(_imageUrls.length, (index) {
               return GestureDetector(
