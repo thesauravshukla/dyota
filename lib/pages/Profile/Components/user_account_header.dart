@@ -42,16 +42,18 @@ class UserAccountHeader extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.black,
             ),
-            accountName: Text(
-              "Loading...",
-              style: TextStyle(color: Colors.white),
-            ),
+            accountName: null, // Removed the name section
             accountEmail: Text(
               "Loading...",
               style: TextStyle(color: Colors.white),
             ),
             currentAccountPicture: CircleAvatar(
-              backgroundImage: AssetImage('assets/profile_picture.png'),
+              backgroundColor: Colors.grey,
+              child: Icon(
+                Icons.person,
+                size: 40,
+                color: Colors.white,
+              ),
             ),
           );
         } else if (snapshot.hasError) {
@@ -60,35 +62,38 @@ class UserAccountHeader extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.black,
             ),
-            accountName: Text(
-              "Error",
-              style: TextStyle(color: Colors.white),
-            ),
+            accountName: null, // Removed the name section
             accountEmail: Text(
               "Error",
               style: TextStyle(color: Colors.white),
             ),
             currentAccountPicture: CircleAvatar(
-              backgroundImage: AssetImage('assets/profile_picture.png'),
+              backgroundColor: Colors.grey,
+              child: Icon(
+                Icons.person,
+                size: 40,
+                color: Colors.white,
+              ),
             ),
           );
         } else {
           // Use the retrieved name or a default value if the snapshot has data
-          String accountName = snapshot.data ?? "No name";
           return UserAccountsDrawerHeader(
             decoration: const BoxDecoration(
               color: Colors.black,
             ),
-            accountName: Text(
-              accountName,
-              style: const TextStyle(color: Colors.white),
-            ),
+            accountName: null, // Removed the name section
             accountEmail: Text(
               userEmail,
               style: const TextStyle(color: Colors.white),
             ),
             currentAccountPicture: const CircleAvatar(
-              backgroundImage: AssetImage('assets/profile_picture.png'),
+              backgroundColor: Colors.grey,
+              child: Icon(
+                Icons.person,
+                size: 40,
+                color: Colors.white,
+              ),
             ),
           );
         }

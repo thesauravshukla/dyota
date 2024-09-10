@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/components/generic_appbar.dart';
 import 'package:dyota/pages/My_Bag/Components/itemcard.dart';
-import 'package:dyota/pages/My_Bag/Components/promocodefield.dart';
 import 'package:dyota/pages/My_Bag/Components/total_amount_selection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -64,7 +63,7 @@ class _MyBagState extends State<MyBag> {
             return ListView(
               children: [
                 ...itemCards,
-                PromoCodeField(),
+                // PromoCodeField(),
                 TotalAmountSection(),
               ],
             );
@@ -79,7 +78,7 @@ class _MyBagState extends State<MyBag> {
 
   Scaffold _buildScaffold(BuildContext context, Widget body) {
     return Scaffold(
-      appBar: genericAppbar(title: 'My Bag'),
+      appBar: genericAppbar(title: 'My Bag', showBackButton: false),
       body: body,
     );
   }
