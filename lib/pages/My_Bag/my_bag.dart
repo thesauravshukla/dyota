@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:decimal/decimal.dart';
 import 'package:dyota/components/generic_appbar.dart';
 import 'package:dyota/pages/My_Bag/Components/itemcard.dart';
 import 'package:dyota/pages/My_Bag/Components/total_amount_selection.dart';
@@ -63,8 +64,7 @@ class _MyBagState extends State<MyBag> {
             return ListView(
               children: [
                 ...itemCards,
-                // PromoCodeField(),
-                TotalAmountSection(),
+                TotalAmountSection(minimumOrderQuantity: Decimal.fromInt(100)),
               ],
             );
           } catch (e) {

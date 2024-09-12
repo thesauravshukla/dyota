@@ -5,6 +5,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class TotalAmountSection extends StatelessWidget {
+  final Decimal minimumOrderQuantity;
+
+  const TotalAmountSection({Key? key, required this.minimumOrderQuantity})
+      : super(key: key);
+
   Future<Decimal> _calculateSubtotal() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.email == null) {
@@ -88,12 +93,15 @@ class TotalAmountSection extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
               SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => PaymentPage()),
-                  );
-                },
+                onPressed: totalAmount >= minimumOrderQuantity
+                    ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => PaymentPage()),
+                        );
+                      }
+                    : null,
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: Colors.black, // Text color

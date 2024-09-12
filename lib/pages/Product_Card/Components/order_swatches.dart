@@ -100,7 +100,7 @@ class _OrderSwatchesButtonState extends State<OrderSwatchesButton> {
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
-              'Tap the designs to place order',
+              'Tap the designs to select them ',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
