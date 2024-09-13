@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decimal/decimal.dart';
 import 'package:dyota/components/generic_appbar.dart';
+import 'package:dyota/pages/Payment/payments.dart';
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_card.dart';
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_dialogs.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -63,52 +64,61 @@ class _PaymentPageState extends State<PaymentPage> {
       }
     }
 
-    final totalAmount = subtotal;
+    final totalAmount = subtotal + tax;
 
-    final selectedAddressData = addresses[_selectedAddress!];
+    // Initiate Razorpay payment
+    String paymentResult = await initiatePayment(totalAmount);
 
-    final orderData = {
-      'cartItems': cartItemIds,
-      'deliveryAddress': {
-        'displayName': 'Delivery Address',
-        'toDisplay': 1,
-        'title': selectedAddressData['Title'],
-        'address': selectedAddressData['Address'],
-      },
-      'orderId': {
-        'displayName': 'Order ID',
-        'toDisplay': 1,
-        'value': orderId,
-      },
-      'orderTimestamp': timestamp,
-      'totalAmount': {
-        'displayName': 'Total Amount',
-        'toDisplay': 1,
-        'value': totalAmount.toString(),
-      },
-    };
+    if (paymentResult == 'success') {
+      final selectedAddressData = addresses[_selectedAddress!];
 
-    final orderDocRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(email)
-        .collection('processingOrderList')
-        .doc(orderId);
+      final orderData = {
+        'cartItems': cartItemIds,
+        'deliveryAddress': {
+          'displayName': 'Delivery Address',
+          'toDisplay': 1,
+          'title': selectedAddressData['Title'],
+          'address': selectedAddressData['Address'],
+        },
+        'orderId': {
+          'displayName': 'Order ID',
+          'toDisplay': 1,
+          'value': orderId,
+        },
+        'orderTimestamp': timestamp,
+        'totalAmount': {
+          'displayName': 'Total Amount',
+          'toDisplay': 1,
+          'value': totalAmount.toString(),
+        },
+      };
 
-    WriteBatch batch = FirebaseFirestore.instance.batch();
+      final orderDocRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(email)
+          .collection('processingOrderList')
+          .doc(orderId);
 
-    // Add the order data
-    batch.set(orderDocRef, orderData);
+      WriteBatch batch = FirebaseFirestore.instance.batch();
 
-    // Delete all cart items
-    for (var doc in cartItemsSnapshot.docs) {
-      batch.delete(doc.reference);
+      // Add the order data
+      batch.set(orderDocRef, orderData);
+
+      // Delete all cart items
+      for (var doc in cartItemsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Order placed successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Payment failed. Please try again.')),
+      );
     }
-
-    await batch.commit();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Order placed successfully')),
-    );
   }
 
   @override
