@@ -23,14 +23,14 @@ class RazorpayPayment {
     _paymentCompleter = Completer<String>();
 
     var options = {
-      'key': 'rzp_test_1DP5n2I1B5Gjcf', // Replace with your Razorpay API key
+      'key': 'rzp_live_ILgsfZCZoFIKMb',
       'amount': (amount * 100).toInt(), // Amount in paise
       'name': 'Dyota',
       'description': 'Payment for order',
       'currency': 'INR',
       'prefill': {'email': 'example@example.com'},
       'external': {
-        'wallets': ['paytm']
+        'wallets': ['paytm', 'phonepe', 'gpay', 'applepay', 'amazonpay', 'upi']
       }
     };
 
