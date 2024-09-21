@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dyota/components/bottom_navigation_bar_component.dart';
+import 'package:dyota/pages/Home/home_page.dart';
 import 'package:dyota/pages/Login_Or_Register/login_or_register_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +17,7 @@ class AuthPage extends StatelessWidget {
             // User is logged in
             User? user = snapshot.data;
             checkAndCreateUserRecord(user);
-            return ParentWidget(); // Your logged-in user's home widget
+            return HomePage(); // Your logged-in user's home widget
           } else {
             // User is NOT logged in
             return LoginOrRegisterPage();

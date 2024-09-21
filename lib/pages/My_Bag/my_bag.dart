@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decimal/decimal.dart';
+import 'package:dyota/components/bottom_navigation_bar_component.dart';
 import 'package:dyota/components/generic_appbar.dart';
+import 'package:dyota/pages/Home/home_page.dart';
 import 'package:dyota/pages/My_Bag/Components/itemcard.dart';
 import 'package:dyota/pages/My_Bag/Components/total_amount_selection.dart';
+import 'package:dyota/pages/Profile/profile_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
@@ -76,10 +79,37 @@ class _MyBagState extends State<MyBag> {
     );
   }
 
+  void _onItemTapped(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+        break;
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MyBag()),
+        );
+        break;
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ProfileScreen()),
+        );
+        break;
+    }
+  }
+
   Scaffold _buildScaffold(BuildContext context, Widget body) {
     return Scaffold(
       appBar: genericAppbar(title: 'My Bag', showBackButton: false),
       body: body,
+      bottomNavigationBar: CustomBottomNavigationBar(
+        selectedIndex: 1, // Set the current index as needed
+        onItemTapped: (index) => _onItemTapped(context, index),
+      ),
     );
   }
 }

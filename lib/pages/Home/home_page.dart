@@ -4,6 +4,8 @@ import 'package:dyota/pages/Home/Components/best_seller_header.dart';
 import 'package:dyota/pages/Home/Components/category_grid_component.dart';
 import 'package:dyota/pages/Home/Components/category_header_component.dart';
 import 'package:dyota/pages/Home/Components/product_grid_component.dart';
+import 'package:dyota/pages/My_Bag/my_bag.dart';
+import 'package:dyota/pages/Profile/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
@@ -29,6 +31,29 @@ class HomePage extends StatelessWidget {
     }
 
     return documentIds;
+  }
+
+  void _onItemTapped(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+        break;
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MyBag()),
+        );
+        break;
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ProfileScreen()),
+        );
+        break;
+    }
   }
 
   @override
@@ -83,6 +108,39 @@ class HomePage extends StatelessWidget {
           }
         },
       ),
+      bottomNavigationBar: CustomBottomNavigationBar(
+        selectedIndex: 0, // Set the current index as needed
+        onItemTapped: (index) => _onItemTapped(context, index),
+      ),
+    );
+  }
+}
+
+class CustomBottomNavigationBar extends StatelessWidget {
+  final int selectedIndex;
+  final Function(int) onItemTapped;
+
+  const CustomBottomNavigationBar({
+    Key? key,
+    required this.selectedIndex,
+    required this.onItemTapped,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return BottomNavigationBar(
+      backgroundColor: Colors.black,
+      selectedItemColor: Colors.white,
+      unselectedItemColor: Colors.white54,
+      type: BottomNavigationBarType.fixed,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.shopping_bag), label: 'Bag'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline), label: 'Profile'),
+      ],
+      currentIndex: selectedIndex,
+      onTap: onItemTapped,
     );
   }
 }
