@@ -1,5 +1,5 @@
-import 'package:dyota/pages/My%20Orders/Components/orderlist.dart';
-import 'package:dyota/pages/My%20Orders/Components/ordersappbar.dart';
+import 'package:dyota/pages/My_Orders/Components/orderlist.dart';
+import 'package:dyota/pages/My_Orders/Components/ordersappbar.dart';
 import 'package:flutter/material.dart';
 
 class MyOrdersPage extends StatefulWidget {

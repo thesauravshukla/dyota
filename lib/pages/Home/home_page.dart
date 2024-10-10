@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dyota/components/bottom_navigation_bar_component.dart';
 import 'package:dyota/pages/Home/Components/app_bar_component.dart';
 import 'package:dyota/pages/Home/Components/best_seller_header.dart';
 import 'package:dyota/pages/Home/Components/category_grid_component.dart';
@@ -112,35 +113,6 @@ class HomePage extends StatelessWidget {
         selectedIndex: 0, // Set the current index as needed
         onItemTapped: (index) => _onItemTapped(context, index),
       ),
-    );
-  }
-}
-
-class CustomBottomNavigationBar extends StatelessWidget {
-  final int selectedIndex;
-  final Function(int) onItemTapped;
-
-  const CustomBottomNavigationBar({
-    Key? key,
-    required this.selectedIndex,
-    required this.onItemTapped,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      backgroundColor: Colors.black,
-      selectedItemColor: Colors.white,
-      unselectedItemColor: Colors.white54,
-      type: BottomNavigationBarType.fixed,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.shopping_bag), label: 'Bag'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline), label: 'Profile'),
-      ],
-      currentIndex: selectedIndex,
-      onTap: onItemTapped,
     );
   }
 }

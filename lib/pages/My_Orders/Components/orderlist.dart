@@ -1,4 +1,4 @@
-import 'package:dyota/pages/My%20Orders/Components/order_card.dart';
+import 'package:dyota/pages/My_Orders/Components/order_card.dart';
 import 'package:flutter/material.dart';
 
 class OrderList extends StatelessWidget {
