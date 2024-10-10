@@ -216,3 +216,171 @@ The `SearchPage` class is a stateful widget that provides a user interface for s
 - Iterates through each document and checks if any field matches the query, assigning a priority based on the match type.
 - Returns a sorted list of matching document IDs based on their priority.
 
+## CategoryHeader
+
+### Overview
+
+The `CategoryHeader` class is a stateless widget that displays a header for the categories section of the application.
+
+### Features
+
+- **Static Header**: Displays a fixed title "Categories" to indicate the section for category listings.
+- **Custom Styling**: Utilizes a specific font family, size, weight, and color.
+
+### Methods
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `CategoryHeader`.
+- Uses padding to create space around the text.
+
+## ProductGrid
+
+### Overview
+
+The `ProductGrid` class is a stateless widget that displays a grid of products based on a list of document IDs. It utilizes a `GridView` to present the products.
+
+### Features
+
+- **Dynamic Product Display**: Renders a grid of products using the provided document IDs.
+- **Logging**: Implements logging to track the building process of the grid and individual product items.
+
+### Constructor
+
+- **Parameters**:
+  - `documentIds`: A list of strings representing the document IDs of the products to be displayed.
+
+### Methods
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ProductGrid`.
+- Logs the number of items being built for the grid.
+- Utilizes a `GridView.builder` to create a grid layout with:
+  - **Non-scrollable**: The grid is set to not scroll, allowing it to fit within its parent widget.
+  - **Dynamic Item Count**: The number of items displayed is based on the length of the `documentIds` list.
+  - **Grid Delegate**: Configures the grid to have a fixed number of columns (2) and specified spacing between items.
+  - **Item Builder**: For each item, it logs the document ID being processed and returns a `ProductListItem` widget wrapped in padding for spacing.
+
+## CategoryItem
+
+### Overview
+
+The `CategoryItem` class is a stateless widget that represents an individual category item in the application. It fetches category data from Firestore and displays the category image and name. When tapped, it navigates to the corresponding category page.
+
+### Features
+
+- **Dynamic Data Fetching**: Retrieves category names, image file names, and document IDs from Firestore.
+- **Image Handling**: Fetches the download URL for category images stored in Firebase Storage.
+- **User Interaction**: Allows users to tap on a category item to navigate to the respective category page.
+
+### Constructor
+
+- **Parameters**:
+  - `index`: An integer representing the index of the category item, used to access specific category data.
+
+### Methods
+
+#### `Future<String> getImageUrl(String imageName)`
+
+- Fetches the download URL for a category image from Firebase Storage.
+- Returns the URL as a string.
+
+#### `Future<List<Map<String, String>>> getCategoryData()`
+
+- Fetches category data from Firestore, including category names, image file names, and document IDs.
+- Returns a list of maps containing the category data.
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `CategoryItem`.
+- Utilizes a `FutureBuilder` to manage asynchronous data fetching for category data.
+- Handles various states of the data fetching process:
+  - Displays nothing while waiting for data.
+  - Throws an exception if an error occurs during data fetching.
+  - Logs a warning and displays nothing if no data is found.
+- If data is available, it fetches the image URL using another `FutureBuilder`:
+  - Displays a loading indicator while fetching the image.
+  - Throws an exception if an error occurs while fetching the image.
+  - Logs a warning if no image is found.
+- If the image URL is successfully retrieved, it displays the image and category name in a column layout:
+  - The image is wrapped in a `GestureDetector` to handle taps, navigating to the `CategoryPage` with the corresponding document ID.
+  - Includes spacing between the image and text for better visual separation.
+
+## CategoryPage
+
+### Overview
+
+The `CategoryPage` class is a stateful widget that displays a specific category of items within the application. It allows users to view subcategories, sort items, and select categories to filter the displayed items. The page fetches data from Firestore and updates the UI based on user interactions.
+
+### Features
+
+- **Dynamic Data Fetching**: Retrieves category data, including subcategories and items, from Firestore.
+- **Sorting Options**: Provides users with the ability to sort items by price in ascending or descending order.
+- **User Interaction**: Allows users to select categories and view items based on their selections.
+
+### Constructor
+
+- **Parameters**:
+  - `categoryDocumentId`: A string representing the document ID of the category to be displayed.
+
+## State Management
+
+#### `_CategoryPageState`
+
+- **Attributes**:
+  - `isGridView`: A boolean indicating whether the items should be displayed in a grid view.
+  - `selectedCategories`: A list of strings representing the categories selected by the user.
+  - `selectedSortOption`: A string representing the currently selected sorting option.
+  - `categoryName`: A string for the name of the category.
+  - `subCategories`: A list of strings for the subcategories under the main category.
+  - `itemDocumentIds`: A list of strings for the document IDs of the items to be displayed.
+  - `isLoading`: A boolean indicating whether data is currently being loaded.
+
+#### `initState()`
+
+- Initializes the state and fetches category data when the widget is first created.
+- Logs the initialization process and handles any errors that occur during data fetching.
+
+#### `_selectCategory(String category)`
+
+- Updates the selected categories based on user interaction.
+- Fetches items again after updating the selected categories.
+
+#### `_showSortOptions(BuildContext context)`
+
+- Displays a modal bottom sheet with sorting options for the user to select.
+
+#### `_buildSortOptions(BuildContext context)`
+
+- Constructs a list of sorting options for the modal bottom sheet.
+
+#### `_buildSortOption(BuildContext context, String option)`
+
+- Creates a list tile for each sorting option, allowing the user to select it and fetch items accordingly.
+
+#### `_fetchCategoryData()`
+
+- Asynchronously fetches category data from Firestore, including the category name and subcategories.
+- Updates the state with the fetched data and logs the success or failure of the operation.
+
+#### `_fetchItems({String sortOption = 'Sort'})`
+
+- Asynchronously fetches item document IDs based on the selected categories and category name.
+- Sorts the items based on the selected sorting option and updates the state with the sorted item IDs.
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `CategoryPage`.
+- Displays a loading indicator while data is being fetched.
+- Contains a `Scaffold` with:
+  - A custom app bar displaying the category name.
+  - A scrollable column containing:
+    - A list of subcategories.
+    - A sort button to trigger sorting options.
+    - A grid view of items or a loading indicator based on the loading state.
+
+#### `Widget buildGridView()`
+
+- Constructs a grid view to display the items based on the fetched document IDs.
+- Returns an empty text widget if there are no items to display.
