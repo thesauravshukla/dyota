@@ -384,3 +384,618 @@ The `CategoryPage` class is a stateful widget that displays a specific category 
 
 - Constructs a grid view to display the items based on the fetched document IDs.
 - Returns an empty text widget if there are no items to display.
+
+## ProductListItem
+
+### Overview
+
+The `ProductListItem` class is a stateless widget that represents an individual product in the application. It fetches product data from Firestore and displays the product's image, brand, title, and price. When tapped, it navigates to a detailed product view.
+
+### Features
+
+- **Dynamic Data Fetching**: Retrieves product data, including image locations and pricing, from Firestore.
+- **Image Handling**: Fetches the download URL for the product image stored in Firebase Storage.
+- **User Interaction**: Allows users to tap on the product item to view detailed information.
+
+### Constructor
+
+- **Parameters**:
+  - `documentId`: A string representing the document ID of the product to be displayed.
+
+## Methods
+
+#### `Future<Map<String, dynamic>> fetchProductData()`
+
+- Asynchronously fetches product data from Firestore using the provided `documentId`.
+- Returns a map containing the product's details.
+
+#### `Future<String> getImageUrl(String path)`
+
+- Asynchronously retrieves the download URL for the product image from Firebase Storage.
+- Returns the URL as a string.
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ProductListItem`.
+- Utilizes a `FutureBuilder` to manage asynchronous data fetching for product data.
+- Handles various states of the data fetching process:
+  - Displays nothing while waiting for data.
+  - Throws an exception if an error occurs during data fetching.
+  - If data is available, it fetches the image URL using another `FutureBuilder`:
+    - Displays a loading indicator while fetching the image.
+    - Throws an exception if an error occurs while fetching the image.
+    - If the image URL is successfully retrieved, it displays the product card with the image and details.
+
+#### `Widget buildProductCard(String imageUrl, Map<String, dynamic> data)`
+
+- Constructs the UI for the product card.
+- Extracts and formats the brand, title, and price from the product data.
+- Displays the product image, brand, title, and price in a card layout.
+- Includes a discount label if applicable.
+
+## genericAppbar
+
+### Overview
+
+The `genericAppbar` class is a stateless widget that provides a customizable application bar for the app. It allows for the display of a title and optionally includes a back button for navigation.
+
+### Features
+
+- **Customizable Title**: Accepts a title string to be displayed in the app bar.
+- **Back Button Control**: Includes an option to show or hide the back button, allowing for flexible navigation options.
+- **Consistent Styling**: Sets a consistent background color and text color for the app bar.
+
+### Constructor
+
+- **Parameters**:
+  - `title`: A required string that sets the title of the app bar.
+  - `showBackButton`: An optional boolean (defaulting to `true`) that determines whether the back button is displayed.
+
+### Methods
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `genericAppbar`.
+- Configures the app bar with:
+  - A black background color.
+  - White icon and text colors for visibility.
+  - A leading back button that pops the current screen from the navigation stack if `showBackButton` is true.
+  - No leading widget if `showBackButton` is false.
+
+#### `@override Size get preferredSize`
+
+- Returns the preferred size of the app bar, which is set to the standard toolbar height.
+
+## LoginOrRegisterPage
+
+### Overview
+
+The `LoginOrRegisterPage` class is a stateful widget that provides a user interface for users to either log in or register for an account. It allows users to toggle between the login and registration forms seamlessly.
+
+### Features
+
+- **Toggle Functionality**: Users can switch between the login and registration pages using a simple toggle mechanism.
+- **Dynamic UI**: Displays either the `LoginPage` or `RegisterPage` based on the current state.
+
+### Constructor
+
+- **Parameters**:
+  - None. The constructor initializes the widget with a key.
+
+### State Management
+
+#### `_LoginOrRegisterPageState`
+
+- **Attributes**:
+  - `showLoginPage`: A boolean that determines which page (login or register) is currently being displayed. It is initialized to `true`, meaning the login page is shown by default.
+
+#### `void togglePages()`
+
+- Toggles the value of `showLoginPage` between `true` and `false`.
+- Calls `setState` to update the UI whenever the toggle occurs.
+
+## Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `LoginOrRegisterPage`.
+- Checks the value of `showLoginPage`:
+  - If `true`, it returns the `LoginPage` widget, passing the `togglePages` function as a callback for when the user wants to switch to the registration page.
+  - If `false`, it returns the `RegisterPage` widget, also passing the `togglePages` function for switching back to the login page.
+
+## LoginPage
+
+### Overview
+
+The `LoginPage` class is a stateful widget that provides a user interface for users to log into their accounts. It includes fields for email and password input, a sign-in button, and options for password recovery and registration.
+
+### Features
+
+- **User Authentication**: Allows users to log in using their email and password.
+- **Error Handling**: Displays an error message if invalid credentials are provided.
+- **Navigation**: Provides options to navigate to the password recovery page and to switch to the registration page.
+
+### Constructor
+
+- **Parameters**:
+  - `onTap`: A callback function that is called when the user wants to switch to the registration page.
+
+### State Management
+
+#### `_LoginPageState`
+
+- **Attributes**:
+  - `emailController`: A `TextEditingController` for managing the email input field.
+  - `passwordController`: A `TextEditingController` for managing the password input field.
+  - `showInvalidCredentials`: A boolean that tracks whether to display an invalid credentials message.
+
+#### `void signUserIn()`
+
+- Asynchronously attempts to sign the user in using Firebase Authentication.
+- Displays a loading indicator while the sign-in process is ongoing.
+- If the sign-in fails, updates the state to show an invalid credentials message.
+
+## Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `LoginPage`.
+- Utilizes a `Scaffold` with a black background and a `SafeArea` to ensure content is displayed within the safe area of the device.
+- Contains a `ListView` to allow scrolling of the content, which includes:
+  - A logo and heading for the application.
+  - A welcome message.
+  - Input fields for email and password using `MyTextField`.
+  - A message indicating invalid credentials if applicable.
+  - A link to the password recovery page.
+  - A sign-in button that triggers the `signUserIn` method.
+  - A section for Google sign-in using `SquareTile`.
+  - A prompt for users who are not members to register, which triggers the `onTap` callback.
+
+## RegisterPage
+
+### Overview
+
+The `RegisterPage` class is a stateful widget that provides a user interface for new users to register for an account. It includes fields for email, password, and password confirmation, as well as a button to submit the registration form.
+
+### Features
+
+- **User Registration**: Allows users to create an account using their email and password.
+- **Error Handling**: Displays appropriate messages for invalid input, such as weak passwords or email already in use.
+- **Navigation**: Provides an option to navigate back to the login page after registration.
+
+### Constructor
+
+- **Parameters**:
+  - `onTap`: A callback function that is called when the user wants to switch to the login page.
+
+### State Management
+
+#### `_RegisterPageState`
+
+- **Attributes**:
+  - `emailController`: A `TextEditingController` for managing the email input field.
+  - `passwordController`: A `TextEditingController` for managing the password input field.
+  - `confirmPasswordController`: A `TextEditingController` for managing the password confirmation input field.
+  - `showInvalidCredentials`: An integer that tracks the type of error encountered during registration.
+
+#### `void signUserUp()`
+
+- Asynchronously attempts to register the user using Firebase Authentication.
+- Displays a loading indicator while the registration process is ongoing.
+- If registration is successful:
+  - Closes the loading indicator.
+  - Shows a success message using a `SnackBar`.
+  - Waits for a few seconds and then navigates to the `LoginPage`.
+- If registration fails:
+  - Closes the loading indicator.
+  - Updates the state to reflect the type of error encountered (e.g., invalid email, weak password, email already in use).
+
+## Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `RegisterPage`.
+- Utilizes a `Scaffold` with a black background and a `SafeArea` to ensure content is displayed within the safe area of the device.
+- Contains a `ListView` to allow scrolling of the content, which includes:
+  - A logo and heading for the application.
+  - Input fields for email, password, and password confirmation using `MyTextField`.
+  - A register button that triggers the `signUserUp` method.
+  - A section for Google sign-in using `SquareTile`.
+  - A prompt for users who already have an account to log in, which triggers the `onTap` callback.
+
+## MyBag
+
+### Overview
+
+The `MyBag` class is a stateful widget that represents the user's shopping bag within the application. It displays the items that the user has added to their cart and provides functionality to navigate to different sections of the app.
+
+### Features
+
+- **User Authentication Check**: Verifies if the user is logged in before displaying the bag contents.
+- **Real-time Data Fetching**: Uses a `StreamBuilder` to listen for changes in the user's cart items stored in Firestore.
+- **Dynamic UI Updates**: Automatically updates the UI when items are added or removed from the cart.
+- **Navigation**: Provides a bottom navigation bar to switch between the home page, the bag, and the user profile.
+
+### Constructor
+
+- **MyBag**: The constructor initializes the widget without any parameters.
+
+## State Management
+
+#### `_MyBagState`
+
+- **Attributes**:
+  - `Logger _logger`: A logger instance for logging information and errors related to the `MyBag` widget.
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `MyBag` widget.
+- Checks if the user is logged in:
+  - If not, displays a message prompting the user to log in.
+- If the user is logged in, it sets up a `StreamBuilder` to listen for changes in the user's cart items:
+  - Displays a loading indicator while waiting for data.
+  - Handles errors that may occur during data fetching.
+  - If the cart is empty, displays a message indicating that the bag is empty.
+  - If items are present, it builds a list of `ItemCard` widgets for each item in the cart, along with a `TotalAmountSection` to display the total amount.
+
+#### `void _onItemTapped(BuildContext context, int index)`
+
+- Handles navigation when an item in the bottom navigation bar is tapped:
+  - Navigates to the home page, the current bag, or the profile screen based on the selected index.
+
+#### `Scaffold _buildScaffold(BuildContext context, Widget body)`
+
+- Constructs a `Scaffold` widget that includes:
+  - A custom app bar with the title "My Bag".
+  - The body content passed as a parameter.
+  - A bottom navigation bar that allows users to switch between different sections of the app.
+
+## ItemCard
+
+### Overview
+
+The `ItemCard` class is a stateful widget that represents an individual item in the user's shopping bag. It displays the item's details, including an image and various attributes, and provides functionality to delete the item from the cart.
+
+### Features
+
+- **Dynamic Data Fetching**: Retrieves item data from Firestore based on the user's email and the item's document ID.
+- **User Interaction**: Allows users to tap on the item to view its details in a separate `ProductCard` screen.
+- **Delete Functionality**: Provides an option to delete the item from the cart with a confirmation dialog.
+
+### Constructor
+
+- **Parameters**:
+  - `documentId`: A required string representing the document ID of the item.
+  - `onDelete`: A required callback function that is called when the item is deleted.
+
+### State Management
+
+#### `_ItemCardState`
+
+- **Attributes**:
+  - `_isDeleted`: A boolean that tracks whether the item has been deleted.
+
+#### `String _parseDocumentId(String input)`
+
+- Parses the document ID to extract a relevant portion of the ID for further processing.
+
+#### `String _getFieldValue(Map<String, dynamic> field)`
+
+- Extracts and formats the value, prefix, and suffix from a field map, returning a combined string.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ItemCard`.
+- Checks if the item has been deleted:
+  - If deleted, returns an empty widget.
+- Retrieves the current user and checks if they are logged in:
+  - If not logged in, displays a message indicating the user needs to log in.
+- Uses a `FutureBuilder` to fetch cart data based on the user's email and the item's document ID:
+  - Displays a loading indicator while waiting for data.
+  - Handles errors that may occur during data fetching.
+  - If no cart data is found, displays a message indicating this.
+- If cart data is available, it processes the data and builds the UI:
+  - Uses another `FutureBuilder` to fetch additional document data for the item.
+  - Displays a loading indicator while waiting for the document data.
+  - Handles errors and empty data scenarios.
+- Once the document data is retrieved, it constructs the item card UI:
+  - Displays the item's image using the `ImageLoader` component.
+  - Shows the item's attributes in a formatted manner.
+  - Includes a delete button that triggers a confirmation dialog before deleting the item.
+
+## ImageLoader
+
+### Overview
+
+The `ImageLoader` class is a stateless widget designed to asynchronously load an image from a specified location and provide it to a builder function for rendering. It utilizes a `FutureBuilder` to manage the loading state and handle potential errors during the image fetching process.
+
+### Features
+
+- **Asynchronous Image Loading**: Fetches the image URL from a remote storage location using a provided image path.
+- **Error Handling**: Logs and throws exceptions for any errors encountered during the image fetching process.
+- **Flexible Rendering**: Uses a builder function to allow for customizable rendering of the loaded image.
+
+### Constructor
+
+- **Parameters**:
+  - `imageLocation`: A required string that specifies the location of the image to be loaded.
+  - `builder`: A required function that takes a `BuildContext` and a `String` (the image URL) and returns a `Widget`. This allows the user to define how the image should be displayed once it is loaded.
+
+### Methods
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ImageLoader`.
+- Logs the start of the image loading process.
+- Uses a `FutureBuilder` to handle the asynchronous fetching of the image URL:
+  - **Loading State**: Displays a loading indicator while the image URL is being fetched.
+  - **Error State**: Logs the error and throws an exception if an error occurs during the fetching process.
+  - **No Data State**: Logs a warning and displays an empty container if no data is found.
+  - **Success State**: Once the image URL is successfully fetched, it logs the success and calls the builder function to render the image.
+
+## TotalAmountSection
+
+### Overview
+
+The `TotalAmountSection` class is a stateless widget that displays the total amount of items in the user's shopping cart, including the subtotal and applicable taxes. It also provides a button to proceed to the payment page if the total amount meets a specified minimum order quantity.
+
+### Features
+
+- **Subtotal Calculation**: Computes the subtotal of items in the user's cart by fetching data from Firestore.
+- **Tax Calculation**: Calculates the total tax based on the items in the cart.
+- **Total Amount Calculation**: Combines the subtotal and tax to display the total amount.
+- **Conditional Navigation**: Enables navigation to the payment page only if the total amount meets the minimum order quantity.
+
+### Constructor
+
+- **Parameters**:
+  - `minimumOrderQuantity`: A required `Decimal` that specifies the minimum amount required to proceed to payment.
+
+### Methods
+
+#### `Future<Decimal> _calculateSubtotal()`
+
+- Asynchronously calculates the subtotal of items in the user's cart.
+- Retrieves the current user's email and fetches the cart items from Firestore.
+- Sums the prices of all items in the cart and returns the subtotal as a `Decimal`.
+
+#### `Future<Decimal> _calculateTax()`
+
+- Asynchronously calculates the total tax for items in the user's cart.
+- Retrieves the current user's email and fetches the cart items from Firestore.
+- Iterates through the cart items to sum the tax values and returns the total tax as a `Decimal`.
+
+#### `Future<Decimal> _calculateTotalAmount()`
+
+- Asynchronously calculates the total amount by combining the subtotal and tax.
+- Calls the `_calculateSubtotal` and `_calculateTax` methods and returns the total amount as a `Decimal`.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `TotalAmountSection`.
+- Uses a `FutureBuilder` to handle the asynchronous calculation of the total amount:
+  - Displays a loading indicator while waiting for the total amount to be calculated.
+  - Handles errors that may occur during the calculation.
+- Once the total amount is available, it displays:
+  - The total amount formatted to two decimal places.
+  - A button to proceed to the payment page, which is enabled only if the total amount meets the minimum order quantity.
+
+## PaymentPage
+
+### Overview
+
+The `PaymentPage` class is a stateful widget that facilitates the payment process for the user's order. It allows users to select a shipping address, view the total amount for their cart items, and initiate the payment process. The page integrates with Firebase for data storage and retrieval.
+
+### Features
+
+- **Address Selection**: Users can select a shipping address from their saved addresses or add a new one.
+- **Cart Item Summary**: Displays a summary of items in the cart, including subtotal, tax, and total amount.
+- **Payment Processing**: Initiates payment through a payment gateway (e.g., Razorpay) and handles order placement.
+- **Error Handling**: Provides feedback to users through snack bars for various actions, such as missing addresses or payment failures.
+
+### Constructor
+
+- **PaymentPage**: The constructor initializes the widget without any parameters.
+
+## State Management
+
+#### `_PaymentPageState`
+
+- **Attributes**:
+  - `_selectedAddress`: An integer that holds the index of the currently selected address. It can be null if no address is selected.
+  - `addresses`: A list of maps that stores the user's saved addresses.
+
+#### `void _handlePay() async`
+
+- Handles the payment process:
+  - Checks if any address is selected; if not, shows a snack bar prompting the user to select an address.
+  - Retrieves the current user's email and cart items from Firestore.
+  - Calculates the subtotal and tax for the cart items.
+  - Initiates the payment process and handles the result:
+    - If successful, saves the order details to Firestore and deletes the cart items.
+    - If failed, shows an error message.
+
+#### `@override void initState()`
+
+- Initializes the state and fetches the user's addresses when the widget is first created.
+
+#### `Future<void> _fetchAddresses() async`
+
+- Fetches the user's saved addresses from Firestore and updates the state with the retrieved addresses.
+
+#### `Future<void> _addNewAddress(String title, String address) async`
+
+- Adds a new address to the user's saved addresses in Firestore.
+
+#### `Future<void> _editAddress(int index, String title, String address) async`
+
+- Edits an existing address in the user's saved addresses.
+
+#### `Future<void> _setMainAddress(int index) async`
+
+- Sets the specified address as the main address for the user.
+
+#### `Future<void> _deleteAddress(int indexToDelete) async`
+
+- Deletes the specified address from the user's saved addresses.
+
+#### `void _showAddAddressDialog()`
+
+- Displays a dialog for the user to input a new address.
+
+#### `void _showEditAddressDialog(int index)`
+
+- Displays a dialog for the user to edit an existing address.
+
+#### `void _showDeleteConfirmationDialog(int index)`
+
+- Displays a confirmation dialog before deleting an address.
+
+#### `Future<List<Map<String, dynamic>>> _fetchCartItems() async`
+
+- Fetches the items in the user's cart from Firestore.
+
+#### `Future<Decimal> _calculateTax() async`
+
+- Calculates the total tax for the items in the user's cart.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `PaymentPage`.
+- Displays the total amount, including items, tax, and total.
+- Provides a list of addresses for the user to select from.
+- Includes a button to initiate the payment process.
+
+## RazorpayPayment
+
+### Overview
+
+The `RazorpayPayment` class provides an interface for handling payments using the Razorpay payment gateway. It manages the payment process, including opening the checkout, handling payment success, errors, and external wallet responses.
+
+### Features
+
+- **Payment Processing**: Initiates the payment process and handles the response from Razorpay.
+- **Event Handling**: Listens for payment success, error, and external wallet events.
+- **Completer for Asynchronous Handling**: Uses a `Completer` to manage the asynchronous nature of the payment process.
+
+### Constructor
+
+#### `RazorpayPayment()`
+
+- Initializes the Razorpay instance and sets up event listeners for payment success, error, and external wallet events.
+
+### Methods
+
+#### `void dispose()`
+
+- Cleans up the Razorpay instance by calling the `clear` method to prevent memory leaks.
+
+#### `Future<String> openCheckout(double amount)`
+
+- Opens the Razorpay checkout interface for the user to complete the payment.
+- **Parameters**:
+  - `amount`: The total amount to be charged, in double format.
+- **Returns**: A `Future<String>` that resolves to the payment result ('success', 'failure', or 'external_wallet').
+- **Throws**: Completes with an error if the checkout cannot be opened.
+
+#### `void _handlePaymentSuccess(PaymentSuccessResponse response)`
+
+- Handles the event when a payment is successful.
+- Completes the payment completer with a success message and logs the payment ID.
+
+#### `void _handlePaymentError(PaymentFailureResponse response)`
+
+- Handles the event when a payment fails.
+- Completes the payment completer with a failure message and logs the error code and message.
+
+#### `void _handleExternalWallet(ExternalWalletResponse response)`
+
+- Handles the event when an external wallet is used for payment.
+- Completes the payment completer with a message indicating the use of an external wallet and logs the wallet name.
+
+### Function
+
+#### `Future<String> initiatePayment(Decimal amount)`
+
+- Initiates the payment process by creating an instance of `RazorpayPayment` and calling the `openCheckout` method.
+- **Parameters**:
+  - `amount`: The total amount to be charged, in `Decimal` format.
+- **Returns**: A `Future<String>` that resolves to the payment result.
+- **Handles**: Catches any errors during the payment initiation and ensures the Razorpay instance is disposed of after use.
+
+## AddressCard
+
+### Overview
+
+The `AddressCard` class is a stateless widget that represents a single address entry in the user interface. It displays the address details and provides options to edit, delete, and select the address as the shipping address. This component is commonly used in forms where users can manage their shipping addresses.
+
+### Features
+
+- **Display Address Information**: Shows the name and address details in a structured format.
+- **Edit and Delete Options**: Provides buttons to edit or delete the address.
+- **Selection Mechanism**: Allows users to select the address as their shipping address with a checkbox.
+
+### Constructor
+
+#### `AddressCard`
+
+- **Parameters**:
+  - `index`: A required integer that uniquely identifies the card.
+  - `name`: A required string representing the name associated with the address.
+  - `address`: A required string representing the full address.
+  - `isSelected`: A required boolean indicating whether this address is currently selected.
+  - `onSelected`: A required callback function that is called when the address is selected.
+  - `onEdit`: A required callback function that is called when the edit button is pressed.
+  - `onMainAddressChanged`: A required callback function that is called when the main address selection changes.
+  - `onDelete`: A required callback function that is called when the delete button is pressed.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `AddressCard`.
+- **Card Layout**: The card is styled with rounded corners and a shadow for visual separation.
+- **Address Display**: Displays the name in bold and the address below it.
+- **Edit and Delete Buttons**: Provides an edit button and a delete icon button for user interaction.
+- **Selection Checkbox**: Displays a checkbox that indicates whether the address is selected. Tapping on this checkbox triggers the `onSelected` callback.
+
+## AddressDialog
+
+### Overview
+
+The `AddressDialog` class is a stateless widget that presents a dialog for users to input or edit an address. It provides text fields for entering the title and address, along with options to save or cancel the action. This dialog is typically used in forms where users need to manage their shipping addresses.
+
+### Features
+
+- **Input Fields**: Provides text fields for users to enter the title and address.
+- **Save and Cancel Actions**: Includes buttons to save the entered data or cancel the operation.
+- **Initial Values**: Supports pre-filling the text fields with initial values for editing existing addresses.
+
+### Constructor
+
+#### `AddressDialog`
+
+- **Parameters**:
+  - `title`: A required string that specifies the title of the dialog.
+  - `initialTitle`: An optional string that provides the initial title for the text field (used when editing an address).
+  - `initialAddress`: An optional string that provides the initial address for the text field (used when editing an address).
+  - `onSave`: A required callback function that is called when the user saves the address. It takes two parameters: the title and the address as strings.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `AddressDialog`.
+- **Text Editing Controllers**: Initializes `TextEditingController` instances for the title and address fields, using the initial values if provided.
+- **AlertDialog**: Returns an `AlertDialog` widget that includes:
+  - A title displaying the dialog's title.
+  - A content section containing two `TextField` widgets for user input (title and address).
+  - Action buttons for canceling or saving the input:
+    - **Cancel Button**: Closes the dialog without saving.
+    - **Save Button**: Calls the `onSave` callback with the current text from the title and address fields.
