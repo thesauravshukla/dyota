@@ -70,7 +70,7 @@
       + [Overview](#overview-11)
       + [Features](#features-10)
       + [Constructor](#constructor-4)
-   * [State Management](#state-management-1)
+      + [State Management](#state-management-1)
          - [`_CategoryPageState`](#_categorypagestate)
          - [`initState()`](#initstate-1)
          - [`_selectCategory(String category)`](#_selectcategorystring-category)
@@ -85,7 +85,7 @@
       + [Overview](#overview-12)
       + [Features](#features-11)
       + [Constructor](#constructor-5)
-   * [Methods](#methods-7)
+      + [Methods](#methods-7)
          - [`Future<Map<String, dynamic>> fetchProductData()`](#futuremapstring-dynamic-fetchproductdata)
          - [`Future<String> getImageUrl(String path)`](#futurestring-getimageurlstring-path)
          - [`@override Widget build(BuildContext context)`](#override-widget-buildbuildcontext-context-9)
@@ -128,7 +128,7 @@
       + [Overview](#overview-17)
       + [Features](#features-16)
       + [Constructor](#constructor-10)
-   * [State Management](#state-management-5)
+      + [State Management](#state-management-5)
          - [`_MyBagState`](#_mybagstate)
          - [`@override Widget build(BuildContext context)`](#override-widget-buildbuildcontext-context-14)
          - [`void _onItemTapped(BuildContext context, int index)`](#void-_onitemtappedbuildcontext-context-int-index-1)
@@ -169,7 +169,7 @@
       + [Overview](#overview-22)
       + [Features](#features-21)
       + [Constructor](#constructor-14)
-   * [State Management](#state-management-7)
+      + [State Management](#state-management-7)
          - [`_PaymentPageState`](#_paymentpagestate)
          - [`void _handlePay() async`](#void-_handlepay-async)
          - [`@override void initState()`](#override-void-initstate)
@@ -355,7 +355,7 @@
       + [Features](#features-38)
       + [Constructor](#constructor-31)
          - [`OrderSwatchesButton`](#orderswatchesbutton-1)
-   * [State Management](#state-management-13)
+      + [State Management](#state-management-13)
          - [`_OrderSwatchesButtonState`](#_orderswatchesbuttonstate)
          - [`@override void initState()`](#override-void-initstate-6)
    * [Methods](#methods-16)
@@ -465,7 +465,6 @@
 ## Overview
 
 Dyota is a mobile application built using Flutter and Firebase. It provides a seamless shopping experience with features like user authentication, product browsing, cart management, order tracking, and more.
-
 
 <!-- TOC --><a name="authpage"></a>
 ## AuthPage
@@ -852,7 +851,7 @@ The `CategoryPage` class is a stateful widget that displays a specific category 
   - `categoryDocumentId`: A string representing the document ID of the category to be displayed.
 
 <!-- TOC --><a name="state-management-1"></a>
-## State Management
+### State Management
 
 <!-- TOC --><a name="_categorypagestate"></a>
 #### `_CategoryPageState`
@@ -945,7 +944,7 @@ The `ProductListItem` class is a stateless widget that represents an individual 
   - `documentId`: A string representing the document ID of the product to be displayed.
 
 <!-- TOC --><a name="methods-7"></a>
-## Methods
+### Methods
 
 <!-- TOC --><a name="futuremapstring-dynamic-fetchproductdata"></a>
 #### `Future<Map<String, dynamic>> fetchProductData()`
@@ -1206,7 +1205,7 @@ The `MyBag` class is a stateful widget that represents the user's shopping bag w
 - **MyBag**: The constructor initializes the widget without any parameters.
 
 <!-- TOC --><a name="state-management-5"></a>
-## State Management
+### State Management
 
 <!-- TOC --><a name="_mybagstate"></a>
 #### `_MyBagState`
@@ -1466,7 +1465,7 @@ The `PaymentPage` class is a stateful widget that facilitates the payment proces
 - **PaymentPage**: The constructor initializes the widget without any parameters.
 
 <!-- TOC --><a name="state-management-7"></a>
-## State Management
+### State Management
 
 <!-- TOC --><a name="_paymentpagestate"></a>
 #### `_PaymentPageState`
@@ -2494,7 +2493,7 @@ The `OrderSwatchesButton` class is a stateful widget that allows users to select
   - `documentIds`: A required list of strings representing the document IDs of the swatches to be displayed.
 
 <!-- TOC --><a name="state-management-13"></a>
-## State Management
+### State Management
 
 <!-- TOC --><a name="_orderswatchesbuttonstate"></a>
 #### `_OrderSwatchesButtonState`
