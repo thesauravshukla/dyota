@@ -14,7 +14,7 @@ Dyota is a mobile application built using Flutter and Firebase. It provides a se
 
 ### Overview
 
-The `AuthPage` is a stateless widget that serves as the authentication entry point for the application. It utilizes Firebase Authentication to manage user sessions and Firestore to store user-related data. The page dynamically updates based on the user's authentication state, providing a seamless experience for both logged-in and unauthenticated users.
+The `AuthPage` is a stateless widget that serves as the authentication entry point for the application. It utilizes Firebase Authentication to manage user sessions and Firestore to store user-related data. The page dynamically updates based on the user's authentication state.
 
 ### Features
 
@@ -470,7 +470,7 @@ The `genericAppbar` class is a stateless widget that provides a customizable app
 
 ### Overview
 
-The `LoginOrRegisterPage` class is a stateful widget that provides a user interface for users to either log in or register for an account. It allows users to toggle between the login and registration forms seamlessly.
+The `LoginOrRegisterPage` class is a stateful widget that provides a user interface for users to either log in or register for an account. It allows users to toggle between the login and registration forms.
 
 ### Features
 
@@ -999,3 +999,409 @@ The `AddressDialog` class is a stateless widget that presents a dialog for users
   - Action buttons for canceling or saving the input:
     - **Cancel Button**: Closes the dialog without saving.
     - **Save Button**: Calls the `onSave` callback with the current text from the title and address fields.
+
+## ProfileScreen
+
+### Overview
+
+The `ProfileScreen` class is a stateful widget that represents the user's profile page within the application. It displays user account information, including the number of shipping addresses, order history, and payment methods. The screen also provides options for logging out.
+
+### Features
+
+- **User Account Header**: Displays the user's account information at the top of the profile screen.
+- **Profile List Tiles**: Provides interactive list tiles for navigating to different sections such as orders, shipping addresses, and payment methods.
+- **Logout Functionality**: Allows users to log out of their account.
+
+### Constructor
+
+#### `ProfileScreen`
+
+- **Parameters**: 
+  - `key`: An optional key that can be used to control the widget's identity in the widget tree.
+
+### State Management
+
+#### `_ProfileScreenState`
+
+- **Attributes**:
+  - `_addressCount`: An integer that holds the count of the user's saved shipping addresses.
+
+#### `@override void initState()`
+
+- Initializes the state and fetches the address count when the widget is first created.
+
+#### `Future<void> _fetchAddressCount() async`
+
+- Asynchronously fetches the count of shipping addresses from Firestore for the currently logged-in user.
+- Updates the `_addressCount` state variable with the fetched value.
+
+#### `void _handleLogout(BuildContext context) async`
+
+- Handles the logout process by signing the user out of Firebase Authentication.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ProfileScreen`.
+- **Scaffold**: Uses a `Scaffold` widget to provide the basic material design layout.
+- **AppBar**: Displays a generic app bar with the title "Profile".
+- **ListView**: Contains a list of profile-related items, including:
+  - A user account header.
+  - List tiles for navigating to "My Orders", "Shipping Addresses", and "Payment Methods".
+  - A logout button.
+
+#### `Widget _buildProfileListTile(...)`
+
+- A helper method that constructs a `ProfileListTile` widget with the provided icon, title, subtitle, and tap handler.
+
+#### `void _navigateTo(BuildContext context, Widget page)`
+
+- A helper method that navigates to a specified page using a `MaterialPageRoute`.
+
+## MyOrdersPage
+
+### Overview
+
+The `MyOrdersPage` class is a stateful widget that displays the user's order history in a tabbed interface. It allows users to view their orders categorized by status: Delivered, Processing, and Cancelled. This page enhances the user experience by providing a clear and organized way to manage and review past orders.
+
+### Features
+
+- **Tabbed Navigation**: Users can switch between different order statuses using tabs.
+- **Order List Display**: Each tab displays a list of orders corresponding to the selected status.
+
+### Constructor
+
+#### `MyOrdersPage`
+
+- **Parameters**: 
+  - `key`: An optional key that can be used to control the widget's identity in the widget tree.
+
+### State Management
+
+#### `_MyOrdersPageState`
+
+- **Attributes**:
+  - `_tabController`: A `TabController` that manages the tab selection and animation.
+
+#### `@override void initState()`
+
+- Initializes the state and creates a `TabController` with three tabs (for Delivered, Processing, and Cancelled orders).
+
+#### `@override void dispose()`
+
+- Disposes of the `_tabController` to free up resources when the widget is removed from the widget tree.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `MyOrdersPage`.
+- **Scaffold**: Uses a `Scaffold` widget to provide the basic material design layout.
+- **AppBar**: Displays a custom app bar (`OrdersAppBar`) that includes the tab controller.
+- **TabBarView**: Contains a `TabBarView` that displays different `OrderList` widgets based on the selected tab:
+  - **Delivered**: Displays orders that have been delivered.
+  - **Processing**: Displays orders that are currently being processed.
+  - **Cancelled**: Displays orders that have been cancelled.
+
+## OrderList
+
+### Overview
+
+The `OrderList` class is a stateless widget that displays a list of orders based on their status. It utilizes a `ListView` to create a scrollable list of `OrderCard` widgets, each representing an individual order. This component is designed to be reusable for different order statuses such as Delivered, Processing, and Cancelled.
+
+### Features
+
+- **Dynamic Order Display**: Renders a list of orders based on the provided status.
+- **Reusability**: Can be used in various contexts where order lists are needed, simply by passing different statuses.
+
+### Constructor
+
+#### `OrderList`
+
+- **Parameters**:
+  - `status`: A required string that specifies the status of the orders to be displayed (e.g., 'Delivered', 'Processing', 'Cancelled').
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `OrderList`.
+- **ListView.builder**: Utilizes a `ListView.builder` to efficiently create a scrollable list of order cards:
+  - **itemCount**: Set to 3, indicating that three order cards will be displayed. This can be modified to reflect the actual number of orders in a real implementation.
+  - **itemBuilder**: A function that builds each `OrderCard` widget, passing the current order's status to it.
+
+# OrdersAppBar Class Documentation
+
+## Overview
+
+The `OrdersAppBar` class is a stateless widget that represents the app bar for the "My Orders" screen. It includes a title, navigation buttons, and a tab bar for switching between different order statuses. This component enhances the user interface by providing a consistent and functional navigation experience.
+
+## Features
+
+- **Back Navigation**: Includes a back button for navigating to the previous screen.
+- **Title Display**: Shows the title "My Orders" prominently in the center of the app bar.
+- **Action Buttons**: Provides buttons for search and additional actions.
+- **Tab Navigation**: Integrates a tab bar for switching between order statuses (Delivered, Processing, Cancelled).
+
+## Constructor
+
+### `OrdersAppBar`
+
+- **Parameters**:
+  - `tabController`: A required `TabController` that manages the state of the tab bar.
+
+## Build Method
+
+### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `OrdersAppBar`.
+- **AppBar**: Returns an `AppBar` widget with the following components:
+  - **Leading**: A back button that allows users to return to the previous screen.
+  - **Background Color**: Sets the background color of the app bar to black.
+  - **Title**: Displays the title "My Orders" in white text.
+  - **Center Title**: Centers the title within the app bar.
+  - **Actions**: Includes two icon buttons:
+    - **Search Button**: A button for initiating a search action (currently a placeholder).
+    - **More Actions Button**: A button for additional actions (currently a placeholder).
+  - **Bottom**: Integrates the `OrdersTabBar`, passing the `tabController` to manage tab selection.
+
+## Preferred Size
+
+### `@override Size get preferredSize`
+
+- Returns the preferred size of the app bar, which includes the height of the toolbar and the tab bar.
+
+## OrdersTabBar
+
+### Overview
+
+The `OrdersTabBar` class is a stateless widget that represents the tab bar for the "My Orders" screen. It allows users to switch between different order statuses, enhancing navigation and organization within the app.
+
+### Features
+
+- **Tab Navigation**: Provides tabs for different order statuses (Delivered, Processing, Cancelled).
+- **Customizable Appearance**: Allows customization of label colors and styles.
+
+### Constructor
+
+#### `OrdersTabBar`
+
+- **Parameters**:
+  - `tabController`: A required `TabController` that manages the state of the tabs.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `OrdersTabBar`.
+- **TabBar**: Returns a `TabBar` widget with the following properties:
+  - **Controller**: Uses the provided `tabController` to manage tab selection.
+  - **Label Color**: Sets the color of the selected tab label to white.
+  - **Indicator Color**: Sets the color of the tab indicator to white.
+  - **Unselected Label Color**: Sets the color of unselected tab labels to white.
+  - **Label Style**: Defines the font size for the tab labels.
+  - **Tabs**: Creates three tabs for different order statuses.
+
+### Preferred Size
+
+#### `@override Size get preferredSize`
+
+- Returns the preferred size of the tab bar, which is set to the height of the tab bar.
+
+## OrderCard
+
+### Overview
+
+The `OrderCard` class is a stateless widget that represents an individual order's details in the user interface. It displays essential information about the order, including the order number, tracking number, quantity, total amount, and the order status. This component is designed to be reusable within the order management sections of the application.
+
+### Features
+
+- **Order Information Display**: Shows key details about the order, such as order number, tracking number, quantity, and total amount.
+- **Action Buttons**: Provides buttons for viewing more details about the order and for handling status actions.
+- **Dynamic Status Color**: Changes the color of the status button based on the order's status.
+
+### Constructor
+
+#### `OrderCard`
+
+- **Parameters**:
+  - `status`: A required string that indicates the current status of the order (e.g., 'Delivered', 'Processing', 'Cancelled').
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `OrderCard`.
+- **Card Widget**: Uses a `Card` widget to provide a material design look with elevation and rounded corners.
+- **Padding**: Applies padding around the card's content for better spacing.
+- **Column Layout**: Organizes the content in a vertical column:
+  - **Order Number**: Displays a static order number.
+  - **Tracking Number**: Displays the tracking number associated with the order.
+  - **Quantity and Total Amount**: Displays the quantity of items and the total amount in a row, with the total amount styled in green.
+  - **Details Button**: An `OutlinedButton` that triggers an action to view more details about the order.
+  - **Status Button**: A `TextButton` that displays the order's status, with its color changing based on the status (green for 'Delivered', black for others).
+
+## ProfileListTile
+
+### Overview
+
+The `ProfileListTile` class is a stateless widget that represents a customizable list tile for displaying profile-related information in a Flutter application. It includes an icon, a title, a subtitle, and a tap action, making it suitable for use in profile screens or settings menus.
+
+### Features
+
+- **Icon Display**: Shows an icon on the left side of the list tile.
+- **Title and Subtitle**: Displays a title and a subtitle, allowing for additional context or information.
+- **Tap Action**: Provides a callback function that is triggered when the list tile is tapped, enabling navigation or other actions.
+
+### Constructor
+
+#### `ProfileListTile`
+
+- **Parameters**:
+  - `icon`: A required `IconData` that specifies the icon to be displayed on the list tile.
+  - `title`: A required string that represents the main title of the list tile.
+  - `subtitle`: A required string that provides additional information or context below the title.
+  - `onTap`: A required `VoidCallback` that is called when the list tile is tapped.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ProfileListTile`.
+- **ListTile Widget**: Returns a `ListTile` widget with the following components:
+  - **Leading Icon**: Displays the provided icon on the left side of the tile.
+  - **Title**: Displays the title in black text.
+  - **Subtitle**: Displays the subtitle in black text below the title.
+  - **Trailing Icon**: Shows a right arrow icon (`Icons.navigate_next`) on the right side, indicating that the tile is tappable.
+  - **OnTap**: Assigns the provided `onTap` callback to the `onTap` property of the `ListTile`, allowing for interaction.
+
+## UserAccountHeader
+
+### Overview
+
+The `UserAccountHeader` class is a stateless widget that displays the user's account information in a header format, typically used in a drawer or profile section of a Flutter application. It retrieves the user's name from Firestore based on their email and displays it along with the user's email address and a default profile picture.
+
+### Features
+
+- **User Information Retrieval**: Fetches the user's full name from Firestore based on their email address.
+- **Loading and Error States**: Displays appropriate loading indicators and error messages while fetching user data.
+- **Default Fallback**: If the user's full name is not available, it uses the part of the email before the '@' as a fallback.
+
+### Constructor
+
+#### `UserAccountHeader`
+
+- **Parameters**:
+  - `key`: An optional key that can be used to control the widget's identity in the widget tree.
+
+### Methods
+
+#### `Future<String?> getUserName(String email) async`
+
+- **Parameters**:
+  - `email`: A string representing the user's email address.
+- **Returns**: A `Future` that resolves to the user's full name or `null` if no document is found.
+- **Description**: 
+  - Queries the Firestore database for the user's profile data based on the provided email.
+  - If a document is found, it retrieves the `fullName` field. If this field is empty, it returns the part of the email before the '@' symbol. If no document is found, it returns `null`.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `UserAccountHeader`.
+- **User Retrieval**: Uses `FirebaseAuth` to get the currently logged-in user and their email.
+- **FutureBuilder**: Utilizes a `FutureBuilder` to handle the asynchronous fetching of the user's name:
+  - **Loading State**: Displays a loading indicator while waiting for the data.
+  - **Error State**: Displays an error message if there is an issue fetching the data.
+  - **Data State**: Displays the user's email and a default profile picture if the data is successfully retrieved.
+
+### UI Components
+
+- **UserAccountsDrawerHeader**: 
+  - Displays the user's email address.
+  - Shows a default profile picture using a `CircleAvatar`.
+  - The header has a black background for styling.
+
+## ShippingAddressesScreen
+
+### Overview
+
+The `ShippingAddressesScreen` class is a stateful widget that manages the display and manipulation of a user's shipping addresses within a Flutter application. It allows users to view, add, edit, and delete their shipping addresses, as well as set a primary address.
+
+### Features
+
+- **Address Management**: Users can view a list of their saved addresses, add new addresses, edit existing ones, and delete addresses.
+- **User Authentication**: Ensures that the user is logged in before allowing any address-related operations.
+- **Dynamic UI Updates**: Automatically refreshes the address list after any changes (add, edit, delete).
+
+### Constructor
+
+#### `ShippingAddressesScreen`
+
+- **Parameters**: None.
+
+### State Management
+
+#### `_ShippingAddressesScreenState`
+
+- **Attributes**:
+  - `_selectedAddress`: An optional integer that holds the index of the currently selected address.
+  - `addresses`: A list of maps that stores the user's addresses, where each map contains details about an address.
+
+#### `@override void initState()`
+
+- Initializes the state and fetches the user's addresses when the widget is first created.
+
+### Methods
+
+#### `void _toggleSelection(int? index)`
+
+- Toggles the selection of an address based on its index. If the address is already selected, it deselects it; otherwise, it selects the new address.
+
+#### `Future<void> _fetchAddresses() async`
+
+- Fetches the user's addresses from Firestore:
+  - Checks if the user is logged in.
+  - Retrieves the user's document from Firestore and extracts the addresses.
+  - Updates the state with the fetched addresses.
+
+#### `Future<void> _addNewAddress(String title, String address) async`
+
+- Adds a new address to the user's list:
+  - Checks if the user is logged in.
+  - Updates the Firestore document to include the new address and increments the address count.
+
+#### `Future<void> _editAddress(int index, String title, String address) async`
+
+- Edits an existing address:
+  - Checks if the user is logged in.
+  - Updates the specified address in Firestore.
+
+#### `Future<void> _setMainAddress(int index) async`
+
+- Sets the specified address as the main address:
+  - Checks if the user is logged in.
+  - Updates the Firestore document to mark the selected address as the main address and updates others accordingly.
+
+#### `Future<void> _deleteAddress(int indexToDelete) async`
+
+- Deletes an address from the user's list:
+  - Checks if the user is logged in.
+  - Uses a Firestore batch operation to delete the address and shift subsequent addresses.
+  - Updates the address count in Firestore.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ShippingAddressesScreen`:
+  - **AppBar**: Displays a generic app bar with the title "Shipping Address".
+  - **ListView**: Displays the list of addresses using a `ListView.builder`.
+  - **Floating Action Button**: Provides a button to add a new address.
+
+### UI Components
+
+- **AddressCard**: A custom widget that displays each address with options to select, edit, or delete.
+- **Dialogs**: Utilizes dialog boxes for adding, editing, and confirming deletions of addresses.
