@@ -705,6 +705,44 @@ The `ItemCard` class is a stateful widget that represents an individual item in 
   - Shows the item's attributes in a formatted manner.
   - Includes a delete button that triggers a confirmation dialog before deleting the item.
 
+## DeleteConfirmationDialog
+
+### Overview
+
+The `DeleteConfirmationDialog` is a utility function that displays a confirmation dialog to the user when they attempt to delete an item from their shopping bag in a Flutter application. It provides a clear interface for confirming or canceling the delete action.
+
+### Features
+
+- **Confirmation Dialog**: Prompts the user to confirm the deletion of an item.
+- **Logging**: Utilizes the logging package to track the dialog's state and actions.
+- **Firestore Integration**: Deletes the specified item from the Firestore database upon confirmation.
+
+### Function
+
+#### `showDeleteConfirmationDialog`
+
+- **Parameters**:
+  - `context`: The `BuildContext` in which the dialog will be displayed.
+  - `email`: A string representing the user's email, used to locate the user's cart items in Firestore.
+  - `unparsedDocumentId`: A string representing the document ID of the item to be deleted.
+  - `onDelete`: A callback function that is invoked after the item has been successfully deleted.
+
+### Implementation
+
+- **Logging**: Logs the action of showing the delete confirmation dialog along with the document ID.
+- **showDialog**: Displays an `AlertDialog` with the following components:
+  - **Title**: "Remove Item"
+  - **Content**: A message asking the user to confirm the deletion.
+  - **Actions**:
+    - **Cancel Button**: Closes the dialog without performing any action. Logs the cancellation.
+    - **Yes Button**: 
+      - Logs the confirmation of the delete action.
+      - Closes the dialog.
+      - Deletes the item from Firestore using the provided email and document ID.
+      - Logs the successful deletion.
+      - Displays a `SnackBar` notification to inform the user that the item has been removed.
+      - Calls the `onDelete` callback to perform any additional actions after deletion.
+
 ## ImageLoader
 
 ### Overview
@@ -1405,3 +1443,750 @@ The `ShippingAddressesScreen` class is a stateful widget that manages the displa
 
 - **AddressCard**: A custom widget that displays each address with options to select, edit, or delete.
 - **Dialogs**: Utilizes dialog boxes for adding, editing, and confirming deletions of addresses.
+
+## ProductCard
+
+### Overview
+
+The `ProductCard` class is a stateful widget that displays detailed information about a specific product in a Flutter application. It fetches product images, displays them in a carousel, and provides options for users to view related products, add the product to their cart, and see additional product details.
+
+### Features
+
+- **Image Carousel**: Displays a carousel of product images that users can swipe through.
+- **Dynamic Fields**: Shows additional product information based on the product's details.
+- **Recently Viewed Products**: Keeps track of and displays products that the user has recently viewed.
+- **Users Also Viewed**: Suggests products that other users have viewed in the same category.
+- **Navigation**: Provides a bottom navigation bar for easy access to the home, bag, and profile screens.
+
+### Constructor
+
+#### `ProductCard`
+
+- **Parameters**:
+  - `documentId`: A required string that uniquely identifies the product document in Firestore.
+
+### State Management
+
+#### `_ProductCardState`
+
+- **Attributes**:
+  - `selectedImageIndex`: An integer that tracks the currently selected image in the carousel.
+  - `selectedParentImageIndex`: An integer for tracking the selected parent image.
+  - `imageDetails`: A list of maps containing image URLs and document IDs for the product images.
+  - `allImageUrls`: A list of all image URLs for the product.
+  - `recentlyViewedDetails`: A list of maps containing details of recently viewed products.
+  - `usersAlsoViewedDetails`: A list of maps containing details of products that users also viewed.
+  - `isLoading`: A boolean indicating whether the product data is still being loaded.
+  - `currentDocumentId`: A string that holds the current product's document ID.
+  - `currentCategoryValue`: A string that holds the current category value of the product.
+
+#### `@override void initState()`
+
+- Initializes the state and fetches product images and recently viewed products when the widget is first created.
+
+### Methods
+
+#### `Future<void> fetchImages(String documentId) async`
+
+- Fetches images for the specified product from Firestore and Firebase Storage:
+  - Retrieves the product document and its associated images.
+  - Updates the state with the fetched image URLs and details.
+
+#### `Future<void> updateRecentlyViewedProducts(String documentId) async`
+
+- Updates the list of recently viewed products for the current user:
+  - Checks if the user is logged in and updates their recently viewed products in Firestore.
+
+#### `Future<void> fetchRecentlyViewedProducts() async`
+
+- Fetches the user's recently viewed products from Firestore and updates the state.
+
+#### `Future<void> fetchUsersAlsoViewedProducts(String categoryValue) async`
+
+- Fetches products that users also viewed based on the current product's category and updates the state.
+
+#### `void _onItemTapped(int index)`
+
+- Handles navigation when an item in the bottom navigation bar is tapped:
+  - Navigates to the appropriate screen based on the selected index.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ProductCard`:
+  - Displays a loading indicator while data is being fetched.
+  - Shows the product name, image carousel, dynamic fields, and sections for users also viewed and recently viewed products.
+  - Includes a bottom navigation bar for easy navigation.
+
+### UI Components
+
+- **ImageCarousel**: Displays the product images in a carousel format.
+- **MoreColoursSection**: Shows additional color options for the product.
+- **DynamicFieldsDisplay**: Displays dynamic fields related to the product.
+- **OrderSwatchesButton**: Provides options for selecting product variations.
+- **AddToCartButton**: Allows users to add the product to their shopping cart.
+- **UsersAlsoViewedSection**: Displays products that other users have viewed.
+- **RecentlyViewedSection**: Displays products that the user has recently viewed.
+
+## AddToCartButton
+
+### Overview
+
+The `AddToCartButton` class is a stateful widget that allows users to select product designs and add them to their shopping cart in a Flutter application. It provides a user interface for selecting images, specifying order lengths, and validating inputs before adding items to the cart.
+
+### Features
+
+- **Image Selection**: Users can select product images to add to their cart.
+- **Length Specification**: Users can specify the order length for each selected design using a slider.
+- **Validation**: Ensures that the selected lengths meet the minimum order requirements before adding items to the cart.
+- **Logging**: Utilizes logging to track actions and errors throughout the process.
+
+### Constructor
+
+#### `AddToCartButton`
+
+- **Parameters**:
+  - `documentIds`: A required list of strings representing the document IDs of the products to be added to the cart.
+
+### State Management
+
+#### `_AddToCartButtonState`
+
+- **Attributes**:
+  - `showDetails`: A boolean indicating whether the details section is expanded.
+  - `selectedImages`: A list of booleans tracking which images have been selected.
+  - `selectedLengths`: A list of doubles representing the lengths selected for each product.
+  - `imageUrls`: A list of strings containing the URLs of the product images.
+  - `minimumOrderLengths`: A map that associates each document ID with its minimum order length.
+  - `validationErrors`: A map that tracks validation errors for each selected item.
+
+#### `@override void initState()`
+
+- Initializes the state and fetches image URLs when the widget is first created. It also sets up the selected images and lengths.
+
+### Methods
+
+#### `Future<void> fetchImageUrls() async`
+
+- Fetches the image URLs for the products based on their document IDs:
+  - Retrieves each product document from Firestore and extracts the image locations and minimum order lengths.
+  - Updates the state with the fetched image URLs.
+
+#### `void validateInputs()`
+
+- Validates the selected lengths against the minimum order lengths:
+  - Populates the `validationErrors` map with any errors found during validation.
+
+#### `Future<void> _addToCart() async`
+
+- Adds the selected items to the user's cart:
+  - Checks if the user is logged in; if not, displays a message.
+  - For each selected image, fetches the price and tax from Firestore, calculates the total price, and adds the item to the user's cart in Firestore.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `AddToCartButton`:
+  - Displays an `ExpansionTile` that can be expanded to show more details.
+  - Lists the product images with selection options and length sliders.
+  - Includes a button to add the selected designs to the cart, which triggers validation and the add-to-cart process.
+
+### UI Components
+
+- **ImageSelector**: A custom widget that allows users to select an image.
+- **LengthSlider**: A slider that allows users to specify the order length for the selected design.
+- **ElevatedButton**: A button that adds the selected designs to the cart, with validation checks.
+
+## ImageCarousel
+
+### Overview
+
+The `ImageCarousel` class is a stateless widget that displays a carousel of images for a product in a Flutter application. It allows users to view a selected image and provides thumbnail navigation for selecting different images.
+
+### Features
+
+- **Image Display**: Shows the currently selected image prominently.
+- **Thumbnail Navigation**: Provides a row of thumbnail images that users can tap to change the displayed image.
+- **Customizable Callbacks**: Allows for custom actions when a thumbnail is tapped.
+
+### Constructor
+
+#### `ImageCarousel`
+
+- **Parameters**:
+  - `allImageUrls`: A required list of strings containing the URLs of all images to be displayed in the carousel.
+  - `selectedImageIndex`: A required integer representing the index of the currently selected image.
+  - `onThumbnailTap`: A required callback function that is called when a thumbnail is tapped, passing the index of the tapped thumbnail.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ImageCarousel`:
+  - **Column Widget**: Organizes the image display and thumbnails vertically.
+  - **ImagePlaceholder**: Displays the currently selected image using the `ImagePlaceholder` widget, which takes the URL of the selected image.
+  - **ImageThumbnails**: Displays a list of thumbnails using the `ImageThumbnails` widget, passing the image details, the currently selected index, and the thumbnail tap callback.
+
+## MoreColoursSection
+
+### Overview
+
+The `MoreColoursSection` class is a stateless widget that displays a section for selecting additional color options for a product in a Flutter application. It presents a title and a set of image thumbnails that represent different color variations of the product.
+
+### Features
+
+- **Color Selection**: Allows users to view and select different color options for a product.
+- **Customizable Callbacks**: Provides a callback function that is triggered when a thumbnail is tapped, enabling interaction with the selected color.
+
+### Constructor
+
+#### `MoreColoursSection`
+
+- **Parameters**:
+  - `imageDetails`: A required list of maps containing details about the images representing different colors. Each map should include the image URL and any other relevant information.
+  - `selectedParentImageIndex`: A required integer that indicates the index of the currently selected color thumbnail.
+  - `onThumbnailTap`: A required callback function that is called when a thumbnail is tapped, passing the index of the tapped thumbnail.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `MoreColoursSection`:
+  - **Container**: Wraps the section in a container with a light grey background.
+  - **Column**: Organizes the title and thumbnails vertically.
+  - **Padding**: Adds padding around the title text for better spacing.
+  - **Text**: Displays the title "More Colours" with specified styling (font family, size, and weight).
+  - **Divider**: Adds a horizontal line to separate the title from the thumbnails.
+  - **ImageThumbnails**: Displays the thumbnails using the `ImageThumbnails` widget, passing the image details, the currently selected index, and the thumbnail tap callback.
+
+## OrderSwatchesButton
+
+### Overview
+
+The `OrderSwatchesButton` class is a stateful widget that allows users to select fabric swatches and add them to their shopping cart in a Flutter application. It fetches image URLs for the swatches from Firestore and provides an interface for users to select and order them.
+
+### Features
+
+- **Swatch Selection**: Users can tap on swatch images to select or deselect them.
+- **Dynamic Image Loading**: Fetches swatch images from Firebase Storage based on document IDs.
+- **Cart Integration**: Allows users to add selected swatches to their cart, with validation to ensure at least one swatch is selected.
+- **User Authentication**: Checks if the user is logged in before allowing them to add items to the cart.
+
+### Constructor
+
+#### `OrderSwatchesButton`
+
+- **Parameters**:
+  - `documentIds`: A required list of strings representing the document IDs of the swatches to be displayed.
+
+## State Management
+
+#### `_OrderSwatchesButtonState`
+
+- **Attributes**:
+  - `_selectedImages`: A list of booleans indicating which swatches have been selected by the user.
+  - `_imageUrls`: A list of strings containing the URLs of the swatch images.
+
+#### `@override void initState()`
+
+- Initializes the state and fetches the image URLs for the swatches when the widget is first created.
+
+## Methods
+
+#### `Future<void> fetchImageUrls() async`
+
+- Fetches the image URLs for the swatches based on their document IDs:
+  - Retrieves each swatch document from Firestore and extracts the image locations.
+  - Updates the state with the fetched image URLs and initializes the selection list.
+
+#### `Future<void> _addSwatchesToCart() async`
+
+- Adds the selected swatches to the user's cart:
+  - Checks if the user is logged in; if not, displays a message.
+  - For each selected swatch, adds an entry to the user's cart in Firestore.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `OrderSwatchesButton`:
+  - **Container**: Wraps the entire section in a container with a white background and shadow.
+  - **ExpansionTile**: Provides a collapsible section titled "Order Swatches".
+  - **Wrap**: Displays the swatch images in a grid format, allowing users to select them.
+  - **GestureDetector**: Wraps each image to handle taps for selection.
+  - **ElevatedButton**: A button that adds the selected swatches to the cart, with validation to ensure at least one swatch is selected.
+
+### UI Components
+
+- **Image Display**: Each swatch image is displayed with a border that changes color based on selection.
+- **Selection Indicator**: Displays a check icon over selected images to indicate selection.
+
+## ProductName
+
+### Overview
+
+The `ProductName` class is a stateless widget that displays the name of a product in a Flutter application. It is designed to be used within a product card.
+
+### Features
+
+- **Text Display**: Renders the product name with customizable styling.
+- **Padding**: Adds padding around the text for better visual spacing.
+
+### Constructor
+
+#### `ProductName`
+
+- **Parameters**: None.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ProductName` widget:
+  - **Padding**: Wraps the text in a `Padding` widget to provide space on the left, right, and top.
+  - **Text**: Displays the product name as a `Text` widget with the following properties:
+    - **Content**: The text content is currently hardcoded as 'Product Name', which can be replaced with a dynamic variable to display the actual product name.
+    - **Style**: The text is styled with a font size of 24.0 and a bold font weight.
+
+## RecentlyViewedSection
+
+### Overview
+
+The `RecentlyViewedSection` class is a stateless widget that displays a section for recently viewed products in a Flutter application. It provides a visual representation of products that the user has recently interacted with.
+
+### Features
+
+- **Display of Recently Viewed Products**: Shows a list of products that the user has recently viewed.
+- **Thumbnail Navigation**: Utilizes the `ImageThumbnails` component to display product images, allowing users to tap on thumbnails to revisit products.
+- **Customizable Callbacks**: Provides a callback function that is triggered when a thumbnail is tapped, enabling interaction with the selected product.
+
+### Constructor
+
+#### `RecentlyViewedSection`
+
+- **Parameters**:
+  - `recentlyViewedDetails`: A required list of maps containing details about the recently viewed products. Each map should include the image URL and any other relevant information.
+  - `onThumbnailTap`: A required callback function that is called when a thumbnail is tapped, passing the index of the tapped thumbnail.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `RecentlyViewedSection`:
+  - **Container**: Wraps the entire section in a container with a light grey background.
+  - **Column**: Organizes the title and thumbnails vertically.
+  - **Padding**: Adds padding around the title text for better spacing.
+  - **Text**: Displays the title "Recently Viewed" with specified styling (font family, size, and weight).
+  - **Divider**: Adds a horizontal line to separate the title from the thumbnails.
+  - **ImageThumbnails**: Displays the thumbnails using the `ImageThumbnails` widget, passing the recently viewed details, a default selected index of -1 (indicating no selection), and the thumbnail tap callback.
+
+## ShippingInfo
+
+### Overview
+
+The `ShippingInfo` class is a stateless widget that displays a shipping information section in a Flutter application. It provides a simple interface for users to view shipping details and interact with the section.
+
+### Features
+
+- **Display of Shipping Information**: Shows a title for the shipping information.
+- **Tap Interaction**: Allows users to tap on the section, which can be used to navigate to more detailed shipping information or perform other actions.
+
+### Constructor
+
+#### `ShippingInfo`
+
+- **Parameters**: 
+  - `super.key`: An optional key that can be used to control the widget's identity in the widget tree.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ShippingInfo` widget:
+  - **Container**: Wraps the content in a container with a white background and a shadow effect for visual depth.
+    - **BoxDecoration**: Configures the container's appearance:
+      - `color`: Sets the background color to white.
+      - `boxShadow`: Adds a shadow effect with specified properties:
+        - `color`: A grey color with reduced opacity for a subtle shadow.
+        - `spreadRadius`: Controls the spread of the shadow.
+        - `blurRadius`: Controls the blur effect of the shadow.
+        - `offset`: Specifies the position of the shadow relative to the container.
+  - **ListTile**: Displays a list tile with the following properties:
+    - `title`: Contains a text widget displaying the title "Shipping info".
+    - `onTap`: A callback function that is triggered when the tile is tapped. Currently, it contains a TODO comment indicating that further functionality should be implemented.
+
+## SupportSection 
+
+### Overview
+
+The `SupportSection` class is a stateless widget that provides a user interface element for accessing support information in a Flutter application. It is designed to be part of a product card or detail view, allowing users to easily find and tap into support options.
+
+### Features
+
+- **Display of Support Information**: Shows a title for the support section.
+- **Tap Interaction**: Allows users to tap on the section to access support-related functionalities.
+
+### Constructor
+
+#### `SupportSection`
+
+- **Parameters**: 
+  - `super.key`: An optional key that can be used to control the widget's identity in the widget tree.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `SupportSection` widget:
+  - **Container**: Wraps the content in a container with a white background and a shadow effect for visual depth.
+    - **BoxDecoration**: Configures the container's appearance:
+      - `color`: Sets the background color to white.
+      - `boxShadow`: Adds a shadow effect with specified properties:
+        - `color`: A grey color with reduced opacity for a subtle shadow.
+        - `spreadRadius`: Controls the spread of the shadow.
+        - `blurRadius`: Controls the blur effect of the shadow.
+        - `offset`: Specifies the position of the shadow relative to the container.
+  - **ListTile**: Displays a list tile with the following properties:
+    - `title`: Contains a text widget displaying the title "Support".
+    - `onTap`: A callback function that is triggered when the tile is tapped. Currently, it contains a TODO comment indicating that further functionality should be implemented.
+
+## UsersAlsoViewedSection
+
+### Overview
+
+The `UsersAlsoViewedSection` class is a stateless widget that displays a section for products that other users have also viewed in a Flutter application. This section helps users discover related products based on the viewing behavior of others.
+
+### Features
+
+- **Display of Related Products**: Shows a list of products that other users have viewed, enhancing product discovery.
+- **Thumbnail Navigation**: Utilizes the `ImageThumbnails` component to display product images, allowing users to tap on thumbnails to view those products.
+- **Customizable Callbacks**: Provides a callback function that is triggered when a thumbnail is tapped, enabling interaction with the selected product.
+
+### Constructor
+
+#### `UsersAlsoViewedSection`
+
+- **Parameters**:
+  - `usersAlsoViewedDetails`: A required list of maps containing details about the products that users have also viewed. Each map should include the image URL and any other relevant information.
+  - `onThumbnailTap`: A required callback function that is called when a thumbnail is tapped, passing the index of the tapped thumbnail.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `UsersAlsoViewedSection`:
+  - **Container**: Wraps the entire section in a container with a light grey background.
+  - **Column**: Organizes the title and thumbnails vertically.
+  - **Padding**: Adds padding around the title text for better spacing.
+  - **Text**: Displays the title "Users Also Viewed" with specified styling (font family, size, and weight).
+  - **Divider**: Adds a horizontal line to separate the title from the thumbnails.
+  - **ImageThumbnails**: Displays the thumbnails using the `ImageThumbnails` widget, passing the users also viewed details, a default selected index of -1 (indicating no selection), and the thumbnail tap callback.
+
+## DynamicFieldsDisplay
+
+### Overview
+
+The `DynamicFieldsDisplay` class is a stateless widget that retrieves and displays dynamic fields related to a product from a Firestore database in a Flutter application. It is designed to show product details based on the provided document ID.
+
+### Features
+
+- **Dynamic Data Retrieval**: Fetches product details from Firestore based on the provided document ID.
+- **Loading State Handling**: Displays a loading indicator while data is being fetched.
+- **Error Handling**: Displays an error message if there is an issue retrieving the data.
+- **Conditional Rendering**: Shows a message if the document does not exist.
+- **Dynamic Field Display**: Renders fields based on their properties, including display name, value, and priority.
+
+## Constructor
+
+#### `DynamicFieldsDisplay`
+
+- **Parameters**:
+  - `documentId`: A required string that represents the ID of the document in Firestore from which to fetch the product details.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `DynamicFieldsDisplay` widget:
+  - **FutureBuilder**: Utilizes a `FutureBuilder` to handle asynchronous data fetching from Firestore.
+    - **Future**: Fetches the document snapshot from the 'items' collection using the provided `documentId`.
+    - **Builder**: Handles different states of the future:
+      - **Loading State**: Displays a `CircularProgressIndicator` while waiting for data.
+      - **Error State**: Displays an error message if the snapshot has an error.
+      - **No Data State**: Displays a message if the document does not exist.
+      - **Data State**: Processes the retrieved data:
+        - Extracts fields that meet specific criteria (e.g., must contain `displayName`, `toDisplay`, `value`, and `priority`).
+        - Sorts the fields by their priority.
+        - Maps the fields to `DetailItem` widgets for display.
+  - **Container**: Wraps the content in a container with padding and a shadow effect for visual depth.
+    - **Column**: Organizes the title and fields vertically.
+      - **Text**: Displays the title "Product Details" with specified styling.
+      - **Divider**: Adds a horizontal line to separate the title from the fields.
+      - **Field Widgets**: Displays the dynamically generated field widgets.
+
+## DetailItem
+
+### Overview
+
+The `DetailItem` class is a stateless widget that displays a key-value pair in a structured format within a Flutter application. It is designed to present product details.
+
+### Features
+
+- **Key-Value Display**: Shows a title and its corresponding value in a row format.
+- **Logging**: Utilizes the `logging` package to log the building process and any errors that occur.
+- **Error Handling**: Displays an error message if there is an issue during the rendering of the widget.
+
+### Constructor
+
+#### `DetailItem`
+
+- **Parameters**:
+  - `title`: A required string that represents the title of the detail item.
+  - `value`: A required string that represents the value associated with the title.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `DetailItem` widget:
+  - **Logging**: Logs the title and value being built for debugging purposes.
+  - **Container**: Wraps the content in a container with padding and a shadow effect for visual depth.
+    - **Padding**: Adds vertical padding to the container.
+    - **BoxDecoration**: Configures the container's appearance:
+      - `color`: Sets the background color to white.
+      - `boxShadow`: Adds a shadow effect with specified properties.
+  - **Row**: Organizes the title and value horizontally.
+    - **Title**: Displays the title in a `Text` widget with bold styling.
+    - **Value**: Displays the value in an `Expanded` `Text` widget, aligned to the right.
+  - **Error Handling**: If an error occurs during the building process:
+    - Logs the error and stack trace.
+    - Returns a container with a red background indicating an error state.
+    - Displays an error message in white text.
+
+## ImageSelector
+
+### Overview
+
+The `ImageSelector` class is a stateless widget that displays an image with a selection indicator in a Flutter application. It allows users to select an image by tapping on it, providing visual feedback when the image is selected.
+
+### Features
+
+- **Image Display**: Renders an image from a provided URL.
+- **Selection Indicator**: Shows a circular check icon over the image when it is selected.
+- **Tap Interaction**: Allows users to tap on the image to trigger a callback function.
+
+### Constructor
+
+#### `ImageSelector`
+
+- **Parameters**:
+  - `imageUrl`: A required string that represents the URL of the image to be displayed.
+  - `isSelected`: A required boolean that indicates whether the image is currently selected.
+  - `onTap`: A required callback function that is invoked when the image is tapped.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ImageSelector` widget:
+  - **GestureDetector**: Wraps the content in a `GestureDetector` to handle tap events.
+    - **onTap**: Calls the `onTap` callback when the image is tapped.
+  - **Stack**: Uses a `Stack` to overlay the selection indicator on top of the image.
+    - **Container**: Displays the image:
+      - **margin**: Adds margin around the image for spacing.
+      - **Image.network**: Loads the image from the provided URL with specified dimensions and fit.
+    - **Conditional Selection Indicator**: If `isSelected` is true:
+      - **Container**: Displays a circular background for the check icon.
+        - **BoxDecoration**: Configures the container's appearance:
+          - `color`: Sets the background color to black.
+          - `shape`: Sets the shape to a circle.
+      - **Icon**: Displays a check circle icon in white color.
+
+## LengthSlider
+
+### Overview
+
+The `LengthSlider` class is a stateless widget that provides a customizable slider for selecting an order length within a specified range in a Flutter application. It allows users to visually adjust the length and displays the current selection along with any validation errors.
+
+### Features
+
+- **Customizable Range**: Allows setting minimum and maximum order lengths.
+- **Visual Feedback**: Displays the current selected length and validation errors.
+- **Dynamic Labels**: Shows labels at specific intervals along the slider for better user guidance.
+
+### Constructor
+
+#### `LengthSlider`
+
+- **Parameters**:
+  - `minOrderLength`: A required integer that specifies the minimum length for the slider.
+  - `maxOrderLength`: A required integer that specifies the maximum length for the slider.
+  - `selectedLength`: A required double that represents the currently selected length.
+  - `labels`: A required list of integers that represent the labels to be displayed along the slider.
+  - `onChanged`: A required callback function that is called when the slider value changes, passing the new length as a double.
+  - `validationError`: An optional string that contains a validation error message, if any.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `LengthSlider` widget:
+  - **Padding**: Adds padding around the entire widget for spacing.
+  - **Column**: Organizes the title, slider, and current length display vertically.
+    - **Title**: Displays the title "Order Length" with bold styling.
+    - **Container**: Wraps the slider in a container with a light grey background and rounded corners.
+      - **Stack**: Allows layering of the slider and labels.
+        - **SliderTheme**: Customizes the appearance of the slider:
+          - Sets colors for active and inactive tracks, thumb, and overlay.
+          - Configures the shape and size of the slider components.
+        - **Slider**: Displays the slider with the following properties:
+          - `value`: The current selected length.
+          - `min` and `max`: The range of the slider.
+          - `divisions`: Number of discrete divisions on the slider.
+          - `label`: Displays the current value as a label.
+          - `onChanged`: Calls the provided callback when the slider value changes.
+        - **Positioned**: Displays labels at specific intervals along the slider:
+          - Each label is displayed with its corresponding value in meters.
+    - **Current Length Display**: Shows the current selected length formatted to two decimal places.
+    - **Validation Error**: If a validation error exists, it displays the error message in red text.
+
+## ImagePlaceholder
+
+### Overview
+
+The `ImagePlaceholder` class is a stateless widget that displays an image from a provided URL in a Flutter application. It is designed to serve as a placeholder for images, ensuring that the layout remains consistent while the image is being loaded.
+
+### Features
+
+- **Image Display**: Loads and displays an image from a specified URL.
+- **Padding**: Provides consistent spacing around the image for better visual presentation.
+
+### Constructor
+
+#### `ImagePlaceholder`
+
+- **Parameters**:
+  - `imageUrl`: A required string that represents the URL of the image to be displayed.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ImagePlaceholder` widget:
+  - **Padding**: Wraps the image in a `Padding` widget to add space around it.
+    - **EdgeInsets.all(16.0)**: Applies uniform padding of 16 pixels on all sides.
+  - **Image.network**: Loads the image from the provided URL with the following properties:
+    - `fit`: Sets the image's fit to `BoxFit.cover`, ensuring that the image covers the entire area of the widget while maintaining its aspect ratio.
+
+## ImageThumbnails
+
+### Overview
+
+The `ImageThumbnails` class is a stateless widget that displays a horizontal list of image thumbnails in a Flutter application. It allows users to select an image thumbnail, providing visual feedback for the selected thumbnail.
+
+### Features
+
+- **Horizontal Scrolling**: Displays thumbnails in a horizontally scrollable view.
+- **Thumbnail Selection**: Highlights the currently selected thumbnail with a border.
+- **Tap Interaction**: Allows users to tap on a thumbnail to trigger a callback function.
+
+### Constructor
+
+#### `ImageThumbnails`
+
+- **Parameters**:
+  - `imageDetails`: A required list of maps containing details about the images. Each map should include an `imageUrl` key that points to the image's URL.
+  - `selectedImageIndex`: A required integer that indicates the index of the currently selected thumbnail.
+  - `onThumbnailTap`: A required callback function that is called when a thumbnail is tapped, passing the index of the tapped thumbnail.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `ImageThumbnails` widget:
+  - **SizedBox**: Sets a fixed height for the thumbnail container.
+  - **Center**: Centers the content within the available space.
+  - **SingleChildScrollView**: Allows horizontal scrolling of the thumbnails.
+    - **Row**: Organizes the thumbnails in a horizontal layout.
+      - **List.generate**: Generates a list of thumbnail widgets based on the `imageDetails` length:
+        - **GestureDetector**: Wraps each thumbnail in a gesture detector to handle tap events.
+          - **onTap**: Calls the `onThumbnailTap` callback with the index of the tapped thumbnail.
+          - **Container**: Wraps the thumbnail image with margin and border decoration:
+            - **margin**: Adds horizontal spacing between thumbnails.
+            - **BoxDecoration**: Configures the appearance of the container:
+              - **border**: Sets a border color based on whether the thumbnail is selected or not.
+        - **Image.network**: Loads the image from the provided URL with specified dimensions and fit.
+
+## SubCategoryList
+
+### Overview
+
+The `SubCategoryList` class is a stateless widget that displays a horizontal list of subcategories in a Flutter application. It allows users to select subcategories, providing visual feedback for the selected items. This component is useful for filtering or navigating through different categories of products.
+
+### Features
+
+- **Horizontal Scrolling**: Displays subcategories in a horizontally scrollable view.
+- **Selection Feedback**: Highlights the currently selected subcategories.
+- **Logging**: Utilizes the logging package to track the building process and user interactions.
+
+### Constructor
+
+#### `SubCategoryList`
+
+- **Parameters**:
+  - `subCategories`: A required list of strings representing the subcategory names to be displayed.
+  - `selectedCategories`: A required list of strings representing the currently selected subcategories.
+  - `onSelectCategory`: A required callback function that is invoked when a subcategory is selected, passing the selected subcategory as a string.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `SubCategoryList` widget:
+  - **Logging**: Logs the number of subcategories being built for debugging purposes.
+  - **Padding**: Adds padding at the top of the list for spacing.
+  - **SingleChildScrollView**: Allows horizontal scrolling of the subcategory buttons.
+    - **Row**: Organizes the subcategory buttons in a horizontal layout.
+      - **List.map**: Iterates over the `subCategories` list to create a `CategoryButton` for each subcategory:
+        - **Logging**: Logs the creation of each `CategoryButton` for debugging.
+        - **Padding**: Adds horizontal padding around each button for spacing.
+        - **CategoryButton**: Displays the button with the following properties:
+          - `label`: The name of the subcategory.
+          - `isSelected`: A boolean indicating whether the subcategory is currently selected.
+          - `onTap`: A callback function that logs the selection and invokes the `onSelectCategory` callback with the selected subcategory.
+
+## SortButton
+
+### Overview
+
+The `SortButton` class is a stateless widget that provides a button for sorting options in a Flutter application. It allows users to trigger a sorting action based on the currently selected sort option.
+
+### Features
+
+- **Sort Option Display**: Shows the currently selected sort option as a label on the button.
+- **Icon Representation**: Includes a sort icon to visually indicate the button's purpose.
+- **Logging**: Utilizes the logging package to track the button's state and interactions.
+
+### Constructor
+
+#### `SortButton`
+
+- **Parameters**:
+  - `selectedSortOption`: A required string that represents the currently selected sort option to be displayed on the button.
+  - `onShowSortOptions`: A required callback function that is invoked when the button is pressed, allowing the application to show available sorting options.
+
+### Build Method
+
+#### `@override Widget build(BuildContext context)`
+
+- Constructs the UI for the `SortButton` widget:
+  - **Logging**: Logs the current selected sort option for debugging purposes.
+  - **Align**: Aligns the button to the left of its parent container.
+  - **TextButton.icon**: Creates a button with an icon and a label:
+    - **icon**: Displays a sort icon in black color.
+    - **label**: Displays the selected sort option in black text.
+    - **onPressed**: Defines the action to be taken when the button is pressed:
+      - Logs the button press event.
+      - Calls the `onShowSortOptions` callback to display sorting options.
