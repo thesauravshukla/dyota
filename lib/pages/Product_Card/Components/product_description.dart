@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class ProductName extends StatelessWidget {
+class ProductDescription extends StatelessWidget {
   final String documentId;
 
-  const ProductName({Key? key, required this.documentId}) : super(key: key);
+  const ProductDescription({Key? key, required this.documentId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -21,16 +22,18 @@ class ProductName extends StatelessWidget {
         }
 
         final data = snapshot.data!.data() as Map<String, dynamic>;
-        final productName = data['productName']['value'] ?? 'Unknown Product';
+        final productDescriptionMap =
+            data['productDescription'] as Map<String, dynamic>?;
+
+        final productDescription = productDescriptionMap != null
+            ? productDescriptionMap['value'] ?? 'No description available.'
+            : 'No description available.';
 
         return Padding(
-          padding: EdgeInsets.only(left: 16, right: 16, top: 16),
+          padding: EdgeInsets.only(left: 16, right: 16, top: 2),
           child: Text(
-            productName,
-            style: TextStyle(
-              fontSize: 20.0,
-              fontWeight: FontWeight.bold,
-            ),
+            productDescription,
+            style: TextStyle(fontSize: 16.0, color: Colors.grey),
           ),
         );
       },

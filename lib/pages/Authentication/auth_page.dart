@@ -37,8 +37,6 @@ class AuthPage extends StatelessWidget {
         // Create a new document for the user if it doesn't exist
         await docRef.set({
           'addressList': [],
-          'deliveredOrderList': [],
-          'processingOrderList': [],
           'recentlyViewedProducts': [],
         });
       }

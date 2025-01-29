@@ -87,7 +87,6 @@ class _AddToCartButtonState extends State<AddToCartButton> {
   Future<void> _addToCart() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      // Handle the case where the user is not logged in
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text('You need to be logged in to add items to the cart')),
@@ -101,12 +100,13 @@ class _AddToCartButtonState extends State<AddToCartButton> {
     try {
       for (int i = 0; i < selectedImages.length; i++) {
         if (selectedImages[i]) {
-          // Fetch the price per metre and tax from the document
           DocumentSnapshot doc = await FirebaseFirestore.instance
               .collection('items')
               .doc(widget.documentIds[i])
               .get();
           Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+          // Get the price per metre and tax
           String pricePerMetre = data['pricePerMetre']['value'];
           var pricePerMetreDouble = Decimal.parse(pricePerMetre);
           var selectedLengthsDouble =
@@ -121,20 +121,10 @@ class _AddToCartButtonState extends State<AddToCartButton> {
           Decimal tax =
               price * (taxPercentage / Decimal.fromInt(100)).toDecimal();
 
-          // Get the top 3 priority fields and concatenate their values
-          List<MapEntry<String, dynamic>> sortedFields = data.entries
-              .where((entry) =>
-                  entry.value is Map<String, dynamic> &&
-                  entry.value.containsKey('priority'))
-              .map((entry) =>
-                  MapEntry(entry.key, entry.value as Map<String, dynamic>))
-              .toList();
-          sortedFields.sort((a, b) => (a.value['priority'] as int)
-              .compareTo(b.value['priority'] as int));
-          String itemName = sortedFields
-              .take(2)
-              .map((entry) => entry.value['value'].toString())
-              .join(', ');
+          // Get the product name from the productName field
+          Map<String, dynamic> productNameMap =
+              data['productName'] as Map<String, dynamic>;
+          String productName = productNameMap['value'] ?? 'Unknown Product';
 
           await FirebaseFirestore.instance
               .collection('users')
@@ -169,10 +159,10 @@ class _AddToCartButtonState extends State<AddToCartButton> {
               'toDisplay': 1,
               'priority': 5,
             },
-            'itemName': {
-              'displayName': 'Item Name',
-              'value': itemName,
-              'toDisplay': 0,
+            'productName': {
+              'displayName': 'Product Name',
+              'value': productName,
+              'toDisplay': 1,
               'priority': 1,
             },
           }, SetOptions(merge: true));

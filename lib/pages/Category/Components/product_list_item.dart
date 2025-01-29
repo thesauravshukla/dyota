@@ -36,7 +36,6 @@ class ProductListItem extends StatelessWidget {
           var data = snapshot.data!;
           List<dynamic> imageLocations = data['imageLocation'];
           String imagePath = imageLocations[0];
-
           return FutureBuilder<String>(
             future: getImageUrl(imagePath),
             builder: (context, imageSnapshot) {

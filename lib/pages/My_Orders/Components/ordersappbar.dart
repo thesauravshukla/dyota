@@ -52,7 +52,7 @@ class OrdersTabBar extends StatelessWidget implements PreferredSizeWidget {
       labelStyle: TextStyle(fontSize: 16.0), // Set highlight color to white
       tabs: const <Widget>[
         Tab(text: 'Delivered'),
-        Tab(text: 'Processing'),
+        Tab(text: 'Pending'),
         Tab(text: 'Cancelled'),
         // Add more tabs if you have them
       ],

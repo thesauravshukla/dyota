@@ -1,4 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dyota/components/bottom_navigation_bar_component.dart';
+import 'package:dyota/pages/Home/home_page.dart';
+import 'package:dyota/pages/My_Bag/my_bag.dart';
 import 'package:dyota/pages/My_Orders/my_orders.dart';
 import 'package:dyota/pages/Profile/Components/profile_list_tile.dart';
 import 'package:dyota/pages/Profile/Components/user_account_header.dart';
@@ -7,6 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../components/generic_appbar.dart';
+import '../../pages/Authentication/auth_page.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -22,6 +26,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _fetchAddressCount();
+  }
+
+  void _onItemTapped(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+        break;
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MyBag()),
+        );
+        break;
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ProfileScreen()),
+        );
+        break;
+    }
   }
 
   Future<void> _fetchAddressCount() async {
@@ -43,6 +70,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _handleLogout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
+    // Navigate to auth page after logout, removing all previous routes
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const AuthPage()),
+      (route) => false,
+    );
   }
 
   @override
@@ -64,12 +96,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subtitle: '$_addressCount addresses',
             onTap: () => _navigateTo(context, ShippingAddressesScreen()),
           ),
-          _buildProfileListTile(
-            icon: Icons.payment,
-            title: 'Payment methods',
-            subtitle: 'Visa **34',
-            onTap: () => _navigateTo(context, ShippingAddressesScreen()),
-          ),
           // Logout button
           ListTile(
             leading: Icon(Icons.logout),
@@ -77,6 +103,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onTap: () => _handleLogout(context),
           ),
         ],
+      ),
+      bottomNavigationBar: CustomBottomNavigationBar(
+        selectedIndex: 2, // Set the current index as needed
+        onItemTapped: (index) => _onItemTapped(context, index),
       ),
     );
   }

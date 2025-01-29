@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decimal/decimal.dart';
 import 'package:dyota/components/generic_appbar.dart';
+import 'package:dyota/pages/My_Bag/Components/price_calculator.dart';
 import 'package:dyota/pages/Payment/payments.dart';
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_card.dart';
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_dialogs.dart';
@@ -44,27 +47,7 @@ class _PaymentPageState extends State<PaymentPage> {
     final orderId = Uuid().v4(); // Generate a unique order ID
     final timestamp = FieldValue.serverTimestamp();
 
-    // Calculate total amount
-    Decimal subtotal = cartItemsSnapshot.docs.fold(Decimal.zero, (sum, doc) {
-      final data = doc.data();
-      final priceMap = data['price'] as Map<String, dynamic>? ?? {'value': 0.0};
-      Decimal priceValue = Decimal.parse(priceMap['value']);
-      return sum + priceValue;
-    });
-
-    Decimal tax = Decimal.zero;
-    for (var doc in cartItemsSnapshot.docs) {
-      final data = doc.data();
-      if (data.containsKey('tax') && data['tax'] is Map<String, dynamic>) {
-        final taxMap = data['tax'] as Map<String, dynamic>;
-        if (taxMap.containsKey('value')) {
-          Decimal taxValue = Decimal.parse(taxMap['value'].toString());
-          tax += taxValue;
-        }
-      }
-    }
-
-    final totalAmount = subtotal + tax;
+    final totalAmount = PriceCalculator(cartItemsSnapshot.docs).totalAmount;
 
     // Initiate Razorpay payment
     String paymentResult = await initiatePayment(totalAmount);
@@ -392,18 +375,15 @@ class _PaymentPageState extends State<PaymentPage> {
     for (var doc in cartItemsSnapshot.docs) {
       final data = doc.data();
       final priceMap = data['price'] as Map<String, dynamic>? ?? {'value': 0.0};
-      final itemNameMap =
-          data['itemName'] as Map<String, dynamic>? ?? {'value': 'Unknown'};
-      final itemTypeMap =
-          data['itemType'] as Map<String, dynamic>? ?? {'value': 'Unknown'};
+      final productNameMap =
+          data['productName'] as Map<String, dynamic>? ?? {'value': 'Unknown'};
 
-      final priceValue = Decimal.parse(priceMap['value'].toString()) ?? 0.0;
-      final itemName = itemNameMap['value'] ?? 'Unknown';
-      final itemType = itemTypeMap['value'] ?? 'Unknown';
+      final priceValue =
+          Decimal.parse(priceMap['value'].toString()) ?? Decimal.zero;
+      final productName = productNameMap['value'] ?? 'Unknown';
 
       items.add({
-        'itemName': itemName,
-        'itemType': itemType,
+        'productName': productName,
         'price': priceValue,
       });
     }
@@ -438,6 +418,82 @@ class _PaymentPageState extends State<PaymentPage> {
     }
 
     return totalTax;
+  }
+
+  Future<String> _moveCartItemsToOrder() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.email == null) {
+      throw Exception('User not logged in');
+    }
+
+    final email = user.email!;
+
+    final now = DateTime.now();
+    final randomNum =
+        (100 + Random().nextInt(900)); // Random 3-digit number between 100-999
+    final orderId =
+        '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}-'
+        '${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}-'
+        '$randomNum';
+
+    try {
+      // Get all cart items
+      final cartItemsSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(email)
+          .collection('cartItemsList')
+          .get();
+
+      // Start a batch write
+      WriteBatch batch = FirebaseFirestore.instance.batch();
+
+      // For each cart item
+      for (var doc in cartItemsSnapshot.docs) {
+        // Create a reference to the new location
+        final newDocRef = FirebaseFirestore.instance
+            .collection('users')
+            .doc(email)
+            .collection('orders')
+            .doc(orderId)
+            .collection('items')
+            .doc(doc.id);
+
+        // Add the document to the new location
+        batch.set(newDocRef, doc.data());
+
+        // Delete the document from the cart
+        batch.delete(doc.reference);
+      }
+
+      // Add order metadata
+      final orderMetadataRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(email)
+          .collection('orders')
+          .doc(orderId);
+
+      batch.set(orderMetadataRef, {
+        'orderId': orderId,
+        'orderDate': FieldValue.serverTimestamp(),
+        'status': 'Pending',
+        'totalItems': cartItemsSnapshot.docs.length,
+        'totalAmount': {
+          'displayName': 'Total Amount',
+          'value':
+              PriceCalculator(cartItemsSnapshot.docs).totalAmount.toString(),
+          'prefix': 'Rs. ',
+          'toDisplay': 1,
+        }
+      });
+
+      // Commit the batch
+      await batch.commit();
+
+      return orderId;
+    } catch (e) {
+      print('Error moving cart items to order: $e');
+      throw Exception('Failed to create order');
+    }
   }
 
   @override
@@ -501,7 +557,7 @@ class _PaymentPageState extends State<PaymentPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  '${item['itemName']}',
+                                  '${item['productName']}',
                                   style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.white), // White text
@@ -622,7 +678,7 @@ class _PaymentPageState extends State<PaymentPage> {
             Spacer(),
             Center(
               child: ElevatedButton(
-                onPressed: _handlePay,
+                onPressed: () => _moveCartItemsToOrder(),
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30.0),

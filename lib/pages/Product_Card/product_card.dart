@@ -7,9 +7,9 @@ import 'package:dyota/pages/Product_Card/Components/dynamic_fields_display.dart'
 import 'package:dyota/pages/Product_Card/Components/image_carousel.dart';
 import 'package:dyota/pages/Product_Card/Components/more_colours_section.dart';
 import 'package:dyota/pages/Product_Card/Components/order_swatches.dart';
+import 'package:dyota/pages/Product_Card/Components/product_description.dart';
 import 'package:dyota/pages/Product_Card/Components/product_name.dart';
 import 'package:dyota/pages/Product_Card/Components/recently_viewed_section.dart';
-import 'package:dyota/pages/Product_Card/Components/shipping_info.dart';
 import 'package:dyota/pages/Product_Card/Components/support_section.dart';
 import 'package:dyota/pages/Product_Card/Components/users_also_viewed_section.dart';
 import 'package:dyota/pages/Profile/profile_page.dart';
@@ -29,7 +29,8 @@ class ProductCard extends StatefulWidget {
 
 class _ProductCardState extends State<ProductCard> {
   final Logger _logger = Logger('ProductCard');
-  int selectedImageIndex = 0;
+  int selectedImageIndex = 0; // For the image carousel
+  int selectedNavIndex = 0; // For the bottom navigation bar
   int selectedParentImageIndex = 0; // New variable for parent images
   List<Map<String, String>> imageDetails = [];
   List<String> allImageUrls = [];
@@ -102,7 +103,7 @@ class _ProductCardState extends State<ProductCard> {
           allImageUrls = fetchedImageUrls;
           imageDetails = details;
           isLoading = false;
-          selectedImageIndex = 0;
+          selectedImageIndex = 0; // Reset image carousel index
         });
         _logger.info('Images fetched successfully for documentId: $documentId');
         fetchUsersAlsoViewedProducts(currentCategoryValue!);
@@ -219,21 +220,24 @@ class _ProductCardState extends State<ProductCard> {
   void _onItemTapped(int index) {
     switch (index) {
       case 0:
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => HomePage()),
+          (Route<dynamic> route) => false,
         );
         break;
       case 1:
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => MyBag()),
+          (Route<dynamic> route) => false,
         );
         break;
       case 2:
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => ProfileScreen()),
+          (Route<dynamic> route) => false,
         );
         break;
     }
@@ -255,7 +259,8 @@ class _ProductCardState extends State<ProductCard> {
                 ? Center(child: Text(''))
                 : ListView(
                     children: <Widget>[
-                      ProductName(),
+                      ProductName(documentId: currentDocumentId),
+                      ProductDescription(documentId: currentDocumentId),
                       ImageCarousel(
                         allImageUrls: allImageUrls,
                         selectedImageIndex: selectedImageIndex,
@@ -294,7 +299,6 @@ class _ProductCardState extends State<ProductCard> {
                             .map((detail) => detail['documentId']!)
                             .toList(),
                       ),
-                      const ShippingInfo(),
                       const SupportSection(),
                       // Users Also Viewed Section
                       if (usersAlsoViewedDetails.isNotEmpty)
@@ -335,8 +339,13 @@ class _ProductCardState extends State<ProductCard> {
         ],
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: selectedImageIndex,
-        onItemTapped: _onItemTapped,
+        selectedIndex: selectedNavIndex, // Use separate variable for nav index
+        onItemTapped: (index) {
+          setState(() {
+            selectedNavIndex = index; // Update the nav index
+          });
+          _onItemTapped(index);
+        },
       ),
     );
   }
@@ -356,7 +365,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       backgroundColor: Colors.black,
-      selectedItemColor: Colors.white,
+      selectedItemColor: Colors.white54,
       unselectedItemColor: Colors.white54,
       type: BottomNavigationBarType.fixed,
       items: const [

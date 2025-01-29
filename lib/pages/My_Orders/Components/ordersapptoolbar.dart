@@ -13,7 +13,7 @@ class OrdersTabBar extends StatelessWidget implements PreferredSizeWidget {
       controller: tabController,
       tabs: [
         Tab(text: 'Delivered'),
-        Tab(text: 'Processing'),
+        Tab(text: 'Pending'),
         Tab(text: 'Cancelled'),
       ],
       indicator: PaddedRoundedRectTabIndicator(

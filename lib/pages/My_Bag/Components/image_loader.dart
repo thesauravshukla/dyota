@@ -21,18 +21,23 @@ class ImageLoader extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           _logger.info('Fetching image URL for imageLocation: $imageLocation');
-          return Center(child: Text(''));
+          return Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           _logger.severe('Error fetching image URL: ${snapshot.error}');
-          throw Exception('Error fetching image URL: ${snapshot.error}');
-        } else if (!snapshot.hasData) {
+          print(
+              'Error fetching image URL: ${snapshot.error}'); // Print statement
+          return Center(child: Text('Error loading image'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           _logger.warning('No data found for imageLocation: $imageLocation');
-          return Center(child: Text(''));
+          print(
+              'No data found for imageLocation: $imageLocation'); // Print statement
+          return Center(child: Text('Image not available'));
         }
 
         String imageUrl = snapshot.data!;
         _logger.info(
             'Image URL fetched successfully for imageLocation: $imageLocation');
+        print('Image URL fetched successfully: $imageUrl'); // Print statement
         return builder(context, imageUrl);
       },
     );
