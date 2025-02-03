@@ -21,11 +21,13 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   int _addressCount = 0;
+  int _pendingOrdersCount = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchAddressCount();
+    _fetchPendingOrdersCount();
   }
 
   void _onItemTapped(BuildContext context, int index) {
@@ -68,6 +70,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _fetchPendingOrdersCount() async {
+    String? email = FirebaseAuth.instance.currentUser?.email;
+    if (email != null) {
+      try {
+        QuerySnapshot orderSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(email)
+            .collection('orders')
+            .where('status', isEqualTo: 'Pending')
+            .get();
+
+        setState(() {
+          _pendingOrdersCount = orderSnapshot.size;
+        });
+      } catch (e) {
+        print('Error fetching pending orders count: $e');
+      }
+    }
+  }
+
   void _handleLogout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
     // Navigate to auth page after logout, removing all previous routes
@@ -87,7 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildProfileListTile(
             icon: Icons.shopping_cart,
             title: 'My orders',
-            subtitle: 'Already have 12 orders',
+            subtitle: '$_pendingOrdersCount pending orders',
             onTap: () => _navigateTo(context, MyOrdersPage()),
           ),
           _buildProfileListTile(
