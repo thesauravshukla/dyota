@@ -61,53 +61,59 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(),
-      body: FutureBuilder<List<String>>(
-        future: getDocumentIdsShownOnHomePage(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: Text(''));
-          }
-          if (snapshot.hasError) {
-            _logger.severe('Error in FutureBuilder', snapshot.error);
-            return const Center(child: Text(''));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            _logger.info('No items to display');
-            return const Center(child: Text(''));
-          }
-
-          List<String> documentIds = snapshot.data!;
-          _logger.info('Document IDs to display: $documentIds');
-          try {
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  Container(
-                    color: Colors.grey[300],
-                    child: Column(
-                      children: [
-                        CategoryHeader(),
-                        CategoryGrid(),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    color: const Color.fromARGB(255, 255, 255, 255),
-                    child: Column(
-                      children: [
-                        BestSellerHeader(),
-                        ProductGrid(documentIds: documentIds),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          } catch (e) {
-            _logger.severe('Error building widget tree for homepage:', e);
-            return const Center(child: Text(''));
-          }
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // This will trigger a rebuild of the FutureBuilder
+          return await Future.delayed(const Duration(milliseconds: 1500));
         },
+        child: FutureBuilder<List<String>>(
+          future: getDocumentIdsShownOnHomePage(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: Text(''));
+            }
+            if (snapshot.hasError) {
+              _logger.severe('Error in FutureBuilder', snapshot.error);
+              return const Center(child: Text(''));
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              _logger.info('No items to display');
+              return const Center(child: Text(''));
+            }
+
+            List<String> documentIds = snapshot.data!;
+            _logger.info('Document IDs to display: $documentIds');
+            try {
+              return SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Container(
+                      color: Colors.grey[300],
+                      child: Column(
+                        children: [
+                          CategoryHeader(),
+                          CategoryGrid(),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      color: const Color.fromARGB(255, 255, 255, 255),
+                      child: Column(
+                        children: [
+                          BestSellerHeader(),
+                          ProductGrid(documentIds: documentIds),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            } catch (e) {
+              _logger.severe('Error building widget tree for homepage:', e);
+              return const Center(child: Text(''));
+            }
+          },
+        ),
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
         selectedIndex: 0, // Set the current index as needed
