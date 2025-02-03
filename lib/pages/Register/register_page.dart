@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/components/my_button.dart';
 import 'package:dyota/components/my_textfield.dart';
 import 'package:dyota/components/square_tile.dart';
@@ -21,6 +22,31 @@ class _RegisterPageState extends State<RegisterPage> {
   var showInvalidCredentials = 0;
 
   void signUserUp() async {
+    // Validate all fields first
+    if (emailController.text.trim().isEmpty ||
+        passwordController.text.isEmpty ||
+        confirmPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all fields'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Validate password confirmation
+    if (passwordController.text != confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Passwords do not match'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Show loading indicator
     showDialog(
       context: context,
       builder: (context) {
@@ -35,46 +61,72 @@ class _RegisterPageState extends State<RegisterPage> {
     );
 
     try {
+      // Create the user
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text,
+        email: emailController.text.trim(),
         password: passwordController.text,
       );
-      Navigator.pop(context); // Close the progress dialog
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Registration Successful'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-      // Wait for the SnackBar to be displayed for a few seconds
+
+      // Save additional user data to Firestore
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'email': emailController.text.trim(),
+        });
+      }
+
+      // Close loading indicator
+      if (context.mounted) Navigator.pop(context);
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration Successful'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Wait for snackbar
       await Future.delayed(const Duration(seconds: 2));
-      // Navigate directly to the LoginPage class
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) => LoginPage(
-                onTap: widget.onTap)), // Assuming LoginPage constructor
-      );
+
+      // Navigate to login page
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LoginPage(onTap: widget.onTap),
+          ),
+        );
+      }
     } catch (e) {
-      Navigator.pop(context); // Close the progress dialog
-      setState(() {
+      // Close loading indicator
+      if (context.mounted) Navigator.pop(context);
+
+      // Show error message
+      if (context.mounted) {
+        String errorMessage = 'An error occurred during registration';
         if (e is FirebaseAuthException) {
           switch (e.code) {
             case 'invalid-email':
-              showInvalidCredentials = 1;
+              errorMessage = 'Invalid email format';
               break;
             case 'weak-password':
-              showInvalidCredentials = 2;
+              errorMessage = 'Password is too weak';
               break;
             case 'email-already-in-use':
-              showInvalidCredentials = 3;
-              break;
-            default:
-              showInvalidCredentials = 4;
+              errorMessage = 'Email is already registered';
               break;
           }
         }
-      });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
@@ -115,7 +167,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   // Email textfield
                   MyTextField(
                     controller: emailController,
-                    hintText: 'Username',
+                    hintText: 'Email',
                     obscureText: false,
                   ),
                   const SizedBox(height: 10),
