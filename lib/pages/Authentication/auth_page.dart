@@ -38,6 +38,7 @@ class AuthPage extends StatelessWidget {
         await docRef.set({
           'addressList': [],
           'recentlyViewedProducts': [],
+          'minimumOrderValue': 5000,
         });
       }
     }

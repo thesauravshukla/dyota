@@ -32,48 +32,66 @@ class _MyBagState extends State<MyBag> {
 
     return _buildScaffold(
       context,
-      StreamBuilder<QuerySnapshot>(
+      StreamBuilder<DocumentSnapshot>(
+        // First, get the user document to get minimumOrderValue
         stream: FirebaseFirestore.instance
             .collection('users')
             .doc(user.email)
-            .collection('cartItemsList')
             .snapshots(),
-        builder: (context, snapshot) {
-          try {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              _logger.info('Waiting for data...');
-              return Center(child: Text(''));
-            }
-            if (snapshot.hasError) {
-              _logger.severe('Error fetching data: ${snapshot.error}');
-              return Center(child: Text(''));
-            }
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              _logger.info('No data found or bag is empty');
-              return Center(child: Text('Your bag is empty.'));
-            }
-
-            List<Widget> itemCards =
-                snapshot.data!.docs.map<Widget>((document) {
-              return ItemCard(
-                documentId: document.id,
-                onDelete: () {
-                  setState(() {});
-                },
-              );
-            }).toList();
-
-            _logger.info('Data fetched successfully, building item cards');
-            return ListView(
-              children: [
-                ...itemCards,
-                TotalAmountSection(minimumOrderQuantity: Decimal.fromInt(100)),
-              ],
-            );
-          } catch (e) {
-            _logger.severe('Error in StreamBuilder: $e');
+        builder: (context, userSnapshot) {
+          if (!userSnapshot.hasData) {
             return Center(child: Text(''));
           }
+
+          final minimumOrderValue = Decimal.parse(
+              (userSnapshot.data?['minimumOrderValue'] ?? 5000).toString());
+
+          return StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.email)
+                .collection('cartItemsList')
+                .snapshots(),
+            builder: (context, snapshot) {
+              try {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  _logger.info('Waiting for data...');
+                  return Center(child: Text(''));
+                }
+                if (snapshot.hasError) {
+                  _logger.severe('Error fetching data: ${snapshot.error}');
+                  return Center(child: Text(''));
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  _logger.info('No data found or bag is empty');
+                  return Center(child: Text('Your bag is empty.'));
+                }
+
+                List<Widget> itemCards =
+                    snapshot.data!.docs.map<Widget>((document) {
+                  return ItemCard(
+                    documentId: document.id,
+                    onDelete: () {
+                      setState(() {});
+                    },
+                  );
+                }).toList();
+
+                _logger.info('Data fetched successfully, building item cards');
+                return ListView(
+                  children: [
+                    ...itemCards,
+                    TotalAmountSection(
+                      minimumOrderQuantity: minimumOrderValue,
+                    ),
+                  ],
+                );
+              } catch (e) {
+                _logger.severe('Error in StreamBuilder: $e');
+                return Center(child: Text(''));
+              }
+            },
+          );
         },
       ),
     );
