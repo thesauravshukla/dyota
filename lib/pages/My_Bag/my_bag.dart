@@ -81,8 +81,62 @@ class _MyBagState extends State<MyBag> {
                 return ListView(
                   children: [
                     ...itemCards,
-                    TotalAmountSection(
-                      minimumOrderQuantity: minimumOrderValue,
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(user.email)
+                          .collection('cartItemsList')
+                          .snapshots(),
+                      builder: (context, cartSnapshot) {
+                        if (!cartSnapshot.hasData) {
+                          return const SizedBox();
+                        }
+
+                        // Calculate total amount from cart items
+                        Decimal totalAmount = Decimal.zero;
+                        for (var doc in cartSnapshot.data!.docs) {
+                          Map<String, dynamic> priceMap = doc.get('price');
+                          totalAmount +=
+                              Decimal.parse(priceMap['value'].toString());
+                        }
+
+                        return Column(
+                          children: [
+                            if (totalAmount < minimumOrderValue)
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border:
+                                        Border.all(color: Colors.red.shade200),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.warning,
+                                          color: Colors.red.shade400),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Minimum order value should be Rs. ${minimumOrderValue.toString()}',
+                                          style: TextStyle(
+                                            color: Colors.red.shade700,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            TotalAmountSection(
+                              minimumOrderQuantity: minimumOrderValue,
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 );

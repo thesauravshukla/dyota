@@ -62,14 +62,20 @@ class _OrderSwatchesButtonState extends State<OrderSwatchesButton> {
             .collection('users')
             .doc(email)
             .collection('cartItemsList')
-            .doc(widget.documentIds[i] +
-                '-swatches') // Set the document ID to itemDocumentId
+            .doc(widget.documentIds[i] + '-swatches')
             .set({
           'itemType': {
             'displayName': 'Order Type',
             'value': 'Swatches',
             'toDisplay': 1,
             'priority': 1,
+          },
+          'price': {
+            'displayName': 'Price',
+            'prefix': 'Rs. ',
+            'value': '0',
+            'toDisplay': 1,
+            'priority': 2,
           },
         });
       }
