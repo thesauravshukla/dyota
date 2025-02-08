@@ -63,6 +63,15 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0, // Removes shadow
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () =>
+              Navigator.pop(context), // This will go back to previous page
+        ),
+      ),
       body: SafeArea(
         child: ListView(
           children: [
