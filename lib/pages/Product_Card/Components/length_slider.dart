@@ -1,25 +1,27 @@
 import 'package:flutter/material.dart';
 
 class LengthSlider extends StatelessWidget {
-  final int minOrderLength;
-  final int maxOrderLength;
+  final List<double> allowedLengths; // List of allowed length values
   final double selectedLength;
-  final List<int> labels;
   final ValueChanged<double> onChanged;
   final String? validationError;
 
   const LengthSlider({
     Key? key,
-    required this.minOrderLength,
-    required this.maxOrderLength,
+    required this.allowedLengths,
     required this.selectedLength,
-    required this.labels,
     required this.onChanged,
     this.validationError,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Sort the allowed lengths to ensure they're in ascending order
+    final sortedLengths = List<double>.from(allowedLengths)..sort();
+
+    // Find the index of the current selected length
+    final currentIndex = sortedLengths.indexOf(selectedLength);
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -59,12 +61,15 @@ class LengthSlider extends StatelessWidget {
                     valueIndicatorTextStyle: TextStyle(color: Colors.white),
                   ),
                   child: Slider(
-                    value: selectedLength,
-                    min: minOrderLength.toDouble(),
-                    max: maxOrderLength.toDouble(),
-                    divisions: 50,
-                    label: selectedLength.round().toString(),
-                    onChanged: onChanged,
+                    value: currentIndex.toDouble(),
+                    min: 0,
+                    max: (sortedLengths.length - 1).toDouble(),
+                    divisions: sortedLengths.length - 1,
+                    label: '${sortedLengths[currentIndex.toInt()]} m',
+                    onChanged: (value) {
+                      // Convert the index back to the actual length value
+                      onChanged(sortedLengths[value.toInt()]);
+                    },
                   ),
                 ),
                 Positioned(
@@ -73,10 +78,10 @@ class LengthSlider extends StatelessWidget {
                   right: 0,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: labels
-                        .map((label) => Column(
+                    children: sortedLengths
+                        .map((length) => Column(
                               children: [
-                                Text('$label m',
+                                Text('$length m',
                                     style: TextStyle(fontSize: 12)),
                                 Container(
                                     width: 1, height: 8, color: Colors.black),

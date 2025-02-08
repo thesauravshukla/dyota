@@ -25,7 +25,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
   late List<bool> selectedImages;
   late List<double> selectedLengths;
   List<String> imageUrls = [];
-  Map<String, int> minimumOrderLengths = {};
+  Map<String, List<double>> allowedLengthsMap = {};
   Map<int, String> validationErrors = {};
 
   @override
@@ -48,34 +48,48 @@ class _AddToCartButtonState extends State<AddToCartButton> {
             .get();
         if (doc.exists) {
           Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+          // Get image URL
           List<dynamic> imageLocations = data['imageLocation'];
           String imageLocation = imageLocations[0];
           String imageUrl = await FirebaseStorage.instance
               .ref(imageLocation)
               .getDownloadURL();
           urls.add(imageUrl);
-          int minimumOrderLength = data['minimumOrderLength']['value'] ?? 0;
-          minimumOrderLengths[docId] = minimumOrderLength;
-          selectedLengths[widget.documentIds.indexOf(docId)] =
-              minimumOrderLength.toDouble();
+
+          // Get allowed lengths array and convert to List<double>
+          List<dynamic> allowedLengthsRaw = data['allowedLengths'] ?? [];
+          List<double> allowedLengths = allowedLengthsRaw
+              .map((length) => double.parse(length.toString()))
+              .toList();
+
+          allowedLengthsMap[docId] = allowedLengths;
+
+          // Set initial selected length to first allowed length
+          if (allowedLengths.isNotEmpty) {
+            selectedLengths[widget.documentIds.indexOf(docId)] =
+                allowedLengths[0];
+          }
         }
       }
       setState(() {
         imageUrls = urls;
       });
-      _logger.info('Image URLs fetched successfully');
+      _logger.info('Image URLs and allowed lengths fetched successfully');
     } catch (e) {
-      _logger.severe('Error fetching image URLs', e);
+      _logger.severe('Error fetching image URLs and allowed lengths', e);
     }
   }
 
   void validateInputs() {
     Map<int, String> errors = {};
     for (int i = 0; i < selectedLengths.length; i++) {
-      if (selectedImages[i] &&
-          selectedLengths[i] < minimumOrderLengths[widget.documentIds[i]]!) {
-        errors[i] =
-            'Order length should be at least ${minimumOrderLengths[widget.documentIds[i]]}';
+      if (selectedImages[i]) {
+        List<double> allowedLengths =
+            allowedLengthsMap[widget.documentIds[i]] ?? [];
+        if (!allowedLengths.contains(selectedLengths[i])) {
+          errors[i] = 'Please select a valid length from the allowed values';
+        }
       }
     }
     setState(() {
@@ -214,14 +228,9 @@ class _AddToCartButtonState extends State<AddToCartButton> {
           ),
           ...imageUrls.map((imageUrl) {
             int index = imageUrls.indexOf(imageUrl);
-            int minOrderLength =
-                minimumOrderLengths[widget.documentIds[index]]!;
-            int maxOrderLength = minOrderLength + 100;
-            List<int> labels = List.generate(
-                6,
-                (i) =>
-                    minOrderLength +
-                    (i * (maxOrderLength - minOrderLength) ~/ 5));
+            List<double> allowedLengths =
+                allowedLengthsMap[widget.documentIds[index]] ?? [];
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -240,10 +249,8 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                 const Divider(color: Colors.grey),
                 if (selectedImages[index])
                   LengthSlider(
-                    minOrderLength: minOrderLength,
-                    maxOrderLength: maxOrderLength,
+                    allowedLengths: allowedLengths,
                     selectedLength: selectedLengths[index],
-                    labels: labels,
                     onChanged: (value) {
                       setState(() {
                         selectedLengths[index] = value;
