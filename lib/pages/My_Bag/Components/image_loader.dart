@@ -21,7 +21,7 @@ class ImageLoader extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           _logger.info('Fetching image URL for imageLocation: $imageLocation');
-          return Center(child: CircularProgressIndicator());
+          return const SizedBox();
         } else if (snapshot.hasError) {
           _logger.severe('Error fetching image URL: ${snapshot.error}');
           print(

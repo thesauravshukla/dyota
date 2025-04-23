@@ -8,8 +8,13 @@ import 'package:flutter/material.dart';
 class ItemCard extends StatefulWidget {
   final String documentId;
   final VoidCallback onDelete;
+  final Function(bool)? onLoadingChanged;
 
-  ItemCard({required this.documentId, required this.onDelete});
+  ItemCard({
+    required this.documentId,
+    required this.onDelete,
+    this.onLoadingChanged,
+  });
 
   @override
   _ItemCardState createState() => _ItemCardState();
@@ -17,6 +22,30 @@ class ItemCard extends StatefulWidget {
 
 class _ItemCardState extends State<ItemCard> {
   bool _isDeleted = false;
+  bool _isLoading = true;
+  bool _hasNotifiedLoading = false;
+  Map<String, dynamic>? _cachedCartData;
+  Map<String, dynamic>? _cachedDocumentData;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Only notify about loading after a short delay to prevent UI flashing
+    Future.delayed(Duration(milliseconds: 100), () {
+      if (mounted && !_hasNotifiedLoading && widget.onLoadingChanged != null) {
+        _hasNotifiedLoading = true;
+        widget.onLoadingChanged!(_isLoading);
+      }
+    });
+
+    // Safety timeout to ensure loading state is eventually reset
+    Future.delayed(Duration(seconds: 3), () {
+      if (mounted && _isLoading) {
+        _updateLoadingState(false);
+      }
+    });
+  }
 
   String _parseDocumentId(String input) {
     return input.split('-')[0];
@@ -27,6 +56,18 @@ class _ItemCardState extends State<ItemCard> {
     String prefix = field['prefix']?.toString() ?? '';
     String suffix = field['suffix']?.toString() ?? '';
     return '$prefix$value$suffix';
+  }
+
+  void _updateLoadingState(bool isLoading) {
+    if (_isLoading != isLoading) {
+      _isLoading = isLoading;
+      if (widget.onLoadingChanged != null && mounted) {
+        // Use a longer delay to prevent too frequent updates
+        Future.delayed(Duration(milliseconds: 100), () {
+          if (mounted) widget.onLoadingChanged!(_isLoading);
+        });
+      }
+    }
   }
 
   @override
@@ -40,19 +81,40 @@ class _ItemCardState extends State<ItemCard> {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
+      _updateLoadingState(false);
       return Center(child: Text('User not logged in'));
     }
     final email = user.email!;
 
+    // Use cached data to prevent rebuilds
     return FutureBuilder<Map<String, dynamic>?>(
-      future: fetchCartData(email, unparsedDocumentId),
+      future: _cachedCartData != null
+          ? Future.value(_cachedCartData)
+          : fetchCartData(email, unparsedDocumentId),
       builder: (context, cartSnapshot) {
         if (cartSnapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          // Only notify parent if not already loading
+          if (!_isLoading) _updateLoadingState(true);
+          return const SizedBox(height: 0);
+        } else if (cartSnapshot.connectionState == ConnectionState.done) {
+          // Only reset if we're currently loading
+          if (_isLoading) {
+            // Delay the state update to ensure UI stability
+            Future.delayed(Duration.zero, () {
+              if (mounted) _updateLoadingState(false);
+            });
+          }
         } else if (cartSnapshot.hasError) {
+          _updateLoadingState(false);
           return Center(child: Text('Error: ${cartSnapshot.error}'));
         } else if (!cartSnapshot.hasData || cartSnapshot.data == null) {
+          _updateLoadingState(false);
           return Center(child: Text('No cart data found'));
+        }
+
+        // Cache the data to avoid refetching
+        if (_cachedCartData == null) {
+          _cachedCartData = cartSnapshot.data;
         }
 
         Map<String, dynamic> cartData = cartSnapshot.data!;
@@ -64,16 +126,30 @@ class _ItemCardState extends State<ItemCard> {
         cartFields.sort(
             (a, b) => (a['priority'] as int).compareTo(b['priority'] as int));
 
-        // Debug print to check cartFields
         return FutureBuilder<Map<String, dynamic>?>(
-          future: fetchDocumentData(parsedDocumentId),
+          future: _cachedDocumentData != null
+              ? Future.value(_cachedDocumentData)
+              : fetchDocumentData(parsedDocumentId),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
+              if (!_isLoading) _updateLoadingState(true);
+              return const SizedBox(height: 0);
             } else if (snapshot.hasError) {
+              _updateLoadingState(false);
               return Center(child: Text('Error: ${snapshot.error}'));
             } else if (!snapshot.hasData || snapshot.data == null) {
+              _updateLoadingState(false);
               return Center(child: Text(''));
+            }
+
+            // Cache the document data
+            if (_cachedDocumentData == null) {
+              _cachedDocumentData = snapshot.data;
+            }
+
+            // We have all data, so we're not loading
+            if (_isLoading) {
+              _updateLoadingState(false);
             }
 
             Map<String, dynamic> data = snapshot.data!;
@@ -93,6 +169,7 @@ class _ItemCardState extends State<ItemCard> {
             return ImageLoader(
               imageLocation: imageLocation,
               builder: (context, imageUrl) {
+                _updateLoadingState(false);
                 return InkWell(
                   onTap: () {
                     Navigator.push(
@@ -178,5 +255,15 @@ class _ItemCardState extends State<ItemCard> {
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    if (widget.onLoadingChanged != null && _isLoading) {
+      Future.microtask(() {
+        widget.onLoadingChanged!(false);
+      });
+    }
+    super.dispose();
   }
 }
