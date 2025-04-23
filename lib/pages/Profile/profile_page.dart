@@ -91,12 +91,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _handleLogout(BuildContext context) async {
-    await FirebaseAuth.instance.signOut();
-    // Navigate to auth page after logout, removing all previous routes
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const AuthPage()),
-      (route) => false,
-    );
+    // Show confirmation dialog before logging out
+    final bool confirmLogout = await showDialog(
+          context: context,
+          builder: (BuildContext dialogContext) {
+            return AlertDialog(
+              title: const Text('Log Out'),
+              content: const Text('Are you sure you want to log out?'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('No'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text('Yes'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false; // Default to false if dialog is dismissed
+
+    // Only proceed with logout if confirmed
+    if (confirmLogout) {
+      await FirebaseAuth.instance.signOut();
+      // Navigate to auth page after logout, removing all previous routes
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const AuthPage()),
+        (route) => false,
+      );
+    }
   }
 
   @override
