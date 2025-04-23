@@ -4,19 +4,88 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
-class ProductListItem extends StatelessWidget {
+class ProductListItem extends StatefulWidget {
   final String documentId;
-  final Logger _logger = Logger('ProductListItem');
+  final Function(bool)? onLoadingChanged;
 
-  ProductListItem({
+  const ProductListItem({
     Key? key,
     required this.documentId,
+    this.onLoadingChanged,
   }) : super(key: key);
+
+  @override
+  State<ProductListItem> createState() => _ProductListItemState();
+}
+
+class _ProductListItemState extends State<ProductListItem>
+    with AutomaticKeepAliveClientMixin {
+  final Logger _logger = Logger('ProductListItem');
+  bool _isLoading = true;
+  bool _hasNotifiedLoading = false;
+  Map<String, dynamic>? _productData;
+  String? _imageUrl;
+
+  @override
+  bool get wantKeepAlive => true; // Keep the widget alive when scrolling
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+
+    // Set initial loading state
+    Future.microtask(() {
+      if (mounted && !_hasNotifiedLoading && widget.onLoadingChanged != null) {
+        _hasNotifiedLoading = true;
+        widget.onLoadingChanged!(true);
+      }
+    });
+  }
+
+  Future<void> _fetchData() async {
+    try {
+      // Fetch product data
+      final data = await fetchProductData();
+
+      // Get image URL
+      List<dynamic> imageLocations = data['imageLocation'];
+      String imagePath = imageLocations[0];
+      final imageUrl = await getImageUrl(imagePath);
+
+      if (mounted) {
+        setState(() {
+          _productData = data;
+          _imageUrl = imageUrl;
+          _isLoading = false;
+        });
+
+        if (widget.onLoadingChanged != null) {
+          Future.microtask(() {
+            if (mounted) widget.onLoadingChanged!(false);
+          });
+        }
+      }
+    } catch (e) {
+      _logger.severe('Error fetching product data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (widget.onLoadingChanged != null) {
+          Future.microtask(() {
+            if (mounted) widget.onLoadingChanged!(false);
+          });
+        }
+      }
+    }
+  }
 
   Future<Map<String, dynamic>> fetchProductData() async {
     DocumentSnapshot doc = await FirebaseFirestore.instance
         .collection('items')
-        .doc(documentId)
+        .doc(widget.documentId)
         .get();
     return doc.data() as Map<String, dynamic>;
   }
@@ -28,46 +97,33 @@ class ProductListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: fetchProductData(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasData) {
-          var data = snapshot.data!;
-          List<dynamic> imageLocations = data['imageLocation'];
-          String imagePath = imageLocations[0];
-          return FutureBuilder<String>(
-            future: getImageUrl(imagePath),
-            builder: (context, imageSnapshot) {
-              if (imageSnapshot.connectionState == ConnectionState.done &&
-                  imageSnapshot.hasData) {
-                String imageUrl = imageSnapshot.data!;
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              ProductCard(documentId: documentId)),
-                    );
-                  },
-                  child: buildProductCard(imageUrl, data),
-                );
-              } else if (imageSnapshot.hasError) {
-                throw Exception(
-                    'Error in imageSnapshot: ${imageSnapshot.error}');
-              } else {
-                return Container();
-              }
-            },
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
+    if (_isLoading) {
+      return Container(
+        height: 150,
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(16),
+        ),
+      );
+    }
+
+    if (_productData != null && _imageUrl != null) {
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    ProductCard(documentId: widget.documentId)),
           );
-        } else if (snapshot.hasError) {
-          throw Exception('Error in snapshot: ${snapshot.error}');
-        } else {
-          return Container();
-        }
-      },
-    );
+        },
+        child: buildProductCard(_imageUrl!, _productData!),
+      );
+    }
+
+    return Container(); // Fallback empty container
   }
 
   Widget buildProductCard(String imageUrl, Map<String, dynamic> data) {
@@ -157,5 +213,15 @@ class ProductListItem extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    if (widget.onLoadingChanged != null && _isLoading) {
+      Future.microtask(() {
+        widget.onLoadingChanged!(false);
+      });
+    }
+    super.dispose();
   }
 }
