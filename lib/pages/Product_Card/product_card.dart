@@ -37,8 +37,26 @@ class _ProductCardState extends State<ProductCard> {
   List<Map<String, String>> recentlyViewedDetails = [];
   List<Map<String, String>> usersAlsoViewedDetails = [];
   bool isLoading = true;
+  bool isNameLoading = false;
+  bool isDescriptionLoading = false;
+  bool isDynamicFieldsLoading = false;
+  bool isCarouselLoading = false;
+  bool isMoreColoursLoading = false;
+  bool isRecentlyViewedLoading = false;
+  bool isUsersAlsoViewedLoading = false;
+  bool _disposed = false;
   late String currentDocumentId;
   String? currentCategoryValue;
+
+  bool get anyComponentLoading =>
+      isLoading ||
+      isNameLoading ||
+      isDescriptionLoading ||
+      isDynamicFieldsLoading ||
+      isCarouselLoading ||
+      isMoreColoursLoading ||
+      isRecentlyViewedLoading ||
+      isUsersAlsoViewedLoading;
 
   @override
   void initState() {
@@ -49,6 +67,12 @@ class _ProductCardState extends State<ProductCard> {
     fetchImages(widget.documentId);
     updateRecentlyViewedProducts(widget.documentId);
     fetchRecentlyViewedProducts();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 
   Future<void> fetchImages(String documentId) async {
@@ -99,22 +123,31 @@ class _ProductCardState extends State<ProductCard> {
           }
         }
 
-        setState(() {
-          allImageUrls = fetchedImageUrls;
-          imageDetails = details;
-          isLoading = false;
-          selectedImageIndex = 0; // Reset image carousel index
-        });
+        if (!_disposed) {
+          setState(() {
+            allImageUrls = fetchedImageUrls;
+            imageDetails = details;
+            isLoading = false;
+            selectedImageIndex = 0; // Reset image carousel index
+          });
+        }
         _logger.info('Images fetched successfully for documentId: $documentId');
         fetchUsersAlsoViewedProducts(currentCategoryValue!);
       } else {
         _logger.warning('Document does not exist for documentId: $documentId');
+        if (!_disposed) {
+          setState(() {
+            isLoading = false;
+          });
+        }
       }
     } catch (e) {
       _logger.severe('Error fetching images for documentId: $documentId', e);
-      setState(() {
-        isLoading = false;
-      });
+      if (!_disposed) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -154,6 +187,12 @@ class _ProductCardState extends State<ProductCard> {
 
   Future<void> fetchRecentlyViewedProducts() async {
     try {
+      if (!_disposed) {
+        setState(() {
+          isRecentlyViewedLoading = true;
+        });
+      }
+
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         String email = user.email!;
@@ -182,18 +221,40 @@ class _ProductCardState extends State<ProductCard> {
             }
           }
 
+          if (!_disposed) {
+            setState(() {
+              recentlyViewedDetails = details;
+              isRecentlyViewedLoading = false;
+            });
+          }
+        } else if (!_disposed) {
           setState(() {
-            recentlyViewedDetails = details;
+            isRecentlyViewedLoading = false;
           });
         }
+      } else if (!_disposed) {
+        setState(() {
+          isRecentlyViewedLoading = false;
+        });
       }
     } catch (e) {
       _logger.severe('Error fetching recently viewed products', e);
+      if (!_disposed) {
+        setState(() {
+          isRecentlyViewedLoading = false;
+        });
+      }
     }
   }
 
   Future<void> fetchUsersAlsoViewedProducts(String categoryValue) async {
     try {
+      if (!_disposed) {
+        setState(() {
+          isUsersAlsoViewedLoading = true;
+        });
+      }
+
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('items')
           .where('category.value', isEqualTo: categoryValue)
@@ -209,11 +270,19 @@ class _ProductCardState extends State<ProductCard> {
         details.add({'imageUrl': imageUrl, 'documentId': document.id});
       }
 
-      setState(() {
-        usersAlsoViewedDetails = details;
-      });
+      if (!_disposed) {
+        setState(() {
+          usersAlsoViewedDetails = details;
+          isUsersAlsoViewedLoading = false;
+        });
+      }
     } catch (e) {
       _logger.severe('Error fetching users also viewed products', e);
+      if (!_disposed) {
+        setState(() {
+          isUsersAlsoViewedLoading = false;
+        });
+      }
     }
   }
 
@@ -243,13 +312,40 @@ class _ProductCardState extends State<ProductCard> {
     }
   }
 
+  void updateLoadingState({
+    bool? nameLoading,
+    bool? descriptionLoading,
+    bool? dynamicFieldsLoading,
+    bool? carouselLoading,
+    bool? moreColoursLoading,
+  }) {
+    if (_disposed) return;
+
+    // Use Future.microtask to defer the setState until the current build phase is complete
+    // This avoids "setState() called when widget tree was locked" errors
+    Future.microtask(() {
+      if (!_disposed && mounted) {
+        setState(() {
+          if (nameLoading != null) isNameLoading = nameLoading;
+          if (descriptionLoading != null)
+            isDescriptionLoading = descriptionLoading;
+          if (dynamicFieldsLoading != null)
+            isDynamicFieldsLoading = dynamicFieldsLoading;
+          if (carouselLoading != null) isCarouselLoading = carouselLoading;
+          if (moreColoursLoading != null)
+            isMoreColoursLoading = moreColoursLoading;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: genericAppbar(title: 'Product Card'),
       body: Column(
         children: [
-          if (isLoading)
+          if (anyComponentLoading)
             LinearProgressIndicator(
               backgroundColor: Colors.grey[200],
               valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
@@ -258,19 +354,32 @@ class _ProductCardState extends State<ProductCard> {
             child: imageDetails.isEmpty
                 ? Center(child: Text(''))
                 : ListView(
+                    addAutomaticKeepAlives: true,
+                    cacheExtent: 1000,
                     children: <Widget>[
-                      ProductName(documentId: currentDocumentId),
-                      ProductDescription(documentId: currentDocumentId),
+                      ProductName(
+                        documentId: currentDocumentId,
+                        onLoadingChanged: (isLoading) =>
+                            updateLoadingState(nameLoading: isLoading),
+                      ),
+                      ProductDescription(
+                        documentId: currentDocumentId,
+                        onLoadingChanged: (isLoading) =>
+                            updateLoadingState(descriptionLoading: isLoading),
+                      ),
                       ImageCarousel(
                         allImageUrls: allImageUrls,
                         selectedImageIndex: selectedImageIndex,
                         onThumbnailTap: (index) {
+                          if (_disposed) return;
                           setState(() {
                             selectedImageIndex = index;
                           });
                           _logger.info(
                               'Thumbnail tapped, selectedImageIndex: $selectedImageIndex');
                         },
+                        onLoadingChanged: (isLoading) =>
+                            updateLoadingState(carouselLoading: isLoading),
                       ),
                       // Empty box of size 20
                       SizedBox(height: 20),
@@ -278,6 +387,7 @@ class _ProductCardState extends State<ProductCard> {
                         imageDetails: imageDetails,
                         selectedParentImageIndex: selectedParentImageIndex,
                         onThumbnailTap: (index) {
+                          if (_disposed) return;
                           setState(() {
                             selectedParentImageIndex = index;
                             currentDocumentId =
@@ -288,8 +398,14 @@ class _ProductCardState extends State<ProductCard> {
                           _logger.info(
                               'Thumbnail tapped, new documentId: $currentDocumentId');
                         },
+                        onLoadingChanged: (isLoading) =>
+                            updateLoadingState(moreColoursLoading: isLoading),
                       ),
-                      DynamicFieldsDisplay(documentId: currentDocumentId),
+                      DynamicFieldsDisplay(
+                        documentId: currentDocumentId,
+                        onLoadingChanged: (isLoading) =>
+                            updateLoadingState(dynamicFieldsLoading: isLoading),
+                      ),
                       OrderSwatchesButton(
                           documentIds: imageDetails
                               .map((detail) => detail['documentId']!)
@@ -315,6 +431,12 @@ class _ProductCardState extends State<ProductCard> {
                               ),
                             );
                           },
+                          onLoadingChanged: (isLoading) {
+                            if (_disposed) return;
+                            setState(() {
+                              isUsersAlsoViewedLoading = isLoading;
+                            });
+                          },
                         ),
                       SizedBox(height: 20),
                       // Recently Viewed Section
@@ -332,6 +454,12 @@ class _ProductCardState extends State<ProductCard> {
                               ),
                             );
                           },
+                          onLoadingChanged: (isLoading) {
+                            if (_disposed) return;
+                            setState(() {
+                              isRecentlyViewedLoading = isLoading;
+                            });
+                          },
                         ),
                     ],
                   ),
@@ -341,6 +469,7 @@ class _ProductCardState extends State<ProductCard> {
       bottomNavigationBar: CustomBottomNavigationBar(
         selectedIndex: selectedNavIndex, // Use separate variable for nav index
         onItemTapped: (index) {
+          if (_disposed) return;
           setState(() {
             selectedNavIndex = index; // Update the nav index
           });

@@ -1,27 +1,99 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class ProductDescription extends StatelessWidget {
+class ProductDescription extends StatefulWidget {
   final String documentId;
+  final Function(bool) onLoadingChanged;
 
-  const ProductDescription({Key? key, required this.documentId})
-      : super(key: key);
+  const ProductDescription({
+    Key? key,
+    required this.documentId,
+    required this.onLoadingChanged,
+  }) : super(key: key);
+
+  @override
+  State<ProductDescription> createState() => _ProductDescriptionState();
+}
+
+class _ProductDescriptionState extends State<ProductDescription>
+    with AutomaticKeepAliveClientMixin {
+  bool _isLoading = true;
+  bool _hasNotifiedLoading = false;
+  String? _cachedDocumentId;
+  DocumentSnapshot? _cachedData;
+  Future<DocumentSnapshot>? _fetchFuture;
+
+  @override
+  bool get wantKeepAlive => true; // Keep this widget alive when scrolling
+
+  Future<DocumentSnapshot> _fetchData() {
+    if (_fetchFuture == null || widget.documentId != _cachedDocumentId) {
+      _cachedDocumentId = widget.documentId;
+      _fetchFuture = FirebaseFirestore.instance
+          .collection('items')
+          .doc(widget.documentId)
+          .get()
+          .then((snapshot) {
+        _cachedData = snapshot;
+        return snapshot;
+      });
+    }
+    return _fetchFuture!;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _cachedDocumentId = widget.documentId;
+    // Set initial loading state once, using microtask to avoid frame issues
+    Future.microtask(() {
+      if (mounted && !_hasNotifiedLoading) {
+        _hasNotifiedLoading = true;
+        widget.onLoadingChanged(true);
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(ProductDescription oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If document ID changed, reset loading state
+    if (oldWidget.documentId != widget.documentId) {
+      _cachedDocumentId = widget.documentId;
+      _cachedData = null;
+      _fetchFuture = null;
+      _isLoading = true;
+      Future.microtask(() {
+        if (mounted) {
+          widget.onLoadingChanged(true);
+        }
+      });
+    }
+  }
+
+  void _updateLoadingState(bool isLoading) {
+    if (_isLoading != isLoading) {
+      _isLoading = isLoading;
+      Future.microtask(() {
+        if (mounted) {
+          widget.onLoadingChanged(isLoading);
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<DocumentSnapshot>(
-      future:
-          FirebaseFirestore.instance.collection('items').doc(documentId).get(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || !snapshot.data!.exists) {
-          return Center(child: Text('Product not found.'));
-        }
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
 
-        final data = snapshot.data!.data() as Map<String, dynamic>;
+    // If we already have cached data, use it immediately
+    if (_cachedData != null && _cachedDocumentId == widget.documentId) {
+      if (_isLoading) {
+        _updateLoadingState(false);
+      }
+
+      if (_cachedData!.exists) {
+        final data = _cachedData!.data() as Map<String, dynamic>;
         final productDescriptionMap =
             data['productDescription'] as Map<String, dynamic>?;
 
@@ -36,7 +108,59 @@ class ProductDescription extends StatelessWidget {
             style: TextStyle(fontSize: 16.0, color: Colors.grey),
           ),
         );
+      } else {
+        return Center(child: Text('Product not found.'));
+      }
+    }
+
+    return FutureBuilder<DocumentSnapshot>(
+      future: _fetchData(),
+      builder: (context, snapshot) {
+        // Only notify on major state changes, not on every build
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(height: 40); // Empty container while loading
+        } else {
+          // Data loaded or error - if we were previously loading, notify we're done
+          Future.microtask(() {
+            if (mounted && _isLoading) {
+              _updateLoadingState(false);
+            }
+          });
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || !snapshot.data!.exists) {
+            return Center(child: Text('Product not found.'));
+          }
+
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final productDescriptionMap =
+              data['productDescription'] as Map<String, dynamic>?;
+
+          final productDescription = productDescriptionMap != null
+              ? productDescriptionMap['value'] ?? 'No description available.'
+              : 'No description available.';
+
+          return Padding(
+            padding: EdgeInsets.only(left: 16, right: 16, top: 2),
+            child: Text(
+              productDescription,
+              style: TextStyle(fontSize: 16.0, color: Colors.grey),
+            ),
+          );
+        }
       },
     );
+  }
+
+  @override
+  void dispose() {
+    // Ensure we're not loading when component is disposed
+    if (_isLoading) {
+      Future.microtask(() {
+        widget.onLoadingChanged(false);
+      });
+    }
+    super.dispose();
   }
 }
