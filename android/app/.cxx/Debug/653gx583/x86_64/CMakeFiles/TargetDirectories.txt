@@ -1,0 +1,2 @@
+/home/saurav/Documents/dyota/android/app/.cxx/Debug/653gx583/x86_64/CMakeFiles/rebuild_cache.dir
+/home/saurav/Documents/dyota/android/app/.cxx/Debug/653gx583/x86_64/CMakeFiles/edit_cache.dir
