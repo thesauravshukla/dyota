@@ -66,10 +66,10 @@ class _LoginPageState extends State<LoginPage> {
                   // Logo
                   const Column(
                     children: [
-                      Icon(
-                        Icons.texture,
-                        size: 100,
-                        color: Color.fromARGB(255, 255, 255, 255),
+                      Image(
+                        image: AssetImage('lib/images/dyota_icon.png'),
+                        height: 100,
+                        width: 100,
                       ),
                       SizedBox(height: 10),
 
@@ -86,9 +86,8 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 20),
 
-                  // Welcome back, you've been missed
                   const Text(
-                    "Welcome back, you've been missed!",
+                    "Welcome to Dyota",
                     style: TextStyle(
                         color: Color.fromARGB(255, 255, 255, 255),
                         fontSize: 16),
