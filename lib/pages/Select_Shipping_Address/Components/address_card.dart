@@ -22,8 +22,21 @@ class AddressCard extends StatelessWidget {
     required this.onDelete, // Add this line
   }) : super(key: key);
 
+  // Parse the formatted address string into components
+  Map<String, String> _parseAddress() {
+    final parts = address.split(',');
+    return {
+      'street': parts.isNotEmpty ? parts[0].trim() : '',
+      'city': parts.length > 1 ? parts[1].trim() : '',
+      'state': parts.length > 2 ? parts[2].trim() : '',
+      'postalCode': parts.length > 3 ? parts[3].trim() : '',
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
+    final addressParts = _parseAddress();
+
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -34,8 +47,7 @@ class AddressCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment
-                  .start, // Aligns the Edit button with the first line
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
@@ -64,12 +76,20 @@ class AddressCard extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(
-                height:
-                    4), // Decreased line spacing between the name and the address
-            Text(address,
-                style:
-                    TextStyle(height: 1.2)), // Adjusted line height for address
+            SizedBox(height: 8),
+            // Display formatted address components with proper styling
+            Text(
+              addressParts['street'] ?? '',
+              style: TextStyle(fontSize: 14),
+            ),
+            Text(
+              '${addressParts['city'] ?? ''}, ${addressParts['state'] ?? ''}',
+              style: TextStyle(fontSize: 14),
+            ),
+            Text(
+              'PIN: ${addressParts['postalCode'] ?? ''}',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
             SizedBox(height: 16),
             InkWell(
               onTap: () => onSelected(index),

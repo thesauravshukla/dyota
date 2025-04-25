@@ -144,6 +144,32 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Future<void> _addNewAddress(String title, String address) async {
+    if (title.isEmpty || address.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Both title and address are required')),
+      );
+      return;
+    }
+
+    // Validate address format (should be in format: street, city, state, postal code)
+    final addressParts = address.split(',');
+    if (addressParts.length < 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Address is incomplete or in incorrect format')),
+      );
+      return;
+    }
+
+    // Validate postal code (should be 6 digits for Indian postal codes)
+    final postalCode = addressParts[3].trim();
+    if (!RegExp(r'^\d{6}$').hasMatch(postalCode)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Invalid postal code format. Should be 6 digits')),
+      );
+      return;
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -181,10 +207,39 @@ class _PaymentPageState extends State<PaymentPage> {
       });
     } catch (e) {
       print('Error adding new address: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add address: ${e.toString()}')),
+      );
     }
   }
 
   Future<void> _editAddress(int index, String title, String address) async {
+    if (title.isEmpty || address.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Both title and address are required')),
+      );
+      return;
+    }
+
+    // Validate address format
+    final addressParts = address.split(',');
+    if (addressParts.length < 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Address is incomplete or in incorrect format')),
+      );
+      return;
+    }
+
+    // Validate postal code
+    final postalCode = addressParts[3].trim();
+    if (!RegExp(r'^\d{6}$').hasMatch(postalCode)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Invalid postal code format. Should be 6 digits')),
+      );
+      return;
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -208,6 +263,9 @@ class _PaymentPageState extends State<PaymentPage> {
       _fetchAddresses(); // Refresh the addresses list
     } catch (e) {
       print('Error editing address: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to edit address: ${e.toString()}')),
+      );
     }
   }
 
