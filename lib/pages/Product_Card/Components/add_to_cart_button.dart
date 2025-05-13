@@ -1,12 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:decimal/decimal.dart';
+import 'package:dyota/pages/Product_Card/Components/cart_item_manager.dart';
 import 'package:dyota/pages/Product_Card/Components/image_selector.dart';
 import 'package:dyota/pages/Product_Card/Components/length_slider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
+/// Button that allows users to add products to cart by selecting variants and lengths
 class AddToCartButton extends StatefulWidget {
   final List<String> documentIds;
 
@@ -16,179 +14,140 @@ class AddToCartButton extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _AddToCartButtonState createState() => _AddToCartButtonState();
+  AddToCartButtonState createState() => AddToCartButtonState();
 }
 
-class _AddToCartButtonState extends State<AddToCartButton> {
+class AddToCartButtonState extends State<AddToCartButton> {
   final Logger _logger = Logger('AddToCartButton');
-  bool showDetails = false;
-  late List<bool> selectedImages;
-  late List<double> selectedLengths;
-  List<String> imageUrls = [];
-  Map<String, List<double>> allowedLengthsMap = {};
-  Map<int, String> validationErrors = {};
+  final CartItemManager _cartManager = CartItemManager();
+
+  bool _showDetails = false;
+  bool _isLoading = true;
+  List<CartItem> _cartItems = [];
+  List<bool> _selectedItems = [];
+  List<double> _selectedLengths = [];
+  Map<int, String> _validationErrors = {};
 
   @override
   void initState() {
     super.initState();
     _logger.info(
         'AddToCartButton initialized with documentIds: ${widget.documentIds}');
-    fetchImageUrls();
-    selectedImages = List<bool>.filled(widget.documentIds.length, false);
-    selectedLengths = List<double>.filled(widget.documentIds.length, 0);
+    _initializeSelections();
+    _loadData();
   }
 
-  Future<void> fetchImageUrls() async {
-    List<String> urls = [];
+  void _initializeSelections() {
+    _selectedItems = List<bool>.filled(widget.documentIds.length, false);
+    _selectedLengths = List<double>.filled(widget.documentIds.length, 0);
+  }
+
+  Future<void> _loadData() async {
     try {
-      for (String docId in widget.documentIds) {
-        DocumentSnapshot doc = await FirebaseFirestore.instance
-            .collection('items')
-            .doc(docId)
-            .get();
-        if (doc.exists) {
-          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      final cartItems =
+          await _cartManager.fetchCartItemsData(widget.documentIds);
 
-          // Get image URL
-          List<dynamic> imageLocations = data['imageLocation'];
-          String imageLocation = imageLocations[0];
-          String imageUrl = await FirebaseStorage.instance
-              .ref(imageLocation)
-              .getDownloadURL();
-          urls.add(imageUrl);
-
-          // Get allowed lengths array and convert to List<double>
-          List<dynamic> allowedLengthsRaw = data['allowedLengths'] ?? [];
-          List<double> allowedLengths = allowedLengthsRaw
-              .map((length) => double.parse(length.toString()))
-              .toList();
-
-          allowedLengthsMap[docId] = allowedLengths;
-
-          // Set initial selected length to first allowed length
-          if (allowedLengths.isNotEmpty) {
-            selectedLengths[widget.documentIds.indexOf(docId)] =
-                allowedLengths[0];
-          }
+      // Initialize selected lengths to first allowed length for each item
+      final updatedLengths = List<double>.from(_selectedLengths);
+      for (int i = 0; i < cartItems.length; i++) {
+        if (cartItems[i].allowedLengths.isNotEmpty) {
+          updatedLengths[i] = cartItems[i].allowedLengths.first;
         }
       }
+
       setState(() {
-        imageUrls = urls;
+        _cartItems = cartItems;
+        _selectedLengths = updatedLengths;
+        _isLoading = false;
       });
-      _logger.info('Image URLs and allowed lengths fetched successfully');
     } catch (e) {
-      _logger.severe('Error fetching image URLs and allowed lengths', e);
+      _logger.severe('Error loading cart items data', e);
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-  void validateInputs() {
+  void _toggleItemSelection(int index) {
+    if (index < 0 || index >= _selectedItems.length) return;
+
+    setState(() {
+      _selectedItems[index] = !_selectedItems[index];
+    });
+    _logger
+        .info('Image selected: $index, isSelected: ${_selectedItems[index]}');
+  }
+
+  void _updateSelectedLength(int index, double length) {
+    if (index < 0 || index >= _selectedLengths.length) return;
+
+    setState(() {
+      _selectedLengths[index] = length;
+    });
+    _logger.info('Length updated: $index, value: $length');
+  }
+
+  bool _validateInputs() {
     Map<int, String> errors = {};
-    for (int i = 0; i < selectedLengths.length; i++) {
-      if (selectedImages[i]) {
-        List<double> allowedLengths =
-            allowedLengthsMap[widget.documentIds[i]] ?? [];
-        if (!allowedLengths.contains(selectedLengths[i])) {
+
+    for (int i = 0; i < _selectedItems.length; i++) {
+      if (_selectedItems[i]) {
+        if (i >= _cartItems.length) continue;
+
+        List<double> allowedLengths = _cartItems[i].allowedLengths;
+
+        if (!allowedLengths.contains(_selectedLengths[i])) {
           errors[i] = 'Please select a valid length from the allowed values';
         }
       }
     }
+
     setState(() {
-      validationErrors = errors;
+      _validationErrors = errors;
     });
-    _logger.info('Inputs validated with errors: $validationErrors');
+
+    _logger.info('Inputs validated with errors: $_validationErrors');
+    return errors.isEmpty;
   }
 
   Future<void> _addToCart() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
+    if (!_cartManager.isUserLoggedIn()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
             content: Text('You need to be logged in to add items to the cart')),
       );
       _logger.warning('User not logged in');
       return;
     }
 
-    final email = user.email;
+    if (!_validateInputs()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Please correct the errors before adding to cart')),
+      );
+      _logger.warning('Validation errors: $_validationErrors');
+      return;
+    }
 
-    try {
-      for (int i = 0; i < selectedImages.length; i++) {
-        if (selectedImages[i]) {
-          DocumentSnapshot doc = await FirebaseFirestore.instance
-              .collection('items')
-              .doc(widget.documentIds[i])
-              .get();
-          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    // Filter selected items
+    List<CartItem> selectedCartItems = [];
+    List<double> selectedCartLengths = [];
 
-          // Get the price per metre and tax
-          String pricePerMetre = data['pricePerMetre']['value'];
-          var pricePerMetreDouble = Decimal.parse(pricePerMetre);
-          var selectedLengthsDouble =
-              Decimal.parse(selectedLengths[i].toString());
-
-          // Calculate the price based on the selected length
-          Decimal price = (pricePerMetreDouble * selectedLengthsDouble);
-
-          // Calculate the tax
-          String taxPercentageStr = data['tax']['value'];
-          Decimal taxPercentage = Decimal.parse(taxPercentageStr);
-          Decimal tax =
-              price * (taxPercentage / Decimal.fromInt(100)).toDecimal();
-
-          // Get the product name from the productName field
-          Map<String, dynamic> productNameMap =
-              data['productName'] as Map<String, dynamic>;
-          String productName = productNameMap['value'] ?? 'Unknown Product';
-
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(email)
-              .collection('cartItemsList')
-              .doc(widget.documentIds[i] + '-textile')
-              .set({
-            'itemType': {
-              'displayName': 'Order Type',
-              'value': 'Textile Order',
-              'toDisplay': 1,
-              'priority': 2,
-            },
-            'orderLength': {
-              'displayName': 'Order Length',
-              'value': selectedLengths[i].toString(),
-              'suffix': "m",
-              'toDisplay': 1,
-              'priority': 3,
-            },
-            'price': {
-              'displayName': 'Price',
-              'prefix': "Rs. ",
-              'value': price.toString(),
-              'toDisplay': 1,
-              'priority': 4,
-            },
-            'tax': {
-              'displayName': 'Tax',
-              'prefix': "Rs. ",
-              'value': tax.toString(),
-              'toDisplay': 1,
-              'priority': 5,
-            },
-            'productName': {
-              'displayName': 'Product Name',
-              'value': productName,
-              'toDisplay': 1,
-              'priority': 1,
-            },
-          }, SetOptions(merge: true));
-          _logger.info('Item added to cart: ${widget.documentIds[i]}');
-        }
+    for (int i = 0; i < _selectedItems.length; i++) {
+      if (_selectedItems[i] && i < _cartItems.length) {
+        selectedCartItems.add(_cartItems[i]);
+        selectedCartLengths.add(_selectedLengths[i]);
       }
+    }
 
+    final result = await _cartManager.addItemsToCart(
+        selectedCartItems, selectedCartLengths);
+
+    if (result) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Items added to cart')),
       );
-    } catch (e) {
-      _logger.shout('Error adding items to cart', e);
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error adding items to cart')),
       );
@@ -197,6 +156,15 @@ class _AddToCartButtonState extends State<AddToCartButton> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -211,10 +179,10 @@ class _AddToCartButtonState extends State<AddToCartButton> {
       ),
       child: ExpansionTile(
         title: const Text('Add to Cart'),
-        initiallyExpanded: showDetails,
+        initiallyExpanded: _showDetails,
         onExpansionChanged: (bool expanded) {
           setState(() {
-            showDetails = expanded;
+            _showDetails = expanded;
           });
           _logger.info('ExpansionTile expanded: $expanded');
         },
@@ -226,71 +194,51 @@ class _AddToCartButtonState extends State<AddToCartButton> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
-          ...imageUrls.map((imageUrl) {
-            int index = imageUrls.indexOf(imageUrl);
-            List<double> allowedLengths =
-                allowedLengthsMap[widget.documentIds[index]] ?? [];
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Divider(color: Colors.grey),
-                ImageSelector(
-                  imageUrl: imageUrl,
-                  isSelected: selectedImages[index],
-                  onTap: () {
-                    setState(() {
-                      selectedImages[index] = !selectedImages[index];
-                    });
-                    _logger.info(
-                        'Image selected: $index, documentId: ${widget.documentIds[index]}, isSelected: ${selectedImages[index]}');
-                  },
-                ),
-                const Divider(color: Colors.grey),
-                if (selectedImages[index])
-                  LengthSlider(
-                    allowedLengths: allowedLengths,
-                    selectedLength: selectedLengths[index],
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLengths[index] = value;
-                      });
-                      _logger.info('LengthSlider changed: $value');
-                    },
-                    validationError: validationErrors[index],
-                  ),
-              ],
-            );
-          }).toList(),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  validateInputs();
-                  if (validationErrors.isEmpty) {
-                    _addToCart();
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text(
-                              'Please correct the errors before adding to cart')),
-                    );
-                    _logger.warning('Validation errors: $validationErrors');
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.black,
-                  shape: const StadiumBorder(),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 15),
-                ),
-                child: const Text('Add Selected Designs to Cart'),
-              ),
-            ),
-          ),
+          ..._buildProductSelections(),
+          _buildAddToCartButton(),
         ],
+      ),
+    );
+  }
+
+  List<Widget> _buildProductSelections() {
+    return List.generate(_cartItems.length, (index) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Divider(color: Colors.grey),
+          ImageSelector(
+            imageUrl: _cartItems[index].imageUrl,
+            isSelected: _selectedItems[index],
+            onTap: () => _toggleItemSelection(index),
+          ),
+          const Divider(color: Colors.grey),
+          if (_selectedItems[index])
+            LengthSlider(
+              allowedLengths: _cartItems[index].allowedLengths,
+              selectedLength: _selectedLengths[index],
+              onChanged: (value) => _updateSelectedLength(index, value),
+              validationError: _validationErrors[index],
+            ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildAddToCartButton() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Center(
+        child: ElevatedButton(
+          onPressed: _addToCart,
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Colors.black,
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 15),
+          ),
+          child: const Text('Add Selected Designs to Cart'),
+        ),
       ),
     );
   }

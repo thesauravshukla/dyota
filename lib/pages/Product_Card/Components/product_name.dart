@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dyota/pages/Product_Card/Components/firestore_data_loader.dart';
 import 'package:flutter/material.dart';
 
 class ProductName extends StatefulWidget {
@@ -17,146 +18,61 @@ class ProductName extends StatefulWidget {
 
 class _ProductNameState extends State<ProductName>
     with AutomaticKeepAliveClientMixin {
-  bool _isLoading = true;
-  bool _hasNotifiedLoading = false;
-  String? _cachedDocumentId;
-  DocumentSnapshot? _cachedData;
-  Future<DocumentSnapshot>? _fetchFuture;
+  late FirestoreDataLoader<String> _dataLoader;
 
   @override
   bool get wantKeepAlive => true; // Keep this widget alive when scrolling
 
-  Future<DocumentSnapshot> _fetchData() {
-    if (_fetchFuture == null || widget.documentId != _cachedDocumentId) {
-      _cachedDocumentId = widget.documentId;
-      _fetchFuture = FirebaseFirestore.instance
-          .collection('items')
-          .doc(widget.documentId)
-          .get()
-          .then((snapshot) {
-        _cachedData = snapshot;
-        return snapshot;
-      });
-    }
-    return _fetchFuture!;
-  }
-
   @override
   void initState() {
     super.initState();
-    _cachedDocumentId = widget.documentId;
-    // Set initial loading state once, using microtask to avoid frame issues
-    Future.microtask(() {
-      if (mounted && !_hasNotifiedLoading) {
-        _hasNotifiedLoading = true;
-        widget.onLoadingChanged(true);
-      }
-    });
+    _dataLoader = FirestoreDataLoader<String>(
+      documentId: widget.documentId,
+      onLoadingChanged: widget.onLoadingChanged,
+      converter: _extractProductName,
+    );
+    _dataLoader.setInitialLoadingState(mounted);
+  }
+
+  String _extractProductName(DocumentSnapshot snapshot) {
+    final data = snapshot.data() as Map<String, dynamic>;
+    return data['productName']['value'] ?? 'Unknown Product';
   }
 
   @override
   void didUpdateWidget(ProductName oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If document ID changed, reset loading state
-    if (oldWidget.documentId != widget.documentId) {
-      _cachedDocumentId = widget.documentId;
-      _cachedData = null;
-      _fetchFuture = null;
-      _isLoading = true;
-      Future.microtask(() {
-        if (mounted) {
-          widget.onLoadingChanged(true);
-        }
-      });
-    }
-  }
-
-  void _updateLoadingState(bool isLoading) {
-    if (_isLoading != isLoading) {
-      _isLoading = isLoading;
-      Future.microtask(() {
-        if (mounted) {
-          widget.onLoadingChanged(isLoading);
-        }
-      });
-    }
+    _dataLoader.updateDocumentId(widget.documentId, mounted);
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
 
-    // If we already have cached data, use it immediately
-    if (_cachedData != null && _cachedDocumentId == widget.documentId) {
-      if (_isLoading) {
-        _updateLoadingState(false);
-      }
-
-      if (_cachedData!.exists) {
-        final data = _cachedData!.data() as Map<String, dynamic>;
-        final productName = data['productName']['value'] ?? 'Unknown Product';
-
-        return Padding(
-          padding: EdgeInsets.only(left: 16, right: 16, top: 16),
-          child: Text(
-            productName,
-            style: TextStyle(
-              fontSize: 20.0,
-              fontWeight: FontWeight.bold,
-            ),
+    return _dataLoader.buildWithData(
+      context: context,
+      mounted: mounted,
+      collection: 'items',
+      builder: (productName) => Padding(
+        padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
+        child: Text(
+          productName,
+          style: const TextStyle(
+            fontSize: 20.0,
+            fontWeight: FontWeight.bold,
           ),
-        );
-      } else {
-        return Center(child: Text('Product not found.'));
-      }
-    }
-
-    return FutureBuilder<DocumentSnapshot>(
-      future: _fetchData(),
-      builder: (context, snapshot) {
-        // Only notify on major state changes, not on every build
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Container(height: 40); // Empty container while loading
-        } else {
-          // Data loaded or error - if we were previously loading, notify we're done
-          Future.microtask(() {
-            if (mounted && _isLoading) {
-              _updateLoadingState(false);
-            }
-          });
-
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(child: Text('Product not found.'));
-          }
-
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-          final productName = data['productName']['value'] ?? 'Unknown Product';
-
-          return Padding(
-            padding: EdgeInsets.only(left: 16, right: 16, top: 16),
-            child: Text(
-              productName,
-              style: TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          );
-        }
-      },
+        ),
+      ),
+      errorBuilder: (error) => Center(child: Text('Error: $error')),
+      loadingBuilder: () =>
+          Container(height: 40), // Empty container while loading
+      emptyBuilder: () => const Center(child: Text('Product not found.')),
     );
   }
 
   @override
   void dispose() {
-    // Ensure we're not loading when component is disposed
-    if (_isLoading) {
-      Future.microtask(() {
-        widget.onLoadingChanged(false);
-      });
-    }
+    _dataLoader.handleDispose(mounted);
     super.dispose();
   }
 }

@@ -1,20 +1,18 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/components/generic_appbar.dart';
-import 'package:dyota/pages/Home/home_page.dart';
-import 'package:dyota/pages/My_Bag/my_bag.dart';
 import 'package:dyota/pages/Product_Card/Components/add_to_cart_button.dart';
 import 'package:dyota/pages/Product_Card/Components/dynamic_fields_display.dart';
 import 'package:dyota/pages/Product_Card/Components/image_carousel.dart';
 import 'package:dyota/pages/Product_Card/Components/more_colours_section.dart';
 import 'package:dyota/pages/Product_Card/Components/order_swatches.dart';
+import 'package:dyota/pages/Product_Card/Components/product_data.dart';
+import 'package:dyota/pages/Product_Card/Components/product_data_provider.dart';
 import 'package:dyota/pages/Product_Card/Components/product_description.dart';
+import 'package:dyota/pages/Product_Card/Components/product_loading_state.dart';
 import 'package:dyota/pages/Product_Card/Components/product_name.dart';
+import 'package:dyota/pages/Product_Card/Components/product_navigation.dart';
 import 'package:dyota/pages/Product_Card/Components/recently_viewed_section.dart';
 import 'package:dyota/pages/Product_Card/Components/support_section.dart';
 import 'package:dyota/pages/Product_Card/Components/users_also_viewed_section.dart';
-import 'package:dyota/pages/Profile/profile_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
@@ -29,44 +27,34 @@ class ProductCard extends StatefulWidget {
 
 class _ProductCardState extends State<ProductCard> {
   final Logger _logger = Logger('ProductCard');
-  int selectedImageIndex = 0; // For the image carousel
-  int selectedNavIndex = 0; // For the bottom navigation bar
-  int selectedParentImageIndex = 0; // New variable for parent images
-  List<Map<String, String>> imageDetails = [];
-  List<String> allImageUrls = [];
-  List<Map<String, String>> recentlyViewedDetails = [];
-  List<Map<String, String>> usersAlsoViewedDetails = [];
-  bool isLoading = true;
-  bool isNameLoading = false;
-  bool isDescriptionLoading = false;
-  bool isDynamicFieldsLoading = false;
-  bool isCarouselLoading = false;
-  bool isMoreColoursLoading = false;
-  bool isRecentlyViewedLoading = false;
-  bool isUsersAlsoViewedLoading = false;
-  bool _disposed = false;
-  late String currentDocumentId;
-  String? currentCategoryValue;
+  final ProductLoadingState _loadingState = ProductLoadingState();
+  final ProductDataProvider _dataProvider = ProductDataProvider();
 
-  bool get anyComponentLoading =>
-      isLoading ||
-      isNameLoading ||
-      isDescriptionLoading ||
-      isDynamicFieldsLoading ||
-      isCarouselLoading ||
-      isMoreColoursLoading ||
-      isRecentlyViewedLoading ||
-      isUsersAlsoViewedLoading;
+  int selectedImageIndex = 0;
+  int selectedNavIndex = 0;
+  int selectedVariantIndex = 0;
+
+  bool _disposed = false;
+  String _currentDocumentId = '';
+
+  ProductData? _productData;
+  List<RelatedProduct> _recentlyViewed = [];
+  List<RelatedProduct> _relatedProducts = [];
 
   @override
   void initState() {
     super.initState();
-    currentDocumentId = widget.documentId;
+    _currentDocumentId = widget.documentId;
     _logger
-        .info('ProductCard initialized with documentId: ${widget.documentId}');
-    fetchImages(widget.documentId);
-    updateRecentlyViewedProducts(widget.documentId);
-    fetchRecentlyViewedProducts();
+        .info('ProductCard initialized with documentId: $_currentDocumentId');
+
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    await _loadProductData(_currentDocumentId);
+    await _updateRecentlyViewedProducts(_currentDocumentId);
+    await _loadRecentlyViewedProducts();
   }
 
   @override
@@ -75,416 +63,330 @@ class _ProductCardState extends State<ProductCard> {
     super.dispose();
   }
 
-  Future<void> fetchImages(String documentId) async {
+  bool _isDisposed() {
+    return _disposed || !mounted;
+  }
+
+  Future<void> _loadProductData(String documentId) async {
+    if (_isDisposed()) return;
+
     try {
-      _logger.info('Fetching images for documentId: $documentId');
-      DocumentSnapshot doc = await FirebaseFirestore.instance
-          .collection('items')
-          .doc(documentId)
-          .get();
-      if (doc.exists) {
-        _logger.info('Document exists for documentId: $documentId');
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        String parentId = data['parentId'];
-        List<dynamic> imageLocations = data['imageLocation'];
-        currentCategoryValue = data['category']['value'];
+      final productData = await _dataProvider.fetchProductData(documentId);
 
-        // Fetch all images from imageLocation array
-        List<String> fetchedImageUrls = [];
-        for (String imageLocation in imageLocations) {
-          String imageUrl = await FirebaseStorage.instance
-              .ref(imageLocation)
-              .getDownloadURL();
-          fetchedImageUrls.add(imageUrl);
-        }
+      if (_isDisposed()) return;
 
-        String initialImageLocation = imageLocations[0];
-        String initialImageUrl = await FirebaseStorage.instance
-            .ref(initialImageLocation)
-            .getDownloadURL();
-        List<Map<String, String>> details = [
-          {'imageUrl': initialImageUrl, 'documentId': documentId}
-        ];
+      setState(() {
+        _productData = productData;
+        _loadingState.updateWith(mainLoading: false);
+        selectedImageIndex = 0; // Reset image carousel index
+      });
 
-        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-            .collection('items')
-            .where('parentId', isEqualTo: parentId)
-            .where(FieldPath.documentId, isNotEqualTo: documentId)
-            .get();
-        for (var document in querySnapshot.docs) {
-          Map<String, dynamic> docData =
-              document.data() as Map<String, dynamic>;
-          if (docData.containsKey('imageLocation')) {
-            List<dynamic> docImageLocations = docData['imageLocation'];
-            String imageUrl = await FirebaseStorage.instance
-                .ref(docImageLocations[0])
-                .getDownloadURL();
-            details.add({'imageUrl': imageUrl, 'documentId': document.id});
-          }
-        }
-
-        if (!_disposed) {
-          setState(() {
-            allImageUrls = fetchedImageUrls;
-            imageDetails = details;
-            isLoading = false;
-            selectedImageIndex = 0; // Reset image carousel index
-          });
-        }
-        _logger.info('Images fetched successfully for documentId: $documentId');
-        fetchUsersAlsoViewedProducts(currentCategoryValue!);
-      } else {
-        _logger.warning('Document does not exist for documentId: $documentId');
-        if (!_disposed) {
-          setState(() {
-            isLoading = false;
-          });
-        }
+      if (productData.categoryValue != null) {
+        await _loadRelatedProducts(productData.categoryValue!);
       }
     } catch (e) {
-      _logger.severe('Error fetching images for documentId: $documentId', e);
-      if (!_disposed) {
+      _logger.severe('Error loading product data: $e');
+      if (!_isDisposed()) {
         setState(() {
-          isLoading = false;
+          _loadingState.updateWith(mainLoading: false);
         });
       }
     }
   }
 
-  Future<void> updateRecentlyViewedProducts(String documentId) async {
+  Future<void> _updateRecentlyViewedProducts(String documentId) async {
+    await _dataProvider.updateRecentlyViewedProducts(documentId);
+  }
+
+  Future<void> _loadRecentlyViewedProducts() async {
+    if (_isDisposed()) return;
+
+    setState(() {
+      _loadingState.updateWith(recentlyViewedLoading: true);
+    });
+
     try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        String email = user.email!;
-        DocumentReference userDocRef =
-            FirebaseFirestore.instance.collection('users').doc(email);
+      final recentlyViewed = await _dataProvider.fetchRecentlyViewedProducts();
 
-        DocumentSnapshot userDoc = await userDocRef.get();
-        if (userDoc.exists) {
-          List<dynamic> recentlyViewedProducts =
-              userDoc['recentlyViewedProducts'] ?? [];
+      if (_isDisposed()) return;
 
-          if (!recentlyViewedProducts.contains(documentId)) {
-            if (recentlyViewedProducts.length >= 5) {
-              recentlyViewedProducts.removeAt(0);
-            }
-            recentlyViewedProducts.add(documentId);
-
-            await userDocRef.update({
-              'recentlyViewedProducts': recentlyViewedProducts,
-            });
-          }
-        } else {
-          await userDocRef.set({
-            'recentlyViewedProducts': [documentId],
-          });
-        }
-      }
+      setState(() {
+        _recentlyViewed = recentlyViewed;
+        _loadingState.updateWith(recentlyViewedLoading: false);
+      });
     } catch (e) {
-      _logger.severe('Error updating recently viewed products', e);
+      _logger.severe('Error loading recently viewed products: $e');
+      if (!_isDisposed()) {
+        setState(() {
+          _loadingState.updateWith(recentlyViewedLoading: false);
+        });
+      }
     }
   }
 
-  Future<void> fetchRecentlyViewedProducts() async {
+  Future<void> _loadRelatedProducts(String categoryValue) async {
+    if (_isDisposed()) return;
+
+    setState(() {
+      _loadingState.updateWith(usersAlsoViewedLoading: true);
+    });
+
     try {
-      if (!_disposed) {
-        setState(() {
-          isRecentlyViewedLoading = true;
-        });
-      }
+      final relatedProducts =
+          await _dataProvider.fetchRelatedProducts(categoryValue);
 
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        String email = user.email!;
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(email)
-            .get();
+      if (_isDisposed()) return;
 
-        if (userDoc.exists) {
-          List<dynamic> recentlyViewedProducts =
-              userDoc['recentlyViewedProducts'] ?? [];
-          List<Map<String, String>> details = [];
-
-          for (String documentId in recentlyViewedProducts) {
-            DocumentSnapshot doc = await FirebaseFirestore.instance
-                .collection('items')
-                .doc(documentId)
-                .get();
-            if (doc.exists) {
-              Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-              List<dynamic> imageLocations = data['imageLocation'];
-              String imageUrl = await FirebaseStorage.instance
-                  .ref(imageLocations[0])
-                  .getDownloadURL();
-              details.add({'imageUrl': imageUrl, 'documentId': documentId});
-            }
-          }
-
-          if (!_disposed) {
-            setState(() {
-              recentlyViewedDetails = details;
-              isRecentlyViewedLoading = false;
-            });
-          }
-        } else if (!_disposed) {
-          setState(() {
-            isRecentlyViewedLoading = false;
-          });
-        }
-      } else if (!_disposed) {
-        setState(() {
-          isRecentlyViewedLoading = false;
-        });
-      }
+      setState(() {
+        _relatedProducts = relatedProducts;
+        _loadingState.updateWith(usersAlsoViewedLoading: false);
+      });
     } catch (e) {
-      _logger.severe('Error fetching recently viewed products', e);
-      if (!_disposed) {
+      _logger.severe('Error loading related products: $e');
+      if (!_isDisposed()) {
         setState(() {
-          isRecentlyViewedLoading = false;
+          _loadingState.updateWith(usersAlsoViewedLoading: false);
         });
       }
     }
   }
 
-  Future<void> fetchUsersAlsoViewedProducts(String categoryValue) async {
-    try {
-      if (!_disposed) {
-        setState(() {
-          isUsersAlsoViewedLoading = true;
-        });
-      }
-
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('items')
-          .where('category.value', isEqualTo: categoryValue)
-          .get();
-
-      List<Map<String, String>> details = [];
-      for (var document in querySnapshot.docs) {
-        Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-        List<dynamic> imageLocations = data['imageLocation'];
-        String imageUrl = await FirebaseStorage.instance
-            .ref(imageLocations[0])
-            .getDownloadURL();
-        details.add({'imageUrl': imageUrl, 'documentId': document.id});
-      }
-
-      if (!_disposed) {
-        setState(() {
-          usersAlsoViewedDetails = details;
-          isUsersAlsoViewedLoading = false;
-        });
-      }
-    } catch (e) {
-      _logger.severe('Error fetching users also viewed products', e);
-      if (!_disposed) {
-        setState(() {
-          isUsersAlsoViewedLoading = false;
-        });
-      }
-    }
-  }
-
-  void _onItemTapped(int index) {
-    switch (index) {
-      case 0:
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-          (Route<dynamic> route) => false,
-        );
-        break;
-      case 1:
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => MyBag()),
-          (Route<dynamic> route) => false,
-        );
-        break;
-      case 2:
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => ProfileScreen()),
-          (Route<dynamic> route) => false,
-        );
-        break;
-    }
-  }
-
-  void updateLoadingState({
+  void _updateLoadingState({
     bool? nameLoading,
     bool? descriptionLoading,
     bool? dynamicFieldsLoading,
     bool? carouselLoading,
     bool? moreColoursLoading,
   }) {
-    if (_disposed) return;
+    if (_isDisposed()) return;
+
+    // Skip debounced updates
+    if (_loadingState.shouldDebounceUpdate()) return;
 
     // Use Future.microtask to defer the setState until the current build phase is complete
-    // This avoids "setState() called when widget tree was locked" errors
     Future.microtask(() {
-      if (!_disposed && mounted) {
+      if (!_isDisposed()) {
         setState(() {
-          if (nameLoading != null) isNameLoading = nameLoading;
-          if (descriptionLoading != null)
-            isDescriptionLoading = descriptionLoading;
-          if (dynamicFieldsLoading != null)
-            isDynamicFieldsLoading = dynamicFieldsLoading;
-          if (carouselLoading != null) isCarouselLoading = carouselLoading;
-          if (moreColoursLoading != null)
-            isMoreColoursLoading = moreColoursLoading;
+          _loadingState.updateWith(
+            nameLoading: nameLoading,
+            descriptionLoading: descriptionLoading,
+            dynamicFieldsLoading: dynamicFieldsLoading,
+            carouselLoading: carouselLoading,
+            moreColoursLoading: moreColoursLoading,
+          );
         });
       }
     });
+  }
+
+  void _handleImageThumbnailTap(int index) {
+    if (_isDisposed()) return;
+    setState(() {
+      selectedImageIndex = index;
+    });
+    _logger.info('Image thumbnail tapped, new index: $index');
+  }
+
+  void _handleVariantTap(int index) {
+    if (_isDisposed() ||
+        _productData == null ||
+        index >= _productData!.variants.length) return;
+
+    setState(() {
+      selectedVariantIndex = index;
+      _currentDocumentId = _productData!.variants[index].documentId;
+    });
+
+    _loadProductData(_currentDocumentId);
+    _updateRecentlyViewedProducts(_currentDocumentId);
+
+    _logger.info('Variant tapped, new documentId: $_currentDocumentId');
+  }
+
+  void _handleRelatedProductTap(String documentId) {
+    ProductNavigation.navigateToProduct(context, documentId);
+  }
+
+  void _handleNavigation(int index) {
+    setState(() {
+      selectedNavIndex = index;
+    });
+    ProductNavigation.navigateToMainSection(context, index);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: genericAppbar(title: 'Product Card'),
-      body: Column(
-        children: [
-          if (anyComponentLoading)
-            LinearProgressIndicator(
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
-            ),
-          Expanded(
-            child: imageDetails.isEmpty
-                ? Center(child: Text(''))
-                : ListView(
-                    addAutomaticKeepAlives: true,
-                    cacheExtent: 1000,
-                    children: <Widget>[
-                      ProductName(
-                        documentId: currentDocumentId,
-                        onLoadingChanged: (isLoading) =>
-                            updateLoadingState(nameLoading: isLoading),
-                      ),
-                      ProductDescription(
-                        documentId: currentDocumentId,
-                        onLoadingChanged: (isLoading) =>
-                            updateLoadingState(descriptionLoading: isLoading),
-                      ),
-                      ImageCarousel(
-                        allImageUrls: allImageUrls,
-                        selectedImageIndex: selectedImageIndex,
-                        onThumbnailTap: (index) {
-                          if (_disposed) return;
-                          setState(() {
-                            selectedImageIndex = index;
-                          });
-                          _logger.info(
-                              'Thumbnail tapped, selectedImageIndex: $selectedImageIndex');
-                        },
-                        onLoadingChanged: (isLoading) =>
-                            updateLoadingState(carouselLoading: isLoading),
-                      ),
-                      // Empty box of size 20
-                      SizedBox(height: 20),
-                      MoreColoursSection(
-                        imageDetails: imageDetails,
-                        selectedParentImageIndex: selectedParentImageIndex,
-                        onThumbnailTap: (index) {
-                          if (_disposed) return;
-                          setState(() {
-                            selectedParentImageIndex = index;
-                            currentDocumentId =
-                                imageDetails[index]['documentId']!;
-                            fetchImages(currentDocumentId);
-                            updateRecentlyViewedProducts(currentDocumentId);
-                          });
-                          _logger.info(
-                              'Thumbnail tapped, new documentId: $currentDocumentId');
-                        },
-                        onLoadingChanged: (isLoading) =>
-                            updateLoadingState(moreColoursLoading: isLoading),
-                      ),
-                      DynamicFieldsDisplay(
-                        documentId: currentDocumentId,
-                        onLoadingChanged: (isLoading) =>
-                            updateLoadingState(dynamicFieldsLoading: isLoading),
-                      ),
-                      OrderSwatchesButton(
-                          documentIds: imageDetails
-                              .map((detail) => detail['documentId']!)
-                              .toList()),
-                      AddToCartButton(
-                        documentIds: imageDetails
-                            .map((detail) => detail['documentId']!)
-                            .toList(),
-                      ),
-                      const SupportSection(),
-                      // Users Also Viewed Section
-                      if (usersAlsoViewedDetails.isNotEmpty)
-                        UsersAlsoViewedSection(
-                          usersAlsoViewedDetails: usersAlsoViewedDetails,
-                          onThumbnailTap: (index) {
-                            String documentId =
-                                usersAlsoViewedDetails[index]['documentId']!;
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    ProductCard(documentId: documentId),
-                              ),
-                            );
-                          },
-                          onLoadingChanged: (isLoading) {
-                            if (_disposed) return;
-                            setState(() {
-                              isUsersAlsoViewedLoading = isLoading;
-                            });
-                          },
-                        ),
-                      SizedBox(height: 20),
-                      // Recently Viewed Section
-                      if (recentlyViewedDetails.isNotEmpty)
-                        RecentlyViewedSection(
-                          recentlyViewedDetails: recentlyViewedDetails,
-                          onThumbnailTap: (index) {
-                            String documentId =
-                                recentlyViewedDetails[index]['documentId']!;
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    ProductCard(documentId: documentId),
-                              ),
-                            );
-                          },
-                          onLoadingChanged: (isLoading) {
-                            if (_disposed) return;
-                            setState(() {
-                              isRecentlyViewedLoading = isLoading;
-                            });
-                          },
-                        ),
-                    ],
-                  ),
-          ),
-        ],
+      body: _buildBody(),
+      bottomNavigationBar: ProductBottomNavigationBar(
+        selectedIndex: selectedNavIndex,
+        onItemTapped: _handleNavigation,
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: selectedNavIndex, // Use separate variable for nav index
-        onItemTapped: (index) {
-          if (_disposed) return;
-          setState(() {
-            selectedNavIndex = index; // Update the nav index
-          });
-          _onItemTapped(index);
-        },
-      ),
+    );
+  }
+
+  Widget _buildBody() {
+    return Column(
+      children: [
+        if (_loadingState.anyComponentLoading) _buildProgressIndicator(),
+        Expanded(
+          child: _buildContent(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return LinearProgressIndicator(
+      backgroundColor: Colors.grey[200],
+      valueColor: const AlwaysStoppedAnimation<Color>(Colors.brown),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_productData == null || _productData!.variants.isEmpty) {
+      return const Center(child: Text(''));
+    }
+
+    return _buildProductDetails();
+  }
+
+  Widget _buildProductDetails() {
+    if (_productData == null) return const SizedBox();
+
+    List<String> documentIds = _getVariantDocumentIds();
+
+    return ListView(
+      addAutomaticKeepAlives: true,
+      cacheExtent: 1000,
+      children: <Widget>[
+        ProductName(
+          documentId: _currentDocumentId,
+          onLoadingChanged: (isLoading) =>
+              _updateLoadingState(nameLoading: isLoading),
+        ),
+        ProductDescription(
+          documentId: _currentDocumentId,
+          onLoadingChanged: (isLoading) =>
+              _updateLoadingState(descriptionLoading: isLoading),
+        ),
+        _buildImageCarousel(),
+        const SizedBox(height: 20),
+        _buildVariantsSection(),
+        DynamicFieldsDisplay(
+          documentId: _currentDocumentId,
+          onLoadingChanged: (isLoading) =>
+              _updateLoadingState(dynamicFieldsLoading: isLoading),
+        ),
+        OrderSwatchesButton(documentIds: documentIds),
+        AddToCartButton(documentIds: documentIds),
+        const SupportSection(),
+        if (_relatedProducts.isNotEmpty) _buildRelatedProductsSection(),
+        const SizedBox(height: 20),
+        if (_recentlyViewed.isNotEmpty) _buildRecentlyViewedSection(),
+      ],
+    );
+  }
+
+  List<String> _getVariantDocumentIds() {
+    if (_productData == null) return [];
+
+    final variants = _productData!.variants;
+    final List<String> documentIds = [_currentDocumentId];
+
+    for (var variant in variants) {
+      documentIds.add(variant.documentId);
+    }
+
+    return documentIds;
+  }
+
+  Widget _buildImageCarousel() {
+    if (_productData == null || _productData!.allImageUrls.isEmpty) {
+      return const SizedBox();
+    }
+
+    return ImageCarousel(
+      allImageUrls: _productData!.allImageUrls,
+      selectedImageIndex: selectedImageIndex,
+      onThumbnailTap: _handleImageThumbnailTap,
+      onLoadingChanged: (isLoading) =>
+          _updateLoadingState(carouselLoading: isLoading),
+    );
+  }
+
+  Widget _buildVariantsSection() {
+    if (_productData == null || _productData!.variants.isEmpty) {
+      return const SizedBox();
+    }
+
+    // Create a list of image details in the format expected by MoreColoursSection
+    final List<Map<String, String>> imageDetails = [
+      {
+        'imageUrl': _productData!.allImageUrls.first,
+        'documentId': _currentDocumentId
+      }
+    ];
+
+    for (var variant in _productData!.variants) {
+      imageDetails.add({
+        'imageUrl': variant.imageUrl,
+        'documentId': variant.documentId,
+      });
+    }
+
+    return MoreColoursSection(
+      imageDetails: imageDetails,
+      selectedParentImageIndex: selectedVariantIndex,
+      onThumbnailTap: _handleVariantTap,
+      onLoadingChanged: (isLoading) =>
+          _updateLoadingState(moreColoursLoading: isLoading),
+    );
+  }
+
+  Widget _buildRelatedProductsSection() {
+    // Convert RelatedProduct objects to the expected format
+    final List<Map<String, String>> relatedProductDetails =
+        _relatedProducts.map((p) => p.toMap()).toList();
+
+    return UsersAlsoViewedSection(
+      usersAlsoViewedDetails: relatedProductDetails,
+      onThumbnailTap: (index) =>
+          _handleRelatedProductTap(_relatedProducts[index].documentId),
+      onLoadingChanged: (isLoading) {
+        if (_isDisposed()) return;
+        setState(() {
+          _loadingState.updateWith(usersAlsoViewedLoading: isLoading);
+        });
+      },
+    );
+  }
+
+  Widget _buildRecentlyViewedSection() {
+    // Convert RelatedProduct objects to the expected format
+    final List<Map<String, String>> recentlyViewedDetails =
+        _recentlyViewed.map((p) => p.toMap()).toList();
+
+    return RecentlyViewedSection(
+      recentlyViewedDetails: recentlyViewedDetails,
+      onThumbnailTap: (index) =>
+          _handleRelatedProductTap(_recentlyViewed[index].documentId),
+      onLoadingChanged: (isLoading) {
+        if (_isDisposed()) return;
+        setState(() {
+          _loadingState.updateWith(recentlyViewedLoading: isLoading);
+        });
+      },
     );
   }
 }
 
-class CustomBottomNavigationBar extends StatelessWidget {
+class ProductBottomNavigationBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onItemTapped;
 
-  const CustomBottomNavigationBar({
+  const ProductBottomNavigationBar({
     Key? key,
     required this.selectedIndex,
     required this.onItemTapped,
