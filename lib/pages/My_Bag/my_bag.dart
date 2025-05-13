@@ -1,50 +1,70 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:decimal/decimal.dart';
-import 'package:dyota/components/bottom_navigation_bar_component.dart';
-import 'package:dyota/components/generic_appbar.dart';
-import 'package:dyota/pages/Home/home_page.dart';
-import 'package:dyota/pages/My_Bag/Components/itemcard.dart';
-import 'package:dyota/pages/My_Bag/Components/total_amount_selection.dart';
-import 'package:dyota/pages/Profile/profile_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+// Flutter and Dart imports
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
+// Firebase imports
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+// External package imports
+import 'package:decimal/decimal.dart';
+
+// App-wide components
+import 'package:dyota/components/bottom_navigation_bar_component.dart';
+import 'package:dyota/components/generic_appbar.dart';
+
+// Page imports
+import 'package:dyota/pages/Home/home_page.dart' hide LoadingState;
+import 'package:dyota/pages/Profile/profile_page.dart';
+
+// Local components and models
+import 'package:dyota/pages/My_Bag/Components/cart_data.dart';
+import 'package:dyota/pages/My_Bag/Components/cart_data_provider.dart';
+import 'package:dyota/pages/My_Bag/Components/itemcard.dart';
+import 'package:dyota/pages/My_Bag/Components/loading_state.dart';
+import 'package:dyota/pages/My_Bag/Components/total_amount_selection.dart';
+
 class MyBag extends StatefulWidget {
+  const MyBag({Key? key}) : super(key: key);
+
   @override
   _MyBagState createState() => _MyBagState();
 }
 
 class _MyBagState extends State<MyBag> {
   final Logger _logger = Logger('MyBag');
-  bool isItemCardsLoading = false;
-  bool isTotalAmountLoading = false;
-  bool isInitialDataLoading = true;
+  final LoadingState _loadingState = LoadingState();
+  final CartDataProvider _cartDataProvider = CartDataProvider();
   bool _disposed = false;
-  DateTime _lastUpdateTime = DateTime.now();
-
-  bool get anyComponentLoading =>
-      isItemCardsLoading || isTotalAmountLoading || isInitialDataLoading;
 
   @override
   void initState() {
     super.initState();
-    // Set initial data loading to false after a short delay
-    Future.delayed(Duration(milliseconds: 1000), () {
-      if (!_disposed && mounted) {
+    _initializeLoadingState();
+    _setupSafetyTimeouts();
+  }
+
+  void _initializeLoadingState() {
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (!_isDisposed()) {
         setState(() {
-          isInitialDataLoading = false;
+          _loadingState.isInitialDataLoading = false;
         });
       }
     });
+  }
 
-    // Safety timeout to ensure loading states are eventually reset
-    Future.delayed(Duration(seconds: 5), () {
-      if (!_disposed && mounted && anyComponentLoading) {
+  void _setupSafetyTimeouts() {
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!_isDisposed() && _loadingState.anyComponentLoading) {
         _logger.warning('Forced reset of loading states due to timeout');
-        resetAllLoadingStates();
+        _resetAllLoadingStates();
       }
     });
+  }
+
+  bool _isDisposed() {
+    return _disposed || !mounted;
   }
 
   @override
@@ -53,45 +73,46 @@ class _MyBagState extends State<MyBag> {
     super.dispose();
   }
 
-  void updateLoadingState({
+  void _updateLoadingState({
     bool? itemCardsLoading,
     bool? totalAmountLoading,
   }) {
-    if (_disposed) return;
+    if (_isDisposed()) return;
+    if (_loadingState.isInitialDataLoading) return;
 
-    // Skip updates if we're in initial loading state to prevent build loops
-    if (isInitialDataLoading) return;
-
-    // Skip redundant updates that don't change state
-    if ((itemCardsLoading != null && itemCardsLoading == isItemCardsLoading) &&
-        (totalAmountLoading != null &&
-            totalAmountLoading == isTotalAmountLoading)) {
+    if (_loadingState.shouldSkipRedundantUpdate(
+        itemCardsLoading: itemCardsLoading,
+        totalAmountLoading: totalAmountLoading)) {
       return;
     }
 
-    // Log current loading states for debugging
-    _logger.info('Current loading states - '
-        'Items: $isItemCardsLoading, '
-        'Total: $isTotalAmountLoading, '
-        'Initial: $isInitialDataLoading');
+    _logCurrentLoadingStates();
 
-    // Debounce loading state updates to prevent UI flickering
-    final now = DateTime.now();
-    if (now.difference(_lastUpdateTime).inMilliseconds < 300) {
-      return; // Skip frequent updates
+    if (_loadingState.shouldDebounceUpdate()) {
+      return;
     }
-    _lastUpdateTime = now;
 
-    // Use a single microtask for state updates to batch changes
+    _applyLoadingStateUpdate(itemCardsLoading, totalAmountLoading);
+  }
+
+  void _logCurrentLoadingStates() {
+    _logger.info('Current loading states - '
+        'Items: ${_loadingState.isItemCardsLoading}, '
+        'Total: ${_loadingState.isTotalAmountLoading}, '
+        'Initial: ${_loadingState.isInitialDataLoading}');
+  }
+
+  void _applyLoadingStateUpdate(
+      bool? itemCardsLoading, bool? totalAmountLoading) {
     Future.microtask(() {
-      if (!_disposed && mounted) {
+      if (!_isDisposed()) {
         setState(() {
           if (itemCardsLoading != null) {
-            isItemCardsLoading = itemCardsLoading;
+            _loadingState.isItemCardsLoading = itemCardsLoading;
             _logger.info('Updated itemCardsLoading to: $itemCardsLoading');
           }
           if (totalAmountLoading != null) {
-            isTotalAmountLoading = totalAmountLoading;
+            _loadingState.isTotalAmountLoading = totalAmountLoading;
             _logger.info('Updated totalAmountLoading to: $totalAmountLoading');
           }
         });
@@ -99,14 +120,11 @@ class _MyBagState extends State<MyBag> {
     });
   }
 
-  // Add a method to force reset all loading states
-  void resetAllLoadingStates() {
-    if (_disposed || !mounted) return;
+  void _resetAllLoadingStates() {
+    if (_isDisposed()) return;
 
     setState(() {
-      isItemCardsLoading = false;
-      isTotalAmountLoading = false;
-      isInitialDataLoading = false;
+      _loadingState.resetAllLoadingStates();
       _logger.info('Reset all loading states to false');
     });
   }
@@ -114,208 +132,242 @@ class _MyBagState extends State<MyBag> {
   @override
   Widget build(BuildContext context) {
     _logger.info('Building MyBag widget');
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.email == null) {
-      _logger.warning('User not logged in or email is null');
+
+    if (!_isUserLoggedIn()) {
       return _buildScaffold(
         context,
-        Center(child: Text('Please log in to view your bag.')),
+        const Center(child: Text('Please log in to view your bag.')),
       );
     }
 
     return _buildScaffold(
       context,
-      Column(
-        children: [
-          // Show linear progress indicator for ANY loading state
-          if (anyComponentLoading)
-            LinearProgressIndicator(
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
+      _buildMainContent(),
+    );
+  }
+
+  bool _isUserLoggedIn() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.email == null) {
+      _logger.warning('User not logged in or email is null');
+      return false;
+    }
+    return true;
+  }
+
+  Widget _buildMainContent() {
+    return Column(
+      children: [
+        if (_loadingState.anyComponentLoading) _buildProgressIndicator(),
+        Expanded(
+          child: _loadingState.isInitialDataLoading
+              ? const SizedBox()
+              : _buildBagContent(_getCurrentUserEmail()),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return LinearProgressIndicator(
+      backgroundColor: Colors.grey[200],
+      valueColor: const AlwaysStoppedAnimation<Color>(Colors.brown),
+    );
+  }
+
+  String _getCurrentUserEmail() {
+    return FirebaseAuth.instance.currentUser!.email!;
+  }
+
+  Widget _buildBagContent(String userEmail) {
+    _logger.info('Building bag content for user: $userEmail');
+    return StreamBuilder<DocumentSnapshot>(
+      stream: _cartDataProvider.getUserStream(userEmail),
+      builder: (context, userSnapshot) {
+        return _buildUserContent(context, userSnapshot, userEmail);
+      },
+    );
+  }
+
+  Widget _buildUserContent(BuildContext context,
+      AsyncSnapshot<DocumentSnapshot> userSnapshot, String userEmail) {
+    if (!userSnapshot.hasData) {
+      _setTotalAmountLoadingIfNeeded(true);
+      return const SizedBox();
+    }
+
+    final minimumOrderValue = _getMinimumOrderValue(userSnapshot);
+    return _buildCartItemsList(userEmail, minimumOrderValue);
+  }
+
+  void _setTotalAmountLoadingIfNeeded(bool isLoading) {
+    if (!_loadingState.isTotalAmountLoading && isLoading) {
+      _logger.info('No user data, setting totalAmountLoading to true');
+      _updateLoadingState(totalAmountLoading: isLoading);
+    }
+  }
+
+  Decimal _getMinimumOrderValue(AsyncSnapshot<DocumentSnapshot> snapshot) {
+    return Decimal.parse(
+        (snapshot.data?['minimumOrderValue'] ?? 5000).toString());
+  }
+
+  Widget _buildCartItemsList(String userEmail, Decimal minimumOrderValue) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _cartDataProvider.getCartItemsStream(userEmail),
+      builder: (context, snapshot) {
+        try {
+          if (_isWaitingForCartItems(snapshot)) {
+            _setItemCardsLoadingIfNeeded(true);
+            return const SizedBox();
+          }
+
+          _resetLoadingStatesIfDataLoaded(snapshot);
+
+          if (snapshot.hasError) {
+            _logger.severe('Error fetching cart data: ${snapshot.error}');
+            return const Center(child: Text('Error loading data'));
+          }
+
+          if (_isCartEmpty(snapshot)) {
+            return const Center(child: Text('Your bag is empty.'));
+          }
+
+          final cartData = CartData(
+            items: snapshot.data!.docs,
+            minimumOrderValue: minimumOrderValue,
+          );
+
+          return _buildCartContent(cartData);
+        } catch (e) {
+          _logger.severe('Error in cart items StreamBuilder: $e');
+          return const Center(child: Text('Error loading data'));
+        }
+      },
+    );
+  }
+
+  bool _isWaitingForCartItems(AsyncSnapshot<QuerySnapshot> snapshot) {
+    return snapshot.connectionState == ConnectionState.waiting &&
+        !snapshot.hasData;
+  }
+
+  void _setItemCardsLoadingIfNeeded(bool isLoading) {
+    if (!_loadingState.isItemCardsLoading && isLoading) {
+      _logger.info('Waiting for cart items, setting itemCardsLoading to true');
+      _updateLoadingState(itemCardsLoading: isLoading);
+    }
+  }
+
+  void _resetLoadingStatesIfDataLoaded(AsyncSnapshot<QuerySnapshot> snapshot) {
+    if (snapshot.hasData &&
+        (_loadingState.isItemCardsLoading ||
+            _loadingState.isTotalAmountLoading)) {
+      _logger.info('Cart data loaded, resetting loading states');
+      Future.microtask(() {
+        if (mounted) {
+          _resetAllLoadingStates();
+        }
+      });
+    }
+  }
+
+  bool _isCartEmpty(AsyncSnapshot<QuerySnapshot> snapshot) {
+    return !snapshot.hasData || snapshot.data!.docs.isEmpty;
+  }
+
+  Widget _buildCartContent(CartData cartData) {
+    final itemCards = _buildItemCards(cartData.items);
+
+    return ListView(
+      children: [
+        ...itemCards,
+        if (_shouldShowMinimumOrderWarning(cartData))
+          _buildMinimumOrderWarning(cartData.minimumOrderValue),
+        _buildTotalAmountSection(cartData),
+      ],
+    );
+  }
+
+  List<Widget> _buildItemCards(List<QueryDocumentSnapshot> documents) {
+    return documents.map<Widget>((document) {
+      return ItemCard(
+        documentId: document.id,
+        onDelete: () {
+          if (!_disposed) {
+            setState(() {});
+          }
+        },
+        onLoadingChanged: (isLoading) =>
+            _updateLoadingState(itemCardsLoading: isLoading),
+      );
+    }).toList();
+  }
+
+  bool _shouldShowMinimumOrderWarning(CartData cartData) {
+    return cartData.totalAmount < cartData.minimumOrderValue;
+  }
+
+  Widget _buildMinimumOrderWarning(Decimal minimumOrderValue) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.red.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.warning, color: Colors.red.shade400),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Minimum order value should be Rs. ${minimumOrderValue.toString()}',
+                style: TextStyle(
+                  color: Colors.red.shade700,
+                  fontSize: 14,
+                ),
+              ),
             ),
-          Expanded(
-            child: isInitialDataLoading
-                ? const SizedBox() // Empty SizedBox during initial loading
-                : _buildBagContent(user.email!),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  // Extract content building to simplify the main build method
-  Widget _buildBagContent(String userEmail) {
-    _logger.info('Building bag content for user: $userEmail');
-
-    // Use a single StreamBuilder for user data
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(userEmail)
-          .snapshots(),
-      builder: (context, userSnapshot) {
-        if (!userSnapshot.hasData) {
-          if (!isTotalAmountLoading) {
-            _logger.info('No user data, setting totalAmountLoading to true');
-            updateLoadingState(totalAmountLoading: true);
-          }
-          return const SizedBox();
-        }
-
-        final minimumOrderValue = Decimal.parse(
-            (userSnapshot.data?['minimumOrderValue'] ?? 5000).toString());
-
-        // Use a single StreamBuilder for cart items
-        return _buildCartItemsList(userEmail, minimumOrderValue);
-      },
+  Widget _buildTotalAmountSection(CartData cartData) {
+    return TotalAmountSection(
+      minimumOrderQuantity: cartData.minimumOrderValue,
+      totalAmount: cartData.totalAmount,
+      onLoadingChanged: (isLoading) =>
+          _updateLoadingState(totalAmountLoading: isLoading),
     );
   }
 
-  // Extract cart items list building to further simplify
-  Widget _buildCartItemsList(String userEmail, Decimal minimumOrderValue) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(userEmail)
-          .collection('cartItemsList')
-          .snapshots(),
-      builder: (context, snapshot) {
-        try {
-          // Set loading state only if we're waiting for initial data
-          if (snapshot.connectionState == ConnectionState.waiting &&
-              !snapshot.hasData) {
-            if (!isItemCardsLoading) {
-              _logger.info(
-                  'Waiting for cart items, setting itemCardsLoading to true');
-              updateLoadingState(itemCardsLoading: true);
-            }
-            return const SizedBox();
-          }
+  void _navigateTo(BuildContext context, int index) {
+    final navigationTargets = [
+      const HomePage(),
+      const MyBag(),
+      const ProfileScreen(),
+    ];
 
-          // Always ensure loading states are reset when we have data
-          if (snapshot.hasData) {
-            if (isItemCardsLoading || isTotalAmountLoading) {
-              _logger.info('Cart data loaded, resetting loading states');
-              // Use a slight delay to avoid UI flicker
-              Future.microtask(() {
-                if (mounted) {
-                  resetAllLoadingStates();
-                }
-              });
-            }
-          }
-
-          if (snapshot.hasError) {
-            _logger.severe('Error fetching cart data: ${snapshot.error}');
-            return Center(child: Text('Error loading data'));
-          }
-
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            _logger.info('No cart items found or bag is empty');
-            return Center(child: Text('Your bag is empty.'));
-          }
-
-          // Calculate total amount once here
-          Decimal totalAmount = Decimal.zero;
-          for (var doc in snapshot.data!.docs) {
-            Map<String, dynamic> priceMap = doc.get('price');
-            totalAmount += Decimal.parse(priceMap['value'].toString());
-          }
-
-          // Build item cards from snapshot data
-          List<Widget> itemCards = snapshot.data!.docs.map<Widget>((document) {
-            return ItemCard(
-              documentId: document.id,
-              onDelete: () {
-                if (!_disposed) {
-                  setState(() {});
-                }
-              },
-              onLoadingChanged: (isLoading) =>
-                  updateLoadingState(itemCardsLoading: isLoading),
-            );
-          }).toList();
-
-          _logger.info(
-              'Data fetched successfully, returning item cards and total');
-          return ListView(
-            children: [
-              ...itemCards,
-              // Show minimum order warning if needed
-              if (totalAmount < minimumOrderValue)
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.warning, color: Colors.red.shade400),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Minimum order value should be Rs. ${minimumOrderValue.toString()}',
-                            style: TextStyle(
-                              color: Colors.red.shade700,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              // Add total amount section
-              TotalAmountSection(
-                minimumOrderQuantity: minimumOrderValue,
-                totalAmount: totalAmount, // Pass the pre-calculated total
-                onLoadingChanged: (isLoading) =>
-                    updateLoadingState(totalAmountLoading: isLoading),
-              ),
-            ],
-          );
-        } catch (e) {
-          _logger.severe('Error in cart items StreamBuilder: $e');
-          return Center(child: Text('Error loading data'));
-        }
-      },
-    );
-  }
-
-  void _onItemTapped(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
-        break;
-      case 1:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MyBag()),
-        );
-        break;
-      case 2:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ProfileScreen()),
-        );
-        break;
+    if (index >= 0 && index < navigationTargets.length) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => navigationTargets[index]),
+      );
     }
   }
 
-  Scaffold _buildScaffold(BuildContext context, Widget body) {
+  Widget _buildScaffold(BuildContext context, Widget body) {
     return Scaffold(
       appBar: genericAppbar(title: 'My Bag', showBackButton: false),
       body: body,
       bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: 1, // Set the current index as needed
-        onItemTapped: (index) => _onItemTapped(context, index),
+        selectedIndex: 1,
+        onItemTapped: (index) => _navigateTo(context, index),
       ),
     );
   }
