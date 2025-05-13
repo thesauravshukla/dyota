@@ -19,44 +19,45 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final Logger _logger = Logger('HomePage');
-  bool isProductsLoading = false;
-  bool isCategoriesLoading = false;
-  bool isInitialDataLoading = true;
+  final LoadingState _loadingState = LoadingState();
+  late final HomepageDataProvider _dataProvider;
   bool _disposed = false;
-  DateTime _lastUpdateTime = DateTime.now();
-  Future<List<String>> _homePageDocumentsFuture = Future.value([]);
-  bool _futureInitialized = false;
-
-  bool get anyComponentLoading =>
-      isProductsLoading || isCategoriesLoading || isInitialDataLoading;
 
   @override
   void initState() {
     super.initState();
-    // Initialize the future
-    _homePageDocumentsFuture = getDocumentIdsShownOnHomePage();
-    _futureInitialized = true;
+    _dataProvider = HomepageDataProvider();
+    _initializeData();
+    _setupSafetyTimeouts();
+  }
+
+  void _initializeData() {
+    _dataProvider.initialize();
 
     // Set initial data loading to false after a short delay
-    Future.delayed(Duration(milliseconds: 1000), () {
-      if (!_disposed && mounted) {
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (!_isDisposed()) {
         setState(() {
-          isInitialDataLoading = false;
+          _loadingState.isInitialDataLoading = false;
         });
       }
     });
+  }
 
+  void _setupSafetyTimeouts() {
     // Safety timeout to ensure all loading states are reset eventually
-    Future.delayed(Duration(seconds: 5), () {
-      if (!_disposed && mounted && anyComponentLoading) {
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!_isDisposed() && _loadingState.anyComponentLoading) {
         _logger.warning('Forced reset of loading states due to timeout');
         setState(() {
-          isProductsLoading = false;
-          isCategoriesLoading = false;
-          isInitialDataLoading = false;
+          _loadingState.resetAllLoadingStates();
         });
       }
     });
+  }
+
+  bool _isDisposed() {
+    return _disposed || !mounted;
   }
 
   @override
@@ -65,45 +66,59 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  void updateLoadingState({
+  Future<void> _refreshData() async {
+    setState(() {
+      _loadingState.isProductsLoading = true;
+    });
+
+    await _dataProvider.refreshData();
+
+    if (mounted) {
+      setState(() {
+        _loadingState.isProductsLoading = false;
+      });
+    }
+  }
+
+  void _updateLoadingState({
     bool? productsLoading,
     bool? categoriesLoading,
   }) {
-    if (_disposed) return;
+    if (_isDisposed() || _loadingState.isInitialDataLoading) return;
 
-    // Skip updates if we're in initial loading state
-    if (isInitialDataLoading) return;
-
-    // Skip redundant updates that don't change state
-    if ((productsLoading != null && productsLoading == isProductsLoading) &&
-        (categoriesLoading != null &&
-            categoriesLoading == isCategoriesLoading)) {
+    if (_loadingState.shouldSkipRedundantUpdate(
+        productsLoading: productsLoading,
+        categoriesLoading: categoriesLoading)) {
       return;
     }
 
-    // Log current loading states for debugging
-    _logger.info('Current loading states - '
-        'Products: $isProductsLoading, '
-        'Categories: $isCategoriesLoading, '
-        'Initial: $isInitialDataLoading');
+    _logCurrentLoadingStates();
 
-    // Debounce loading state updates to prevent UI flickering
-    final now = DateTime.now();
-    if (now.difference(_lastUpdateTime).inMilliseconds < 300) {
-      return; // Skip frequent updates
+    if (_loadingState.shouldDebounceUpdate()) {
+      return;
     }
-    _lastUpdateTime = now;
 
-    // Use a single microtask for state updates to batch changes
+    _applyLoadingStateUpdate(productsLoading, categoriesLoading);
+  }
+
+  void _logCurrentLoadingStates() {
+    _logger.info('Current loading states - '
+        'Products: ${_loadingState.isProductsLoading}, '
+        'Categories: ${_loadingState.isCategoriesLoading}, '
+        'Initial: ${_loadingState.isInitialDataLoading}');
+  }
+
+  void _applyLoadingStateUpdate(
+      bool? productsLoading, bool? categoriesLoading) {
     Future.microtask(() {
-      if (!_disposed && mounted) {
+      if (!_isDisposed()) {
         setState(() {
           if (productsLoading != null) {
-            isProductsLoading = productsLoading;
+            _loadingState.isProductsLoading = productsLoading;
             _logger.info('Updated productsLoading to: $productsLoading');
           }
           if (categoriesLoading != null) {
-            isCategoriesLoading = categoriesLoading;
+            _loadingState.isCategoriesLoading = categoriesLoading;
             _logger.info('Updated categoriesLoading to: $categoriesLoading');
           }
         });
@@ -111,13 +126,187 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<List<String>> getDocumentIdsShownOnHomePage() async {
-    List<String> documentIds = [];
+  void _navigateTo(BuildContext context, int index) {
+    final navigationTargets = [
+      const HomePage(),
+      MyBag(),
+      ProfileScreen(),
+    ];
 
-    // Only set loading state if not already loading
-    if (!isProductsLoading) {
-      updateLoadingState(productsLoading: true);
+    if (index >= 0 && index < navigationTargets.length) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => navigationTargets[index]),
+      );
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _logger.info('Building HomePage');
+    return Scaffold(
+      appBar: const CustomAppBar(),
+      body: _buildBody(context),
+      bottomNavigationBar: CustomBottomNavigationBar(
+        selectedIndex: 0,
+        onItemTapped: (index) => _navigateTo(context, index),
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    return Column(
+      children: [
+        if (_loadingState.anyComponentLoading) _buildProgressIndicator(),
+        Expanded(
+          child: _buildRefreshableContent(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return LinearProgressIndicator(
+      backgroundColor: Colors.grey[200],
+      valueColor: const AlwaysStoppedAnimation<Color>(Colors.brown),
+    );
+  }
+
+  Widget _buildRefreshableContent(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: _refreshData,
+      child: FutureBuilder<List<String>>(
+        future: _dataProvider.homePageDocumentsFuture,
+        builder: (context, snapshot) {
+          return _buildFutureContent(context, snapshot);
+        },
+      ),
+    );
+  }
+
+  Widget _buildFutureContent(
+      BuildContext context, AsyncSnapshot<List<String>> snapshot) {
+    if (!_dataProvider.isInitialized) {
+      _logger.warning('Future not initialized, initializing now');
+      _dataProvider.initialize();
+      return const SizedBox();
+    }
+
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const SizedBox();
+    }
+
+    if (snapshot.hasError) {
+      _logger.severe('Error in FutureBuilder', snapshot.error);
+      return const Center(child: Text('Error loading data'));
+    }
+
+    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+      _logger.info('No items to display');
+      return const Center(child: Text('No items to display'));
+    }
+
+    return _buildHomepageContent(snapshot.data!);
+  }
+
+  Widget _buildHomepageContent(List<String> documentIds) {
+    _logger.info('Document IDs to display: $documentIds');
+    try {
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildCategoriesSection(),
+            _buildProductsSection(documentIds),
+          ],
+        ),
+      );
+    } catch (e) {
+      _logger.severe('Error building widget tree for homepage:', e);
+      return const Center(child: Text('Error loading page'));
+    }
+  }
+
+  Widget _buildCategoriesSection() {
+    return Container(
+      color: Colors.grey[300],
+      child: Column(
+        children: [
+          const CategoryHeader(),
+          CategoryGrid(
+            onLoadingChanged: (isLoading) =>
+                _updateLoadingState(categoriesLoading: isLoading),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductsSection(List<String> documentIds) {
+    return Container(
+      color: const Color.fromARGB(255, 255, 255, 255),
+      child: Column(
+        children: [
+          const BestSellerHeader(),
+          ProductGrid(
+            documentIds: documentIds,
+            onLoadingChanged: (isLoading) =>
+                _updateLoadingState(productsLoading: isLoading),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class LoadingState {
+  bool isProductsLoading = false;
+  bool isCategoriesLoading = false;
+  bool isInitialDataLoading = true;
+  DateTime _lastUpdateTime = DateTime.now();
+
+  bool get anyComponentLoading =>
+      isProductsLoading || isCategoriesLoading || isInitialDataLoading;
+
+  void resetAllLoadingStates() {
+    isProductsLoading = false;
+    isCategoriesLoading = false;
+    isInitialDataLoading = false;
+  }
+
+  bool shouldSkipRedundantUpdate({
+    bool? productsLoading,
+    bool? categoriesLoading,
+  }) {
+    return (productsLoading != null && productsLoading == isProductsLoading) &&
+        (categoriesLoading != null && categoriesLoading == isCategoriesLoading);
+  }
+
+  bool shouldDebounceUpdate() {
+    final now = DateTime.now();
+    if (now.difference(_lastUpdateTime).inMilliseconds < 300) {
+      return true; // Skip frequent updates
+    }
+    _lastUpdateTime = now;
+    return false;
+  }
+}
+
+class HomepageDataProvider {
+  bool isInitialized = false;
+  late Future<List<String>> homePageDocumentsFuture;
+
+  void initialize() {
+    homePageDocumentsFuture = _fetchHomePageDocuments();
+    isInitialized = true;
+  }
+
+  Future<void> refreshData() async {
+    homePageDocumentsFuture = _fetchHomePageDocuments();
+    await Future.delayed(const Duration(milliseconds: 1500));
+  }
+
+  Future<List<String>> _fetchHomePageDocuments() async {
+    List<String> documentIds = [];
 
     try {
       // Reference to the Firestore collection
@@ -133,140 +322,9 @@ class _HomePageState extends State<HomePage> {
         documentIds.add(doc.id);
       }
 
-      updateLoadingState(productsLoading: false);
       return documentIds;
     } catch (e) {
-      _logger.severe('Error fetching documents: $e');
-      updateLoadingState(productsLoading: false);
       return [];
     }
-  }
-
-  void _onItemTapped(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
-        );
-        break;
-      case 1:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MyBag()),
-        );
-        break;
-      case 2:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ProfileScreen()),
-        );
-        break;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    _logger.info('Building HomePage');
-    return Scaffold(
-      appBar: CustomAppBar(),
-      body: Column(
-        children: [
-          // Show linear progress indicator for ANY loading state
-          if (anyComponentLoading)
-            LinearProgressIndicator(
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
-            ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                // This will trigger a rebuild with a new future
-                setState(() {
-                  _homePageDocumentsFuture = getDocumentIdsShownOnHomePage();
-                  isProductsLoading = true;
-                });
-                await Future.delayed(const Duration(milliseconds: 1500));
-                if (mounted) {
-                  setState(() {
-                    isProductsLoading = false;
-                  });
-                }
-              },
-              child: FutureBuilder<List<String>>(
-                future: _homePageDocumentsFuture,
-                builder: (context, snapshot) {
-                  // Handle any initialization issues
-                  if (!_futureInitialized) {
-                    _logger.warning('Future not initialized, initializing now');
-                    _homePageDocumentsFuture = getDocumentIdsShownOnHomePage();
-                    _futureInitialized = true;
-                    return const SizedBox(); // Use a consistent loading approach
-                  }
-
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SizedBox();
-                  }
-                  if (snapshot.hasError) {
-                    _logger.severe('Error in FutureBuilder', snapshot.error);
-                    return const Center(child: Text('Error loading data'));
-                  }
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    _logger.info('No items to display');
-                    return const Center(child: Text('No items to display'));
-                  }
-
-                  List<String> documentIds = snapshot.data!;
-                  _logger.info('Document IDs to display: $documentIds');
-                  try {
-                    return SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          Container(
-                            color: Colors.grey[300],
-                            child: Column(
-                              children: [
-                                CategoryHeader(),
-                                CategoryGrid(
-                                  onLoadingChanged: (isLoading) =>
-                                      updateLoadingState(
-                                          categoriesLoading: isLoading),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            color: const Color.fromARGB(255, 255, 255, 255),
-                            child: Column(
-                              children: [
-                                BestSellerHeader(),
-                                ProductGrid(
-                                  documentIds: documentIds,
-                                  onLoadingChanged: (isLoading) =>
-                                      updateLoadingState(
-                                          productsLoading: isLoading),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  } catch (e) {
-                    _logger.severe(
-                        'Error building widget tree for homepage:', e);
-                    return const Center(child: Text('Error loading page'));
-                  }
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: 0, // Set the current index as needed
-        onItemTapped: (index) => _onItemTapped(context, index),
-      ),
-    );
   }
 }

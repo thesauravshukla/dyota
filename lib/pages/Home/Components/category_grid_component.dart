@@ -14,68 +14,94 @@ class CategoryGrid extends StatefulWidget {
 
 class _CategoryGridState extends State<CategoryGrid> {
   final Logger _logger = Logger('CategoryGridComponent');
-  Future<List<DocumentSnapshot>> _categoryDocumentsFuture = Future.value([]);
+  late final CategoryDataProvider _dataProvider;
   bool _loadingNotified = false;
 
   @override
   void initState() {
     super.initState();
-    // Memoize the future to prevent rebuilds from recreating it
-    _categoryDocumentsFuture = getCategoryDocuments();
+    _dataProvider = CategoryDataProvider(
+      onLoadingChanged: _handleLoadingChanged,
+    );
   }
 
-  Future<List<DocumentSnapshot>> getCategoryDocuments() async {
-    // Only signal loading if we haven't already
+  void _handleLoadingChanged(bool isLoading) {
     if (!_loadingNotified) {
       _loadingNotified = true;
-      widget.onLoadingChanged?.call(true);
-    }
-
-    try {
-      // Fetch category documents from Firestore
-      QuerySnapshot snapshot =
-          await FirebaseFirestore.instance.collection('categories').get();
-
-      // Signal loading finished
-      widget.onLoadingChanged?.call(false);
-      return snapshot.docs;
-    } catch (e) {
-      // Signal loading finished even on error
-      widget.onLoadingChanged?.call(false);
-      _logger.severe('Error fetching categories: $e');
-      return [];
+      widget.onLoadingChanged?.call(isLoading);
+    } else {
+      widget.onLoadingChanged?.call(isLoading);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<DocumentSnapshot>>(
-      future: _categoryDocumentsFuture, // Use the memoized future
+      future: _dataProvider.categoryDocumentsFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(); // Show nothing while waiting for the data
-        } else if (snapshot.hasError) {
-          _logger.severe('Error in snapshot: ${snapshot.error}');
-          return Text(''); // Handle the error state
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          _logger.severe('No data found');
-          return Text(''); // Handle the case where there is no data
-        } else {
-          List<DocumentSnapshot> categoryDocuments = snapshot.data!;
-
-          return GridView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              childAspectRatio: 1,
-            ),
-            itemCount: categoryDocuments
-                .length, // Set item count based on the number of documents
-            itemBuilder: (context, index) => CategoryItem(index: index),
-          );
-        }
+        return _buildGridContent(snapshot);
       },
     );
+  }
+
+  Widget _buildGridContent(AsyncSnapshot<List<DocumentSnapshot>> snapshot) {
+    if (_shouldShowEmptyWidget(snapshot)) {
+      return const SizedBox();
+    }
+
+    if (snapshot.hasError) {
+      _logger.severe('Error in snapshot: ${snapshot.error}');
+      return const Text('');
+    }
+
+    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+      _logger.severe('No data found');
+      return const Text('');
+    }
+
+    return _buildCategoryGrid(snapshot.data!);
+  }
+
+  bool _shouldShowEmptyWidget(AsyncSnapshot<List<DocumentSnapshot>> snapshot) {
+    return snapshot.connectionState == ConnectionState.waiting;
+  }
+
+  Widget _buildCategoryGrid(List<DocumentSnapshot> categoryDocuments) {
+    return GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        childAspectRatio: 1,
+      ),
+      itemCount: categoryDocuments.length,
+      itemBuilder: (context, index) => CategoryItem(index: index),
+    );
+  }
+}
+
+class CategoryDataProvider {
+  final Function(bool) onLoadingChanged;
+  late final Future<List<DocumentSnapshot>> categoryDocumentsFuture;
+  final Logger _logger = Logger('CategoryDataProvider');
+
+  CategoryDataProvider({required this.onLoadingChanged}) {
+    categoryDocumentsFuture = _fetchCategoryDocuments();
+  }
+
+  Future<List<DocumentSnapshot>> _fetchCategoryDocuments() async {
+    onLoadingChanged(true);
+
+    try {
+      QuerySnapshot snapshot =
+          await FirebaseFirestore.instance.collection('categories').get();
+
+      onLoadingChanged(false);
+      return snapshot.docs;
+    } catch (e) {
+      onLoadingChanged(false);
+      _logger.severe('Error fetching categories: $e');
+      return [];
+    }
   }
 }

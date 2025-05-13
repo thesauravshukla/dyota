@@ -18,32 +18,47 @@ class ProductGrid extends StatefulWidget {
 
 class _ProductGridState extends State<ProductGrid> {
   final Logger _logger = Logger('ProductGrid');
-  bool _isLoading = false;
-  bool _loadingNotified = false;
-  int _loadingItemCount = 0;
+  final LoadingTracker _loadingTracker = LoadingTracker();
 
   @override
   void initState() {
     super.initState();
+    _notifyInitialLoadingState();
+  }
 
-    // Only send a single initial loading notification
-    if (!_loadingNotified && widget.onLoadingChanged != null) {
-      _loadingNotified = true;
-      _isLoading = true;
+  void _notifyInitialLoadingState() {
+    if (!_loadingTracker.hasNotifiedLoading &&
+        widget.onLoadingChanged != null) {
+      _loadingTracker.hasNotifiedLoading = true;
+      _loadingTracker.isLoading = true;
       widget.onLoadingChanged!(true);
     }
   }
 
-  void _updateLoadingState(bool isLoading) {
+  void _onProductLoadingChanged(bool isLoading) {
     if (isLoading) {
-      _loadingItemCount++;
+      _incrementLoadingCount();
     } else {
-      _loadingItemCount = _loadingItemCount > 0 ? _loadingItemCount - 1 : 0;
+      _decrementLoadingCount();
     }
 
-    bool newLoadingState = _loadingItemCount > 0;
-    if (_isLoading != newLoadingState) {
-      _isLoading = newLoadingState;
+    _updateParentLoadingState();
+  }
+
+  void _incrementLoadingCount() {
+    _loadingTracker.loadingItemCount++;
+  }
+
+  void _decrementLoadingCount() {
+    _loadingTracker.loadingItemCount = _loadingTracker.loadingItemCount > 0
+        ? _loadingTracker.loadingItemCount - 1
+        : 0;
+  }
+
+  void _updateParentLoadingState() {
+    bool newLoadingState = _loadingTracker.loadingItemCount > 0;
+    if (_loadingTracker.isLoading != newLoadingState) {
+      _loadingTracker.isLoading = newLoadingState;
       widget.onLoadingChanged?.call(newLoadingState);
     }
   }
@@ -52,7 +67,10 @@ class _ProductGridState extends State<ProductGrid> {
   Widget build(BuildContext context) {
     _logger
         .info('Building ProductGrid with ${widget.documentIds.length} items');
+    return _buildProductGrid();
+  }
 
+  Widget _buildProductGrid() {
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
@@ -62,17 +80,25 @@ class _ProductGridState extends State<ProductGrid> {
         crossAxisSpacing: 5,
         mainAxisSpacing: 5,
       ),
-      itemBuilder: (context, index) {
-        _logger.fine(
-            'Building ProductListItem for documentId: ${widget.documentIds[index]}');
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: ProductListItem(
-            documentId: widget.documentIds[index],
-            onLoadingChanged: _updateLoadingState,
-          ),
-        );
-      },
+      itemBuilder: _buildProductItem,
     );
   }
+
+  Widget _buildProductItem(BuildContext context, int index) {
+    _logger.fine(
+        'Building ProductListItem for documentId: ${widget.documentIds[index]}');
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ProductListItem(
+        documentId: widget.documentIds[index],
+        onLoadingChanged: _onProductLoadingChanged,
+      ),
+    );
+  }
+}
+
+class LoadingTracker {
+  bool isLoading = false;
+  bool hasNotifiedLoading = false;
+  int loadingItemCount = 0;
 }
