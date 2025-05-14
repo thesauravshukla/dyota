@@ -1,6 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dyota/pages/Category/Components/product_item_data.dart';
 import 'package:dyota/pages/Product_Card/product_card.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
@@ -21,10 +20,8 @@ class ProductListItem extends StatefulWidget {
 class _ProductListItemState extends State<ProductListItem>
     with AutomaticKeepAliveClientMixin {
   final Logger _logger = Logger('ProductListItem');
-  bool _isLoading = true;
+  late ProductItemData _productItemData;
   bool _hasNotifiedLoading = false;
-  Map<String, dynamic>? _productData;
-  String? _imageUrl;
 
   @override
   bool get wantKeepAlive => true; // Keep the widget alive when scrolling
@@ -32,6 +29,8 @@ class _ProductListItemState extends State<ProductListItem>
   @override
   void initState() {
     super.initState();
+    _productItemData = ProductItemData(documentId: widget.documentId);
+    _productItemData.addListener(_onDataChanged);
     _fetchData();
 
     // Set initial loading state
@@ -43,63 +42,31 @@ class _ProductListItemState extends State<ProductListItem>
     });
   }
 
-  Future<void> _fetchData() async {
-    try {
-      // Fetch product data
-      final data = await fetchProductData();
-
-      // Get image URL
-      List<dynamic> imageLocations = data['imageLocation'];
-      String imagePath = imageLocations[0];
-      final imageUrl = await getImageUrl(imagePath);
-
-      if (mounted) {
-        setState(() {
-          _productData = data;
-          _imageUrl = imageUrl;
-          _isLoading = false;
-        });
-
-        if (widget.onLoadingChanged != null) {
-          Future.microtask(() {
-            if (mounted) widget.onLoadingChanged!(false);
-          });
-        }
-      }
-    } catch (e) {
-      _logger.severe('Error fetching product data: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
-        if (widget.onLoadingChanged != null) {
-          Future.microtask(() {
-            if (mounted) widget.onLoadingChanged!(false);
-          });
-        }
-      }
+  void _onDataChanged() {
+    if (mounted && widget.onLoadingChanged != null && _hasNotifiedLoading) {
+      widget.onLoadingChanged!(
+          false); // Always notify as not loading when data changes
+      _hasNotifiedLoading = false; // Reset notification flag
     }
   }
 
-  Future<Map<String, dynamic>> fetchProductData() async {
-    DocumentSnapshot doc = await FirebaseFirestore.instance
-        .collection('items')
-        .doc(widget.documentId)
-        .get();
-    return doc.data() as Map<String, dynamic>;
-  }
-
-  Future<String> getImageUrl(String path) async {
-    String url = await FirebaseStorage.instance.ref(path).getDownloadURL();
-    return url;
+  Future<void> _fetchData() async {
+    try {
+      await _productItemData.fetchData();
+    } finally {
+      // Ensure we set loading to false even if there was an error
+      if (mounted && widget.onLoadingChanged != null && _hasNotifiedLoading) {
+        widget.onLoadingChanged!(false);
+        _hasNotifiedLoading = false;
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
 
-    if (_isLoading) {
+    if (_productItemData.isLoading) {
       return Container(
         height: 150,
         decoration: BoxDecoration(
@@ -109,7 +76,8 @@ class _ProductListItemState extends State<ProductListItem>
       );
     }
 
-    if (_productData != null && _imageUrl != null) {
+    if (_productItemData.productData != null &&
+        _productItemData.imageUrl != null) {
       return GestureDetector(
         onTap: () {
           Navigator.push(
@@ -119,26 +87,14 @@ class _ProductListItemState extends State<ProductListItem>
                     ProductCard(documentId: widget.documentId)),
           );
         },
-        child: buildProductCard(_imageUrl!, _productData!),
+        child: _buildProductCard(),
       );
     }
 
     return Container(); // Fallback empty container
   }
 
-  Widget buildProductCard(String imageUrl, Map<String, dynamic> data) {
-    String getFieldValue(Map<String, dynamic> field) {
-      String value = field['value'] ?? '';
-      String prefix = field['prefix'] ?? '';
-      String suffix = field['suffix'] ?? '';
-      return '$prefix$value$suffix';
-    }
-
-    String brand = getFieldValue(data['subCategory']);
-    String title = getFieldValue(data['printType']);
-    String price = getFieldValue(data['pricePerMetre']);
-    double discount = 0; // Assuming discount is not provided in the data
-
+  Widget _buildProductCard() {
     return Card(
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
@@ -151,12 +107,12 @@ class _ProductListItemState extends State<ProductListItem>
             alignment: Alignment.topRight,
             children: [
               Image.network(
-                imageUrl,
+                _productItemData.imageUrl!,
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: 96, // Fixed height for the image
               ),
-              if (discount > 0)
+              if (_productItemData.discount > 0)
                 Positioned(
                   top: 8,
                   right: 8,
@@ -167,7 +123,7 @@ class _ProductListItemState extends State<ProductListItem>
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '-${discount.toInt()}%',
+                      '-${_productItemData.discount.toInt()}%',
                       style: TextStyle(
                         color: Colors.white,
                       ),
@@ -184,14 +140,14 @@ class _ProductListItemState extends State<ProductListItem>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    brand,
+                    _productItemData.brand,
                     style: TextStyle(
                       fontSize: 13,
                     ),
                   ),
                   SizedBox(height: 1),
                   Text(
-                    title,
+                    _productItemData.title,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey[600],
@@ -199,7 +155,7 @@ class _ProductListItemState extends State<ProductListItem>
                   ),
                   SizedBox(height: 1),
                   Text(
-                    price,
+                    _productItemData.price,
                     style: TextStyle(
                       fontFamily: 'Lato',
                       fontSize: 12,
@@ -217,11 +173,13 @@ class _ProductListItemState extends State<ProductListItem>
 
   @override
   void dispose() {
-    if (widget.onLoadingChanged != null && _isLoading) {
+    if (widget.onLoadingChanged != null && _productItemData.isLoading) {
       Future.microtask(() {
         widget.onLoadingChanged!(false);
       });
     }
+    _productItemData.removeListener(_onDataChanged);
+    _productItemData.dispose();
     super.dispose();
   }
 }

@@ -20,7 +20,8 @@ class CategoryButton extends StatelessWidget {
         'Building CategoryButton with label: $label, isSelected: $isSelected');
     return GestureDetector(
       onTap: () {
-        _logger.info('CategoryButton tapped with label: $label');
+        _logger.info(
+            'CategoryButton tapped with label: $label - ${isSelected ? "deselecting" : "selecting"}');
         onTap();
       }, // Handle tap event
       child: Container(
@@ -54,6 +55,7 @@ class CategoryButton extends StatelessWidget {
                   Icons.close, // Close icon
                   color: Colors.white, // Icon color
                   size: 16, // Icon size
+                  semanticLabel: 'Deselect $label', // For accessibility
                 ),
               ),
           ],
