@@ -43,10 +43,21 @@ class _ProductListItemState extends State<ProductListItem>
   }
 
   void _onDataChanged() {
-    if (mounted && widget.onLoadingChanged != null && _hasNotifiedLoading) {
-      widget.onLoadingChanged!(
-          false); // Always notify as not loading when data changes
-      _hasNotifiedLoading = false; // Reset notification flag
+    if (mounted) {
+      setState(() {
+        // Force rebuild when data changes
+      });
+    }
+
+    // Notify parent about loading state changes
+    if (mounted && widget.onLoadingChanged != null) {
+      if (_productItemData.isLoading && !_hasNotifiedLoading) {
+        _hasNotifiedLoading = true;
+        widget.onLoadingChanged!(true);
+      } else if (!_productItemData.isLoading && _hasNotifiedLoading) {
+        _hasNotifiedLoading = false;
+        widget.onLoadingChanged!(false);
+      }
     }
   }
 
@@ -66,6 +77,7 @@ class _ProductListItemState extends State<ProductListItem>
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
 
+    // Show loading state
     if (_productItemData.isLoading) {
       return Container(
         height: 150,
@@ -76,6 +88,7 @@ class _ProductListItemState extends State<ProductListItem>
       );
     }
 
+    // Show product card if we have both data and image
     if (_productItemData.productData != null &&
         _productItemData.imageUrl != null) {
       return GestureDetector(
@@ -91,7 +104,27 @@ class _ProductListItemState extends State<ProductListItem>
       );
     }
 
-    return Container(); // Fallback empty container
+    // Show error state if we have data but no image, or vice versa
+    return Container(
+      height: 150,
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error, color: Colors.red),
+            SizedBox(height: 4),
+            Text(
+              'Error loading product',
+              style: TextStyle(fontSize: 12, color: Colors.red),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildProductCard() {

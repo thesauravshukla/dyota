@@ -15,6 +15,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   List<Tuple<int, String>> searchResults = [];
   bool isLoading = true;
+  int loadingProductCount = 0;
   late TextEditingController searchController;
 
   @override
@@ -27,6 +28,7 @@ class _SearchPageState extends State<SearchPage> {
   Future<void> _performSearch() async {
     setState(() {
       isLoading = true;
+      loadingProductCount = 0;
     });
 
     try {
@@ -38,8 +40,20 @@ class _SearchPageState extends State<SearchPage> {
       // Handle error
       setState(() {
         isLoading = false;
+        loadingProductCount = 0;
       });
     }
+  }
+
+  void _onProductLoadingChanged(bool loading) {
+    setState(() {
+      if (loading) {
+        loadingProductCount++;
+      } else {
+        loadingProductCount =
+            (loadingProductCount - 1).clamp(0, searchResults.length);
+      }
+    });
   }
 
   @override
@@ -73,18 +87,47 @@ class _SearchPageState extends State<SearchPage> {
                 onSubmitted: (query) {
                   setState(() {
                     isLoading = true;
+                    loadingProductCount = 0;
                   });
                   _performSearch();
                 },
               ),
             ),
           ),
+          // Brown linear progress bar below the black search container
+          if (loadingProductCount > 0)
+            LinearProgressIndicator(
+              backgroundColor: Colors.grey[200],
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
+            ),
           Expanded(
             child: isLoading
                 ? Center(child: CircularProgressIndicator())
                 : searchResults.isEmpty
-                    ? Center(child: Text('No items found'))
-                    : buildGridView(),
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('No items found'),
+                            SizedBox(height: 10),
+                            Text('Search query: "${searchController.text}"'),
+                            Text('Results count: ${searchResults.length}'),
+                          ],
+                        ),
+                      )
+                    : Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Found ${searchResults.length} results for "${searchController.text}"',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Expanded(child: buildGridView()),
+                        ],
+                      ),
           ),
         ],
       ),
@@ -101,10 +144,12 @@ class _SearchPageState extends State<SearchPage> {
       ),
       itemBuilder: (BuildContext context, int index) {
         String documentId = searchResults[index].item2;
+
         return Padding(
           padding: const EdgeInsets.all(8.0),
           child: ProductListItem(
             documentId: documentId,
+            onLoadingChanged: _onProductLoadingChanged,
           ),
         );
       },
@@ -133,9 +178,20 @@ Future<List<Tuple<int, String>>> search(String query) async {
   // Fetch all documents in the 'items' collection
   QuerySnapshot querySnapshot = await itemsCollection.get();
 
+  // If no query, return all documents
+  if (query.isEmpty) {
+    for (QueryDocumentSnapshot doc in querySnapshot.docs) {
+      matchingDocumentIds.add(Tuple(1, doc.id));
+    }
+    return matchingDocumentIds;
+  }
+
   // Iterate through each document
   for (QueryDocumentSnapshot doc in querySnapshot.docs) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+    bool documentMatched = false;
+    int highestPriority = 0;
 
     // Iterate through each field in the document
     for (var entry in data.entries) {
@@ -166,10 +222,28 @@ Future<List<Tuple<int, String>>> search(String query) async {
           }
 
           if (priority > 0) {
-            matchingDocumentIds.add(Tuple(priority, doc.id));
+            documentMatched = true;
+            if (priority > highestPriority) {
+              highestPriority = priority;
+            }
+          }
+        }
+      } else if (entry.value is String) {
+        // Also search in simple string fields
+        String fieldValue = entry.value.toLowerCase();
+        if (fieldValue.contains(lowerCaseQuery)) {
+          int priority =
+              (lowerCaseQuery.length / fieldValue.length * 50).toInt();
+          documentMatched = true;
+          if (priority > highestPriority) {
+            highestPriority = priority;
           }
         }
       }
+    }
+
+    if (documentMatched) {
+      matchingDocumentIds.add(Tuple(highestPriority, doc.id));
     }
   }
 
