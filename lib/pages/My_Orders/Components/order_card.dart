@@ -138,11 +138,6 @@ class _OrderCardState extends State<OrderCard> {
                         .collection('items')
                         .get(),
                     builder: (context, itemsSnapshot) {
-                      if (itemsSnapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
                       if (itemsSnapshot.hasError) {
                         return Center(child: Text('Error loading items'));
                       }
@@ -164,26 +159,27 @@ class _OrderCardState extends State<OrderCard> {
                           return FutureBuilder<String>(
                             future: _getImageUrl(productId),
                             builder: (context, imageSnapshot) {
-                              if (imageSnapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const Center(
-                                    child: CircularProgressIndicator());
-                              }
-
-                              final imageUrl = imageSnapshot.data ?? '';
-
                               return Card(
-                                color: Colors.grey[300], // Set inner card color
+                                color: Colors.grey[300],
                                 margin: const EdgeInsets.symmetric(vertical: 8),
                                 child: Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: Row(
                                     children: [
-                                      Image.network(
-                                        imageUrl,
+                                      Container(
                                         width: 100,
                                         height: 100,
-                                        fit: BoxFit.cover,
+                                        child: imageSnapshot.hasData &&
+                                                imageSnapshot.data!.isNotEmpty
+                                            ? Image.network(
+                                                imageSnapshot.data!,
+                                                fit: BoxFit.cover,
+                                              )
+                                            : Container(
+                                                color: Colors.grey[400],
+                                                child: Icon(Icons.image,
+                                                    color: Colors.grey[600]),
+                                              ),
                                       ),
                                       SizedBox(width: 16),
                                       Expanded(
