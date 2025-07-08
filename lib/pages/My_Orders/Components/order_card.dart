@@ -108,7 +108,8 @@ class _OrderCardState extends State<OrderCard> {
                     Text('Quantity: ${data['totalItems'] ?? 0}'),
                     Text(
                       'Total Amount: ${data['totalAmount']?['prefix'] ?? ''}${data['totalAmount']?['value'] ?? '0'}',
-                      style: TextStyle(color: Colors.green),
+                      style:
+                          TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
                     ),
                   ],
                 ),
