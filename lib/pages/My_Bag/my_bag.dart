@@ -279,19 +279,23 @@ class _MyBagState extends State<MyBag> {
   Widget _buildCartContent(CartData cartData) {
     final itemCards = _buildItemCards(cartData.items);
 
-    return ListView(
-      children: [
-        ...itemCards,
-        if (_shouldShowMinimumOrderWarning(cartData))
-          _buildMinimumOrderWarning(cartData.minimumOrderValue),
-        _buildTotalAmountSection(cartData),
-      ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        children: [
+          ...itemCards,
+          if (_shouldShowMinimumOrderWarning(cartData))
+            _buildMinimumOrderWarning(cartData.minimumOrderValue),
+          _buildTotalAmountSection(cartData),
+        ],
+      ),
     );
   }
 
   List<Widget> _buildItemCards(List<QueryDocumentSnapshot> documents) {
     return documents.map<Widget>((document) {
       return ItemCard(
+        key: ValueKey(document.id),
         documentId: document.id,
         onDelete: () {
           if (!_disposed) {

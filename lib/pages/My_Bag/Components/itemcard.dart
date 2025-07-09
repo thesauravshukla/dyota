@@ -125,7 +125,20 @@ class _ItemCardState extends State<ItemCard> {
       ItemCardData itemData) {
     if (_isLoadingCartData(cartSnapshot)) {
       _updateLoadingState(true);
-      return const SizedBox(height: 0);
+      return Card(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Container(
+          height: 120,
+          padding: const EdgeInsets.all(16),
+          child: const Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        ),
+      );
     }
 
     if (_hasCartDataLoaded(cartSnapshot)) {
@@ -192,7 +205,20 @@ class _ItemCardState extends State<ItemCard> {
       AsyncSnapshot<Map<String, dynamic>?> snapshot, ItemCardData itemData) {
     if (_isLoadingDocumentData(snapshot)) {
       _updateLoadingState(true);
-      return const SizedBox(height: 0);
+      return Card(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Container(
+          height: 120,
+          padding: const EdgeInsets.all(16),
+          child: const Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        ),
+      );
     }
 
     if (_hasDocumentDataError(snapshot)) {
@@ -263,18 +289,21 @@ class _ItemCardState extends State<ItemCard> {
     return InkWell(
       onTap: () => _navigateToProductCard(context, itemData.parsedDocumentId),
       child: Card(
-        margin: const EdgeInsets.all(5),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              _buildProductImage(imageUrl),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildProductDetails(cartFields),
-              ),
-              _buildDeleteButton(itemData),
-            ],
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProductImage(imageUrl),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildProductDetails(cartFields),
+                ),
+                _buildDeleteButton(itemData),
+              ],
+            ),
           ),
         ),
       ),
@@ -282,16 +311,20 @@ class _ItemCardState extends State<ItemCard> {
   }
 
   Widget _buildProductImage(String imageUrl) {
-    return Image.network(
-      imageUrl,
-      width: 100,
-      height: 100,
-      fit: BoxFit.cover,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.network(
+        imageUrl,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+      ),
     );
   }
 
   Widget _buildProductDetails(List<Map<String, dynamic>> cartFields) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children:
           cartFields.where((field) => field['toDisplay'] == 1).map((field) {

@@ -121,7 +121,42 @@ class _TotalAmountSectionState extends State<TotalAmountSection> {
   Widget _buildContent(AsyncSnapshot<Decimal> snapshot) {
     if (_isLoadingData(snapshot)) {
       _updateLoadingStateIfNeeded(true);
-      return const SizedBox(height: 0);
+      return Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('Total amount:',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Container(
+              height: 32,
+              child: const Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 48,
+              child: ElevatedButton(
+                onPressed: null,
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.grey,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: const Text('Loading...'),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     if (_hasDataLoaded(snapshot)) {
