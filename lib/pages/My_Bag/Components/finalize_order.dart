@@ -557,7 +557,7 @@ class _PaymentPageState extends State<PaymentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: genericAppbar(title: 'Payment Page'),
+      appBar: genericAppbar(title: 'Finalize Order'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

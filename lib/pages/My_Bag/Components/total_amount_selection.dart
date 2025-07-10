@@ -220,7 +220,7 @@ class _TotalAmountSectionState extends State<TotalAmountSection> {
           borderRadius: BorderRadius.circular(30),
         ),
       ),
-      child: const Text('Proceed To Payment'),
+      child: const Text('Finalize Order'),
     );
   }
 
