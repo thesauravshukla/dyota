@@ -1,5 +1,5 @@
 import 'package:dyota/pages/Home/home_page.dart';
-import 'package:dyota/pages/My_Bag/my_bag.dart';
+import 'package:dyota/pages/Cart/cart.dart';
 import 'package:dyota/pages/Product_Card/product_card.dart';
 import 'package:dyota/pages/Profile/profile_page.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +10,7 @@ class ProductNavigation {
   static void navigateToMainSection(BuildContext context, int index) {
     final navigationTargets = [
       const HomePage(),
-      MyBag(),
+      Cart(),
       const ProfileScreen(),
     ];
 

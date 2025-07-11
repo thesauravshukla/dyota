@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/components/bottom_navigation_bar_component.dart';
 import 'package:dyota/pages/Home/home_page.dart';
-import 'package:dyota/pages/My_Bag/my_bag.dart';
+import 'package:dyota/pages/Cart/cart.dart';
 import 'package:dyota/pages/My_Orders/my_orders.dart';
 import 'package:dyota/pages/Profile/Components/profile_list_tile.dart';
 import 'package:dyota/pages/Profile/Components/user_account_header.dart';
@@ -41,7 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       case 1:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MyBag()),
+          MaterialPageRoute(builder: (context) => Cart()),
         );
         break;
       case 2:

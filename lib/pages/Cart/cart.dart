@@ -18,21 +18,21 @@ import 'package:dyota/pages/Home/home_page.dart' hide LoadingState;
 import 'package:dyota/pages/Profile/profile_page.dart';
 
 // Local components and models
-import 'package:dyota/pages/My_Bag/Components/cart_data.dart';
-import 'package:dyota/pages/My_Bag/Components/cart_data_provider.dart';
-import 'package:dyota/pages/My_Bag/Components/itemcard.dart';
-import 'package:dyota/pages/My_Bag/Components/loading_state.dart';
-import 'package:dyota/pages/My_Bag/Components/total_amount_selection.dart';
+import 'package:dyota/pages/Cart/Components/cart_data.dart';
+import 'package:dyota/pages/Cart/Components/cart_data_provider.dart';
+import 'package:dyota/pages/Cart/Components/itemcard.dart';
+import 'package:dyota/pages/Cart/Components/loading_state.dart';
+import 'package:dyota/pages/Cart/Components/total_amount_selection.dart';
 
-class MyBag extends StatefulWidget {
-  const MyBag({Key? key}) : super(key: key);
+class Cart extends StatefulWidget {
+  const Cart({Key? key}) : super(key: key);
 
   @override
-  _MyBagState createState() => _MyBagState();
+  _CartState createState() => _CartState();
 }
 
-class _MyBagState extends State<MyBag> {
-  final Logger _logger = Logger('MyBag');
+class _CartState extends State<Cart> {
+  final Logger _logger = Logger('Cart');
   final LoadingState _loadingState = LoadingState();
   final CartDataProvider _cartDataProvider = CartDataProvider();
   bool _disposed = false;
@@ -131,7 +131,7 @@ class _MyBagState extends State<MyBag> {
 
   @override
   Widget build(BuildContext context) {
-    _logger.info('Building MyBag widget');
+    _logger.info('Building Cart widget');
 
     if (!_isUserLoggedIn()) {
       return _buildScaffold(
@@ -353,7 +353,7 @@ class _MyBagState extends State<MyBag> {
   void _navigateTo(BuildContext context, int index) {
     final navigationTargets = [
       const HomePage(),
-      const MyBag(),
+      const Cart(),
       const ProfileScreen(),
     ];
 

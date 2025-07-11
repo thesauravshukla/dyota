@@ -5,7 +5,7 @@ import 'package:dyota/pages/Home/Components/best_seller_header.dart';
 import 'package:dyota/pages/Home/Components/category_grid_component.dart';
 import 'package:dyota/pages/Home/Components/category_header_component.dart';
 import 'package:dyota/pages/Home/Components/product_grid_component.dart';
-import 'package:dyota/pages/My_Bag/my_bag.dart';
+import 'package:dyota/pages/Cart/cart.dart';
 import 'package:dyota/pages/Profile/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
@@ -129,7 +129,7 @@ class _HomePageState extends State<HomePage> {
   void _navigateTo(BuildContext context, int index) {
     final navigationTargets = [
       const HomePage(),
-      MyBag(),
+      Cart(),
       ProfileScreen(),
     ];
 
