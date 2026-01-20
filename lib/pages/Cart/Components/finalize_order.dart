@@ -3,13 +3,11 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decimal/decimal.dart';
 import 'package:dyota/components/generic_appbar.dart';
-import 'package:dyota/pages/My_Bag/Components/price_calculator.dart';
-import 'package:dyota/pages/Payment/payments.dart';
+import 'package:dyota/pages/Cart/Components/price_calculator.dart';
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_card.dart';
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_dialogs.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 
 class PaymentPage extends StatefulWidget {
   @override
@@ -19,90 +17,6 @@ class PaymentPage extends StatefulWidget {
 class _PaymentPageState extends State<PaymentPage> {
   int? _selectedAddress; // It can be null when no address is selected
   List<Map<String, dynamic>> addresses = [];
-
-  void _handlePay() async {
-    if (addresses.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Select at least one address')),
-      );
-      return;
-    }
-
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.email == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You need to be logged in to make a payment')),
-      );
-      return;
-    }
-
-    final email = user.email!;
-    final cartItemsSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(email)
-        .collection('cartItemsList')
-        .get();
-
-    final cartItemIds = cartItemsSnapshot.docs.map((doc) => doc.id).toList();
-    final orderId = Uuid().v4(); // Generate a unique order ID
-    final timestamp = FieldValue.serverTimestamp();
-
-    final totalAmount = PriceCalculator(cartItemsSnapshot.docs).totalAmount;
-
-    // Initiate Razorpay payment
-    String paymentResult = 'success';
-
-    if (paymentResult == 'success') {
-      final selectedAddressData = addresses[_selectedAddress!];
-
-      final orderData = {
-        'cartItems': cartItemIds,
-        'deliveryAddress': {
-          'displayName': 'Delivery Address',
-          'toDisplay': 1,
-          'title': selectedAddressData['Title'],
-          'address': selectedAddressData['Address'],
-        },
-        'orderId': {
-          'displayName': 'Order ID',
-          'toDisplay': 1,
-          'value': orderId,
-        },
-        'orderTimestamp': timestamp,
-        'totalAmount': {
-          'displayName': 'Total Amount',
-          'toDisplay': 1,
-          'value': totalAmount.toString(),
-        },
-      };
-
-      final orderDocRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(email)
-          .collection('processingOrderList')
-          .doc(orderId);
-
-      WriteBatch batch = FirebaseFirestore.instance.batch();
-
-      // Add the order data
-      batch.set(orderDocRef, orderData);
-
-      // Delete all cart items
-      for (var doc in cartItemsSnapshot.docs) {
-        batch.delete(doc.reference);
-      }
-
-      await batch.commit();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Order placed successfully')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Payment failed. Please try again.')),
-      );
-    }
-  }
 
   @override
   void initState() {
@@ -436,8 +350,7 @@ class _PaymentPageState extends State<PaymentPage> {
       final productNameMap =
           data['productName'] as Map<String, dynamic>? ?? {'value': 'Unknown'};
 
-      final priceValue =
-          Decimal.parse(priceMap['value'].toString()) ?? Decimal.zero;
+      final priceValue = Decimal.parse(priceMap['value'].toString());
       final productName = productNameMap['value'] ?? 'Unknown';
 
       items.add({

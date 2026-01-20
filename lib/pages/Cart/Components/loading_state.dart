@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Manages loading states for various components in the application.
 /// Provides methods to handle debouncing and skip redundant updates.
 class LoadingState {

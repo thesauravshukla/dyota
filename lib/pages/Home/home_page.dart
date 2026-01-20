@@ -1,12 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dyota/components/bottom_navigation_bar_component.dart';
 import 'package:dyota/pages/Home/Components/app_bar_component.dart';
 import 'package:dyota/pages/Home/Components/best_seller_header.dart';
 import 'package:dyota/pages/Home/Components/category_grid_component.dart';
 import 'package:dyota/pages/Home/Components/category_header_component.dart';
 import 'package:dyota/pages/Home/Components/product_grid_component.dart';
-import 'package:dyota/pages/Cart/cart.dart';
-import 'package:dyota/pages/Profile/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
@@ -126,31 +123,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _navigateTo(BuildContext context, int index) {
-    final navigationTargets = [
-      const HomePage(),
-      Cart(),
-      ProfileScreen(),
-    ];
-
-    if (index >= 0 && index < navigationTargets.length) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => navigationTargets[index]),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     _logger.info('Building HomePage');
     return Scaffold(
       appBar: const CustomAppBar(),
       body: _buildBody(context),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: 0,
-        onItemTapped: (index) => _navigateTo(context, index),
-      ),
     );
   }
 

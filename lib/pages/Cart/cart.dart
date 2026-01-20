@@ -10,12 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:decimal/decimal.dart';
 
 // App-wide components
-import 'package:dyota/components/bottom_navigation_bar_component.dart';
 import 'package:dyota/components/generic_appbar.dart';
-
-// Page imports
-import 'package:dyota/pages/Home/home_page.dart' hide LoadingState;
-import 'package:dyota/pages/Profile/profile_page.dart';
 
 // Local components and models
 import 'package:dyota/pages/Cart/Components/cart_data.dart';
@@ -350,29 +345,11 @@ class _CartState extends State<Cart> {
     );
   }
 
-  void _navigateTo(BuildContext context, int index) {
-    final navigationTargets = [
-      const HomePage(),
-      const Cart(),
-      const ProfileScreen(),
-    ];
-
-    if (index >= 0 && index < navigationTargets.length) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => navigationTargets[index]),
-      );
-    }
-  }
 
   Widget _buildScaffold(BuildContext context, Widget body) {
     return Scaffold(
       appBar: genericAppbar(title: 'My Bag', showBackButton: false),
       body: body,
-      bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: 1,
-        onItemTapped: (index) => _navigateTo(context, index),
-      ),
     );
   }
 }

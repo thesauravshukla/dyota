@@ -1,4 +1,4 @@
-import 'package:dyota/pages/My_Bag/Components/fetch_data.dart';
+import 'package:dyota/pages/Cart/Components/fetch_data.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decimal/decimal.dart';
-import 'package:dyota/pages/My_Bag/Components/payment_page.dart';
-import 'package:dyota/pages/My_Bag/Components/price_calculator.dart';
+import 'package:dyota/pages/Cart/Components/finalize_order.dart';
+import 'package:dyota/pages/Cart/Components/price_calculator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';

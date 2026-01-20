@@ -1,8 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dyota/pages/My_Bag/Components/delete_confirmation_dialog.dart';
-import 'package:dyota/pages/My_Bag/Components/fetch_data.dart';
-import 'package:dyota/pages/My_Bag/Components/image_loader.dart';
-import 'package:dyota/pages/My_Bag/Components/item_card_data.dart';
+import 'package:dyota/pages/Cart/Components/delete_confirmation_dialog.dart';
+import 'package:dyota/pages/Cart/Components/fetch_data.dart';
+import 'package:dyota/pages/Cart/Components/image_loader.dart';
+import 'package:dyota/pages/Cart/Components/item_card_data.dart';
 import 'package:dyota/pages/Product_Card/product_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

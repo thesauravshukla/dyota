@@ -1,7 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dyota/components/bottom_navigation_bar_component.dart';
-import 'package:dyota/pages/Home/home_page.dart';
-import 'package:dyota/pages/Cart/cart.dart';
 import 'package:dyota/pages/My_Orders/my_orders.dart';
 import 'package:dyota/pages/Profile/Components/profile_list_tile.dart';
 import 'package:dyota/pages/Profile/Components/user_account_header.dart';
@@ -30,28 +27,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _fetchPendingOrdersCount();
   }
 
-  void _onItemTapped(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
-        break;
-      case 1:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => Cart()),
-        );
-        break;
-      case 2:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ProfileScreen()),
-        );
-        break;
-    }
-  }
 
   Future<void> _fetchAddressCount() async {
     String email = FirebaseAuth.instance.currentUser?.email ?? '';
@@ -150,10 +125,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onTap: () => _handleLogout(context),
           ),
         ],
-      ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: 2, // Set the current index as needed
-        onItemTapped: (index) => _onItemTapped(context, index),
       ),
     );
   }
