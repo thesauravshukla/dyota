@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:dyota/services/image_cache_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 
@@ -56,8 +56,7 @@ class ProductItemData with ChangeNotifier {
   }
 
   Future<String> _getImageUrl(String path) async {
-    String url = await FirebaseStorage.instance.ref(path).getDownloadURL();
-    return url;
+    return await ImageCacheService.instance.getImageUrl(path) ?? '';
   }
 
   String getFieldValue(Map<String, dynamic> field) {

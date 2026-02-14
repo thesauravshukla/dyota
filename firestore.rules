@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Products catalog: read-only for authenticated users
+    match /items/{itemId} {
+      allow read: if request.auth != null;
+      allow write: if false; // admin-only via console/backend
+    }
+
+    // Categories: read-only for authenticated users
+    match /categories/{categoryId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // User documents: only the owner can read/write
+    match /users/{userEmail} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email == userEmail;
+
+      // Cart items subcollection
+      match /cartItemsList/{cartItemId} {
+        allow read, write: if request.auth != null
+          && request.auth.token.email == userEmail;
+      }
+
+      // Orders subcollection
+      match /orders/{orderId} {
+        allow read, write: if request.auth != null
+          && request.auth.token.email == userEmail;
+
+        match /items/{itemId} {
+          allow read, write: if request.auth != null
+            && request.auth.token.email == userEmail;
+        }
+      }
+    }
+
+    // Deny everything else by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

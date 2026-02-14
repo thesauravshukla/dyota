@@ -1,8 +1,30 @@
 import 'package:dyota/pages/Search/search_page.dart';
 import 'package:flutter/material.dart';
 
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
+
+  @override
+  State<CustomAppBar> createState() => _CustomAppBarState();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight + 48.0);
+}
+
+class _CustomAppBarState extends State<CustomAppBar> {
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,8 +62,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildSearchBar(BuildContext context) {
-    final TextEditingController searchController = TextEditingController();
-
     return Container(
       height: 35.0,
       decoration: BoxDecoration(
@@ -49,36 +69,28 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: TextField(
-        controller: searchController,
-        decoration: _createSearchInputDecoration(),
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search...',
+          hintStyle: const TextStyle(color: Colors.grey),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide.none,
+          ),
+          prefixIcon: const Icon(Icons.search, color: Colors.black),
+          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+        ),
         style: const TextStyle(color: Colors.black),
-        onSubmitted: (query) => _navigateToSearchPage(context, query),
+        onSubmitted: (query) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SearchPage(searchInput: query),
+            ),
+          );
+          _searchController.clear();
+        },
       ),
     );
   }
-
-  InputDecoration _createSearchInputDecoration() {
-    return InputDecoration(
-      hintText: 'Search...',
-      hintStyle: const TextStyle(color: Colors.grey),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-      prefixIcon: const Icon(Icons.search, color: Colors.black),
-      contentPadding: const EdgeInsets.symmetric(vertical: 0),
-    );
-  }
-
-  void _navigateToSearchPage(BuildContext context, String query) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SearchPage(searchInput: query),
-      ),
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight + 48.0);
 }

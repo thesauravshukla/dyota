@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/pages/Product_Card/Components/product_data.dart';
+import 'package:dyota/services/image_cache_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:logging/logging.dart';
 
 /// Provides methods for fetching and managing product data
 class ProductDataProvider {
   final Logger _logger = Logger('ProductDataProvider');
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final ImageCacheService _imageCache = ImageCacheService.instance;
 
   /// Fetches the product data for a given document ID
   Future<ProductData> fetchProductData(String documentId) async {
@@ -50,19 +50,10 @@ class ProductDataProvider {
     }
   }
 
-  /// Fetches image URLs from a list of image locations
+  /// Fetches image URLs from a list of image locations (in parallel)
   Future<List<String>> _fetchImageUrls(List<dynamic> imageLocations) async {
-    List<String> urls = [];
-    for (String imageLocation in imageLocations) {
-      try {
-        String imageUrl = await _storage.ref(imageLocation).getDownloadURL();
-        urls.add(imageUrl);
-      } catch (e) {
-        _logger.warning(
-            'Failed to fetch image URL for location: $imageLocation', e);
-      }
-    }
-    return urls;
+    return _imageCache
+        .getImageUrls(imageLocations.map((e) => e.toString()).toList());
   }
 
   /// Fetches variants of a product (other products with the same parent ID)
@@ -77,20 +68,20 @@ class ProductDataProvider {
           .where(FieldPath.documentId, isNotEqualTo: documentId)
           .get();
 
-      for (var document in querySnapshot.docs) {
-        Map<String, dynamic> docData = document.data() as Map<String, dynamic>;
-        if (docData.containsKey('imageLocation')) {
-          List<dynamic> docImageLocations = docData['imageLocation'];
-          if (docImageLocations.isNotEmpty) {
-            String imageUrl =
-                await _storage.ref(docImageLocations[0]).getDownloadURL();
-            variants.add(ProductVariant(
-              documentId: document.id,
-              imageUrl: imageUrl,
-            ));
-          }
-        }
-      }
+      final variantFutures = querySnapshot.docs.map((document) async {
+        final docData = document.data() as Map<String, dynamic>;
+        final docImageLocations = docData['imageLocation'] as List? ?? [];
+        if (docImageLocations.isEmpty) return null;
+
+        final imageUrl =
+            await _imageCache.getImageUrl(docImageLocations[0].toString());
+        if (imageUrl == null) return null;
+
+        return ProductVariant(documentId: document.id, imageUrl: imageUrl);
+      });
+
+      final results = await Future.wait(variantFutures);
+      variants.addAll(results.whereType<ProductVariant>());
     } catch (e) {
       _logger.warning('Error fetching product variants', e);
     }
@@ -151,22 +142,24 @@ class ProductDataProvider {
         List<dynamic> recentlyViewedProducts =
             userDoc['recentlyViewedProducts'] ?? [];
 
-        for (String documentId in recentlyViewedProducts) {
-          DocumentSnapshot doc =
-              await _firestore.collection('items').doc(documentId).get();
-          if (doc.exists) {
-            Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-            List<dynamic> imageLocations = data['imageLocation'] ?? [];
-            if (imageLocations.isNotEmpty) {
-              String imageUrl =
-                  await _storage.ref(imageLocations[0]).getDownloadURL();
-              recentlyViewed.add(RelatedProduct(
-                imageUrl: imageUrl,
-                documentId: documentId,
-              ));
-            }
-          }
-        }
+        final futures = recentlyViewedProducts.cast<String>().map((docId) async {
+          final doc =
+              await _firestore.collection('items').doc(docId).get();
+          if (!doc.exists) return null;
+
+          final data = doc.data() as Map<String, dynamic>;
+          final imageLocations = data['imageLocation'] as List? ?? [];
+          if (imageLocations.isEmpty) return null;
+
+          final imageUrl =
+              await _imageCache.getImageUrl(imageLocations[0].toString());
+          if (imageUrl == null) return null;
+
+          return RelatedProduct(imageUrl: imageUrl, documentId: docId);
+        });
+
+        final results = await Future.wait(futures);
+        recentlyViewed.addAll(results.whereType<RelatedProduct>());
       }
     } catch (e) {
       _logger.severe('Error fetching recently viewed products', e);
@@ -189,18 +182,20 @@ class ProductDataProvider {
           .limit(10) // Limit to avoid too many results
           .get();
 
-      for (var document in querySnapshot.docs) {
-        Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-        List<dynamic> imageLocations = data['imageLocation'] ?? [];
-        if (imageLocations.isNotEmpty) {
-          String imageUrl =
-              await _storage.ref(imageLocations[0]).getDownloadURL();
-          relatedProducts.add(RelatedProduct(
-            imageUrl: imageUrl,
-            documentId: document.id,
-          ));
-        }
-      }
+      final futures = querySnapshot.docs.map((document) async {
+        final data = document.data() as Map<String, dynamic>;
+        final imageLocations = data['imageLocation'] as List? ?? [];
+        if (imageLocations.isEmpty) return null;
+
+        final imageUrl =
+            await _imageCache.getImageUrl(imageLocations[0].toString());
+        if (imageUrl == null) return null;
+
+        return RelatedProduct(imageUrl: imageUrl, documentId: document.id);
+      });
+
+      final results = await Future.wait(futures);
+      relatedProducts.addAll(results.whereType<RelatedProduct>());
     } catch (e) {
       _logger.severe('Error fetching related products', e);
     }

@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/pages/Category/category_page.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:dyota/services/image_cache_service.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
@@ -11,10 +11,9 @@ class CategoryItem extends StatelessWidget {
   CategoryItem({super.key, required this.index});
 
   Future<String> getImageUrl(String imageName) async {
-    // Get the download URL from Firebase Storage
-    final ref =
-        FirebaseStorage.instance.ref().child('categoryPhotos/$imageName');
-    return await ref.getDownloadURL();
+    return await ImageCacheService.instance
+            .getImageUrl('categoryPhotos/$imageName') ??
+        '';
   }
 
   Future<List<Map<String, String>>> getCategoryData() async {

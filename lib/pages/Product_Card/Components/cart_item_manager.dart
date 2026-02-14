@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decimal/decimal.dart';
+import 'package:dyota/services/image_cache_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:logging/logging.dart';
 
 /// Data model for a cart item with product details
@@ -41,7 +41,7 @@ class CartItem {
 class CartItemManager {
   final Logger _logger = Logger('CartItemManager');
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final ImageCacheService _imageCache = ImageCacheService.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   /// Fetches product data for the given document IDs
@@ -61,11 +61,9 @@ class CartItemManager {
           String imageUrl = '';
 
           if (imageLocations.isNotEmpty) {
-            try {
-              imageUrl = await _storage.ref(imageLocations[0]).getDownloadURL();
-            } catch (e) {
-              _logger.warning('Error fetching image URL for $docId', e);
-            }
+            imageUrl = await _imageCache
+                    .getImageUrl(imageLocations[0].toString()) ??
+                '';
           }
 
           // Get allowed lengths array and convert to List<double>

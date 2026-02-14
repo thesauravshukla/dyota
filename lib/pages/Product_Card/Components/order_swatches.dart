@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dyota/services/image_cache_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 class OrderSwatchesButton extends StatefulWidget {
@@ -24,21 +24,26 @@ class _OrderSwatchesButtonState extends State<OrderSwatchesButton> {
   }
 
   Future<void> fetchImageUrls() async {
-    List<String> urls = [];
-    for (String docId in widget.documentIds) {
-      DocumentSnapshot doc =
-          await FirebaseFirestore.instance.collection('items').doc(docId).get();
-      if (doc.exists) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        List<dynamic> imageLocations = data['imageLocation'];
-        String imageLocation = imageLocations[0];
-        String imageUrl =
-            await FirebaseStorage.instance.ref(imageLocation).getDownloadURL();
-        urls.add(imageUrl);
-      }
-    }
+    final imageCache = ImageCacheService.instance;
+    final futures = widget.documentIds.map((docId) async {
+      final doc = await FirebaseFirestore.instance
+          .collection('items')
+          .doc(docId)
+          .get();
+      if (!doc.exists) return null;
+
+      final data = doc.data() as Map<String, dynamic>;
+      final imageLocations = data['imageLocation'] as List? ?? [];
+      if (imageLocations.isEmpty) return null;
+
+      return await imageCache.getImageUrl(imageLocations[0].toString());
+    });
+
+    final results = await Future.wait(futures);
+    if (!mounted) return;
+
     setState(() {
-      _imageUrls = urls;
+      _imageUrls = results.whereType<String>().toList();
       _selectedImages = List<bool>.filled(_imageUrls.length, false);
     });
   }

@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dyota/services/image_cache_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 class OrderCard extends StatefulWidget {
@@ -37,17 +37,12 @@ class _OrderCardState extends State<OrderCard> {
       if (doc.exists) {
         List<dynamic> imageLocations = doc.data()?['imageLocation'] ?? [];
         if (imageLocations.isNotEmpty) {
-          String imagePath = imageLocations[0];
-          final ref = FirebaseStorage.instance.ref().child(imagePath);
-          return await ref.getDownloadURL();
-        } else {
-          print('No image locations found for documentId: $documentId');
+          return await ImageCacheService.instance
+                  .getImageUrl(imageLocations[0].toString()) ??
+              '';
         }
-      } else {
-        print('Document not found for documentId: $documentId');
       }
     } catch (e) {
-      print('Error fetching image URL for documentId $documentId: $e');
     }
     return '';
   }
