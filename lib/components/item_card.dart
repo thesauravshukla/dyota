@@ -1,3 +1,4 @@
+import 'package:dyota/components/shared/app_image.dart';
 import 'package:flutter/material.dart';
 
 class ItemCard extends StatelessWidget {
@@ -14,11 +15,10 @@ class ItemCard extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min, // Make row take minimum space
           children: [
-            Image.network(
-              item['imageUrl'],
-              width: 100, // Reduced width
-              height: 100, // Reduced height
-              color: Colors.grey, // Placeholder color
+            AppImage(
+              url: item['imageUrl'],
+              width: 100,
+              height: 100,
             ),
             SizedBox(width: 16),
             Expanded(

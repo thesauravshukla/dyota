@@ -17,7 +17,7 @@ class PaymentSection extends StatelessWidget {
             Row(
               children: [
                 Icon(Icons.credit_card,
-                    color: Colors.black), // Replace with your card brand icon
+                    color: Theme.of(context).colorScheme.onSurface),
                 SizedBox(width: 8),
                 Text('**** **** **** 3947'),
               ],
@@ -28,8 +28,7 @@ class PaymentSection extends StatelessWidget {
                 // TODO: Implement change payment logic
               },
               style: TextButton.styleFrom(
-                foregroundColor: Colors
-                    .black, // This is the color of the text (button label)
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
               ),
               child: Text('Change'),
             ),

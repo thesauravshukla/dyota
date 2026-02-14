@@ -61,9 +61,9 @@ class CartItemManager {
           String imageUrl = '';
 
           if (imageLocations.isNotEmpty) {
-            imageUrl = await _imageCache
-                    .getImageUrl(imageLocations[0].toString()) ??
-                '';
+            imageUrl =
+                await _imageCache.getImageUrl(imageLocations[0].toString()) ??
+                    '';
           }
 
           // Get allowed lengths array and convert to List<double>

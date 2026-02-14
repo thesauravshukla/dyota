@@ -105,7 +105,7 @@ class _ProductDescriptionState extends State<ProductDescription>
           padding: EdgeInsets.only(left: 16, right: 16, top: 2),
           child: Text(
             productDescription,
-            style: TextStyle(fontSize: 16.0, color: Colors.grey),
+            style: TextStyle(fontSize: 16.0, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
         );
       } else {
@@ -145,7 +145,7 @@ class _ProductDescriptionState extends State<ProductDescription>
             padding: EdgeInsets.only(left: 16, right: 16, top: 2),
             child: Text(
               productDescription,
-              style: TextStyle(fontSize: 16.0, color: Colors.grey),
+              style: TextStyle(fontSize: 16.0, color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           );
         }

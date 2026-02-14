@@ -65,12 +65,13 @@ class AddressCard extends StatelessWidget {
                             .shrinkWrap, // Minimizes tap target size
                       ),
                       child:
-                          Text('Edit', style: TextStyle(color: Colors.black)),
+                          Text('Edit', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                     ),
                     SizedBox(width: 8), // Space between Edit and Delete buttons
                     IconButton(
-                      icon: Icon(Icons.delete, color: Colors.black),
-                      onPressed: onDelete, // Use the onDelete callback here
+                      icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.onSurface),
+                      tooltip: 'Delete address',
+                      onPressed: onDelete,
                     ),
                   ],
                 ),
@@ -100,8 +101,8 @@ class AddressCard extends StatelessWidget {
                         ? Icons.check_box
                         : Icons.check_box_outline_blank,
                     color: isSelected
-                        ? Colors.black
-                        : Colors.grey, // Check box turns black when selected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   SizedBox(width: 8),
                   Text('Use as the shipping address'),

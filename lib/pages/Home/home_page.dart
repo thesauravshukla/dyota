@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dyota/components/shared/app_empty_state.dart';
+import 'package:dyota/components/shared/app_loading_indicator.dart';
 import 'package:dyota/pages/Home/Components/app_bar_component.dart';
 import 'package:dyota/pages/Home/Components/best_seller_header.dart';
 import 'package:dyota/pages/Home/Components/category_grid_component.dart';
@@ -144,10 +146,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildProgressIndicator() {
-    return LinearProgressIndicator(
-      backgroundColor: Colors.grey[200],
-      valueColor: const AlwaysStoppedAnimation<Color>(Colors.brown),
-    );
+    return const AppLoadingBar();
   }
 
   Widget _buildRefreshableContent(BuildContext context) {
@@ -181,7 +180,7 @@ class _HomePageState extends State<HomePage> {
 
     if (!snapshot.hasData || snapshot.data!.isEmpty) {
       _logger.info('No items to display');
-      return const Center(child: Text('No items to display'));
+      return const AppEmptyState(message: 'No items to display');
     }
 
     return _buildHomepageContent(snapshot.data!);
@@ -206,7 +205,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildCategoriesSection() {
     return Container(
-      color: Colors.grey[300],
+      color: Theme.of(context).colorScheme.surface,
       child: Column(
         children: [
           const CategoryHeader(),

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dyota/components/generic_appbar.dart';
+import 'package:dyota/components/shared/app_confirm_dialog.dart';
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_card.dart';
 import 'package:dyota/pages/Select_Shipping_Address/Components/address_dialogs.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -188,8 +189,8 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddAddressDialog,
-        child: Icon(Icons.add, color: Colors.white),
-        backgroundColor: Colors.black,
+        child: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
     );
   }
@@ -228,31 +229,15 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
     );
   }
 
-  void _showDeleteConfirmationDialog(int index) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text("Do you really want to delete this address?"),
-          actions: <Widget>[
-            TextButton(
-              child: Text("No"),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-            ),
-            TextButton(
-              child: Text("Yes"),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                _deleteAddress(index); // Proceed with deleting the address
-              },
-            ),
-          ],
-        );
-      },
+  void _showDeleteConfirmationDialog(int index) async {
+    final confirmed = await showAppConfirmDialog(
+      context,
+      title: 'Confirm Delete',
+      message: 'Do you really want to delete this address?',
     );
+    if (confirmed) {
+      _deleteAddress(index);
+    }
   }
 
   Future<void> _deleteAddress(int indexToDelete) async {

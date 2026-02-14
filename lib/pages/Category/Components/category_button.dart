@@ -29,33 +29,31 @@ class CategoryButton extends StatelessWidget {
             horizontal: 12, vertical: 8), // Padding inside the container
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color.fromARGB(
-                  255, 0, 0, 0) // Background color when selected
-              : const Color.fromARGB(
-                  255, 255, 255, 255), // Background color when not selected
-          borderRadius: BorderRadius.circular(20), // Rounded corners
-          border: Border.all(color: Colors.black), // Border color
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          border:
+              Border.all(color: Theme.of(context).colorScheme.outline),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min, // Row takes minimum space
           children: [
             Text(
-              label, // Display the label text
+              label,
               style: TextStyle(
                 color: isSelected
-                    ? Colors.white
-                    : Colors.black, // Text color based on selection
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : Theme.of(context).colorScheme.onSurface,
               ),
             ),
             if (isSelected)
               Padding(
-                padding: const EdgeInsets.only(
-                    left: 4.0), // Padding between text and icon
+                padding: const EdgeInsets.only(left: 4.0),
                 child: Icon(
-                  Icons.close, // Close icon
-                  color: Colors.white, // Icon color
-                  size: 16, // Icon size
-                  semanticLabel: 'Deselect $label', // For accessibility
+                  Icons.close,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  size: 16,
+                  semanticLabel: 'Deselect $label',
                 ),
               ),
           ],

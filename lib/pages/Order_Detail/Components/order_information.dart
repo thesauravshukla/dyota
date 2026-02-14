@@ -4,8 +4,8 @@ class OrderInformation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     TextStyle headingStyle =
-        TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold);
-    TextStyle detailStyle = TextStyle(color: Colors.black);
+        TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.bold);
+    TextStyle detailStyle = TextStyle(color: Theme.of(context).colorScheme.onSurface);
 
     Widget infoRow(String heading, String detail) {
       return Row(
@@ -19,12 +19,12 @@ class OrderInformation extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.all(16),
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Order information',
-              style: headingStyle.copyWith(color: Colors.black)),
+              style: headingStyle.copyWith(color: Theme.of(context).colorScheme.onSurface)),
           SizedBox(height: 15),
           infoRow('Shipping Address',
               '3 Newbridge Court, Chino Hills, CA 91709, United States'),

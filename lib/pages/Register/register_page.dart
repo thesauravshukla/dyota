@@ -51,11 +51,7 @@ class _RegisterPageState extends State<RegisterPage> {
       context: context,
       builder: (context) {
         return const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(
-              Colors.black,
-            ),
-          ),
+          child: CircularProgressIndicator(),
         );
       },
     );
@@ -133,7 +129,6 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       body: SafeArea(
         child: ListView(
           children: [
@@ -149,7 +144,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       Icon(
                         Icons.texture,
                         size: 100,
-                        color: Color.fromARGB(255, 255, 255, 255),
                       ),
                       SizedBox(height: 10),
 
@@ -158,8 +152,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         'dyota',
                         style: TextStyle(
                             fontFamily: 'AlfaSlab',
-                            fontSize: 25.0,
-                            color: Colors.white),
+                            fontSize: 25.0),
                       ),
                     ],
                   ),
@@ -188,8 +181,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   // Register button
                   MyButton(
                     onTap: signUserUp,
-                    buttonColor: Colors.black,
-                    textColor: Colors.white,
+                    buttonColor: Theme.of(context).colorScheme.primary,
+                    textColor: Theme.of(context).colorScheme.onPrimary,
                     buttonText: "Register Now",
                   ),
                   const SizedBox(height: 20),
@@ -201,22 +194,18 @@ class _RegisterPageState extends State<RegisterPage> {
                         const Expanded(
                           child: Divider(
                             thickness: 0.5,
-                            color: Colors.white,
                           ),
                         ),
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 10.0),
                           child: Text(
                             'Or continue with',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
                           ),
                         ),
                         Expanded(
                           child: Divider(
                             thickness: 0.5,
-                            color: Colors.grey[400],
+                            color: Theme.of(context).colorScheme.outline,
                           ),
                         ),
                       ],
@@ -244,7 +233,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       children: [
                         Text(
                           'Already have an account?',
-                          style: TextStyle(color: Colors.white),
                         ),
                         SizedBox(width: 4),
                         Text(

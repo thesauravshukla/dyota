@@ -1,3 +1,4 @@
+import 'package:dyota/components/shared/app_image.dart';
 import 'package:flutter/material.dart';
 
 class ImageThumbnails extends StatelessWidget {
@@ -29,16 +30,15 @@ class ImageThumbnails extends StatelessWidget {
                   decoration: BoxDecoration(
                     border: Border.all(
                       color: selectedImageIndex == index
-                          ? Colors.black
+                          ? Theme.of(context).colorScheme.primary
                           : Colors.transparent,
                       width: 2,
                     ),
                   ),
-                  child: Image.network(
-                    imageDetails[index]['imageUrl']!,
+                  child: AppImage(
+                    url: imageDetails[index]['imageUrl']!,
                     width: 60,
                     height: 60,
-                    fit: BoxFit.cover,
                   ),
                 ),
               );

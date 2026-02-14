@@ -17,16 +17,16 @@ class ProfileListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: Colors.black),
+      leading: Icon(icon, color: Theme.of(context).colorScheme.onSurface),
       title: Text(
         title,
-        style: const TextStyle(color: Colors.black),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(color: Colors.black),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       ),
-      trailing: const Icon(Icons.navigate_next, color: Colors.black),
+      trailing: Icon(Icons.navigate_next, color: Theme.of(context).colorScheme.onSurface),
       onTap: onTap,
     );
   }

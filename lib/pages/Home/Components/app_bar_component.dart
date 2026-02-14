@@ -29,7 +29,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.black,
       elevation: 0,
       flexibleSpace: _buildAppBarContent(context),
       actions: const [],
@@ -56,8 +55,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
   Widget _buildBrandLogo() {
     return const Text(
       'dyota',
-      style: TextStyle(
-          fontFamily: 'AlfaSlab', fontSize: 25.0, color: Colors.white),
+      style: TextStyle(fontFamily: 'AlfaSlab', fontSize: 25.0),
     );
   }
 
@@ -73,7 +71,17 @@ class _CustomAppBarState extends State<CustomAppBar> {
         decoration: InputDecoration(
           hintText: 'Search...',
           hintStyle: const TextStyle(color: Colors.grey),
+          filled: true,
+          fillColor: Colors.white,
           border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide.none,
           ),

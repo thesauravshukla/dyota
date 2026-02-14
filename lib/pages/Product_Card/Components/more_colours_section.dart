@@ -37,7 +37,7 @@ class _MoreColoursSectionState extends State<MoreColoursSection> {
     }
 
     return Container(
-      color: Colors.grey[100],
+      color: Theme.of(context).colorScheme.surface,
       child: Column(
         children: [
           Padding(

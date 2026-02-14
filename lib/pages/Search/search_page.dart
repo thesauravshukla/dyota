@@ -1,4 +1,5 @@
 import 'package:dyota/components/generic_appbar.dart';
+import 'package:dyota/components/shared/app_loading_indicator.dart';
 import 'package:dyota/pages/Category/Components/product_list_item.dart';
 import 'package:dyota/services/search_service.dart';
 import 'package:flutter/material.dart';
@@ -56,11 +57,7 @@ class _SearchPageState extends State<SearchPage> {
       body: Column(
         children: [
           _buildSearchBar(),
-          if (_loadingProductCount > 0)
-            LinearProgressIndicator(
-              backgroundColor: Colors.grey[200],
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.brown),
-            ),
+          if (_loadingProductCount > 0) const AppLoadingBar(),
           Expanded(child: _buildBody()),
         ],
       ),
@@ -98,7 +95,7 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppSpinner();
     }
 
     if (_results.isEmpty) {

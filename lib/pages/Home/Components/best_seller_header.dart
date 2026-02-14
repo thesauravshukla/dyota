@@ -5,15 +5,15 @@ class BestSellerHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(8.0),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
       child: Text(
         'Best Sellers',
         style: TextStyle(
             fontFamily: 'Lato',
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.black),
+            color: Theme.of(context).colorScheme.onSurface),
       ),
     );
   }

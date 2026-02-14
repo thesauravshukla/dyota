@@ -17,14 +17,14 @@ class OrdersTabBar extends StatelessWidget implements PreferredSizeWidget {
         Tab(text: 'Cancelled'),
       ],
       indicator: PaddedRoundedRectTabIndicator(
-        color: Colors.black,
+        color: Theme.of(context).colorScheme.primary,
         radius: 40,
         padding: EdgeInsets.symmetric(vertical: 4),
         width: 100,
       ),
       indicatorSize: TabBarIndicatorSize.label,
-      labelColor: Colors.white,
-      unselectedLabelColor: Colors.black,
+      labelColor: Theme.of(context).colorScheme.primary,
+      unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
       labelStyle: TextStyle(fontSize: 16),
       unselectedLabelStyle: TextStyle(fontSize: 16),
     );

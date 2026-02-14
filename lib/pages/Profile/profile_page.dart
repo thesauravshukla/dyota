@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dyota/components/shared/app_confirm_dialog.dart';
 import 'package:dyota/pages/My_Orders/my_orders.dart';
 import 'package:dyota/pages/Profile/Components/profile_list_tile.dart';
 import 'package:dyota/pages/Profile/Components/user_account_header.dart';
@@ -66,29 +67,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _handleLogout(BuildContext context) async {
-    // Show confirmation dialog before logging out
-    final bool confirmLogout = await showDialog(
-          context: context,
-          builder: (BuildContext dialogContext) {
-            return AlertDialog(
-              title: const Text('Log Out'),
-              content: const Text('Are you sure you want to log out?'),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: const Text('No'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(true),
-                  child: const Text('Yes'),
-                ),
-              ],
-            );
-          },
-        ) ??
-        false; // Default to false if dialog is dismissed
+    final bool confirmLogout = await showAppConfirmDialog(
+      context,
+      title: 'Log Out',
+      message: 'Are you sure you want to log out?',
+    );
 
-    // Only proceed with logout if confirmed
     if (confirmLogout) {
       await FirebaseAuth.instance.signOut();
       // Navigate to auth page after logout, removing all previous routes

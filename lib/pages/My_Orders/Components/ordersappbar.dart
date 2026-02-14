@@ -8,25 +8,19 @@ class OrdersAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      leading: const BackButton(color: Colors.white),
-      backgroundColor: Colors.black,
-      title: const Text(
-        'My Orders',
-        style: TextStyle(color: Colors.white),
-      ),
+      leading: const BackButton(),
+      title: const Text('My Orders'),
       centerTitle: true,
       actions: [
         IconButton(
-          icon: const Icon(Icons.search, color: Colors.black),
-          onPressed: () {
-            // Handle search action
-          },
+          icon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface),
+          tooltip: 'Search orders',
+          onPressed: () {},
         ),
         IconButton(
-          icon: const Icon(Icons.more_vert, color: Colors.black),
-          onPressed: () {
-            // Handle more actions
-          },
+          icon: Icon(Icons.more_vert, color: Theme.of(context).colorScheme.onSurface),
+          tooltip: 'More options',
+          onPressed: () {},
         ),
       ],
       bottom: OrdersTabBar(tabController: tabController),
@@ -46,10 +40,10 @@ class OrdersTabBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return TabBar(
       controller: tabController,
-      labelColor: Colors.white, // Set text color to black
-      indicatorColor: Colors.white,
-      unselectedLabelColor: Colors.white,
-      labelStyle: TextStyle(fontSize: 16.0), // Set highlight color to white
+      labelColor: Theme.of(context).colorScheme.primary,
+      indicatorColor: Theme.of(context).colorScheme.primary,
+      unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
+      labelStyle: TextStyle(fontSize: 16.0),
       tabs: const <Widget>[
         Tab(text: 'Delivered'),
         Tab(text: 'Pending'),

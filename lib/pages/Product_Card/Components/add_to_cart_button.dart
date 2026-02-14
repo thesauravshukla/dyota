@@ -1,3 +1,4 @@
+import 'package:dyota/components/shared/app_loading_indicator.dart';
 import 'package:dyota/pages/Product_Card/Components/cart_item_manager.dart';
 import 'package:dyota/pages/Product_Card/Components/image_selector.dart';
 import 'package:dyota/pages/Product_Card/Components/length_slider.dart';
@@ -157,20 +158,18 @@ class AddToCartButtonState extends State<AddToCartButton> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: CircularProgressIndicator(),
-        ),
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: AppSpinner(),
       );
     }
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline,
             spreadRadius: 1,
             blurRadius: 2,
             offset: const Offset(0, 1),
@@ -206,13 +205,13 @@ class AddToCartButtonState extends State<AddToCartButton> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Divider(color: Colors.grey),
+          Divider(color: Theme.of(context).colorScheme.outline),
           ImageSelector(
             imageUrl: _cartItems[index].imageUrl,
             isSelected: _selectedItems[index],
             onTap: () => _toggleItemSelection(index),
           ),
-          const Divider(color: Colors.grey),
+          Divider(color: Theme.of(context).colorScheme.outline),
           if (_selectedItems[index])
             LengthSlider(
               allowedLengths: _cartItems[index].allowedLengths,
@@ -232,8 +231,8 @@ class AddToCartButtonState extends State<AddToCartButton> {
         child: ElevatedButton(
           onPressed: _addToCart,
           style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.white,
-            backgroundColor: Colors.black,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 15),
           ),

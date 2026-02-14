@@ -14,10 +14,10 @@ class _SupportSectionState extends State<SupportSection> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline,
             spreadRadius: 1,
             blurRadius: 2,
             offset: Offset(0, 1),

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 class OrderHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    TextStyle headingStyle = TextStyle(color: Colors.grey[600]);
-    TextStyle detailStyle = TextStyle(color: Colors.black, fontSize: 16);
+    TextStyle headingStyle = TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant);
+    TextStyle detailStyle = TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16);
     TextStyle statusStyle = TextStyle(
         color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16);
 

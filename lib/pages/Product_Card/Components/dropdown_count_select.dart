@@ -12,21 +12,21 @@ class DropdownCountSelect extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: DropdownButtonFormField<String>(
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           labelText: 'Count Value',
           border: OutlineInputBorder(
             borderSide: BorderSide(
-                color: Colors.black, width: 1.0), // Black border for default
+                color: Theme.of(context).colorScheme.outline, width: 1.0),
           ),
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(
-                color: Colors.black,
-                width: 1.0), // Black border for enabled state
+                color: Theme.of(context).colorScheme.outline,
+                width: 1.0),
           ),
           focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(
-                color: Colors.black,
-                width: 2.0), // Black border for focused state
+                color: Theme.of(context).colorScheme.outline,
+                width: 2.0),
           ),
         ),
         value: selectedValue,

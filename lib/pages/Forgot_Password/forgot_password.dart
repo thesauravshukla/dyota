@@ -22,9 +22,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
       context: context,
       builder: (context) {
         return const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-          ),
+          child: CircularProgressIndicator(),
         );
       },
     );
@@ -62,14 +60,12 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0, // Removes shadow
+        elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () =>
-              Navigator.pop(context), // This will go back to previous page
+          icon: Icon(Icons.arrow_back),
+          tooltip: 'Go back',
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
@@ -83,15 +79,13 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   const Icon(
                     Icons.texture,
                     size: 100,
-                    color: Color.fromARGB(255, 255, 255, 255),
                   ),
                   const SizedBox(height: 10),
                   const Text(
                     'dyota',
                     style: TextStyle(
                         fontFamily: 'AlfaSlab',
-                        fontSize: 25.0,
-                        color: Colors.white),
+                        fontSize: 25.0),
                   ),
                   const SizedBox(height: 20),
                   MyTextField(
@@ -101,18 +95,18 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   ),
                   const SizedBox(height: 10),
                   if (showInvalidCredentials)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 25.0),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
                       child: Text(
                         'Invalid credentials or user not found',
-                        style: TextStyle(color: Colors.red),
+                        style: TextStyle(color: Theme.of(context).colorScheme.error),
                       ),
                     ),
                   const SizedBox(height: 10),
                   MyButton(
                     onTap: resetPassword,
-                    buttonColor: Colors.black,
-                    textColor: Colors.white,
+                    buttonColor: Theme.of(context).colorScheme.primary,
+                    textColor: Theme.of(context).colorScheme.onPrimary,
                     buttonText: "Reset Password",
                   ),
                   const SizedBox(height: 20),

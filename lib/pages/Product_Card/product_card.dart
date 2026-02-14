@@ -1,3 +1,5 @@
+import 'package:dyota/components/bottom_navigation_bar_component.dart';
+import 'package:dyota/components/shared/app_loading_indicator.dart';
 import 'package:dyota/components/generic_appbar.dart';
 import 'package:dyota/pages/Product_Card/Components/add_to_cart_button.dart';
 import 'package:dyota/pages/Product_Card/Components/dynamic_fields_display.dart';
@@ -219,7 +221,7 @@ class _ProductCardState extends State<ProductCard> {
     return Scaffold(
       appBar: genericAppbar(title: 'Product Card'),
       body: _buildBody(),
-      bottomNavigationBar: ProductBottomNavigationBar(
+      bottomNavigationBar: CustomBottomNavigationBar(
         selectedIndex: selectedNavIndex,
         onItemTapped: _handleNavigation,
       ),
@@ -238,10 +240,7 @@ class _ProductCardState extends State<ProductCard> {
   }
 
   Widget _buildProgressIndicator() {
-    return LinearProgressIndicator(
-      backgroundColor: Colors.grey[200],
-      valueColor: const AlwaysStoppedAnimation<Color>(Colors.brown),
-    );
+    return const AppLoadingBar();
   }
 
   Widget _buildContent() {
@@ -382,31 +381,3 @@ class _ProductCardState extends State<ProductCard> {
   }
 }
 
-class ProductBottomNavigationBar extends StatelessWidget {
-  final int selectedIndex;
-  final Function(int) onItemTapped;
-
-  const ProductBottomNavigationBar({
-    Key? key,
-    required this.selectedIndex,
-    required this.onItemTapped,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      backgroundColor: Colors.black,
-      selectedItemColor: Colors.white54,
-      unselectedItemColor: Colors.white54,
-      type: BottomNavigationBarType.fixed,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.shopping_bag), label: 'Bag'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline), label: 'Profile'),
-      ],
-      currentIndex: selectedIndex,
-      onTap: onItemTapped,
-    );
-  }
-}

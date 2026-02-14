@@ -16,7 +16,7 @@ class OfferBanner extends StatelessWidget {
         text,
         textAlign: TextAlign.center,
         style: const TextStyle(
-            fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+            fontSize: 18, fontWeight: FontWeight.bold),
       ),
     );
   }

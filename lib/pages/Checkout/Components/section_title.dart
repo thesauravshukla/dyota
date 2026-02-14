@@ -32,7 +32,7 @@ class SectionTitle extends StatelessWidget {
                 child: Text(
                   'Change',
                   style: TextStyle(
-                    color: Colors.grey,
+                    color: Theme.of(context).colorScheme.outline,
                     fontSize: 16,
                   ),
                 ),

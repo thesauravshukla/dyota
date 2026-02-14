@@ -38,27 +38,27 @@ class LengthSlider extends StatelessWidget {
             width: double.infinity,
             padding: EdgeInsets.all(8.0),
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: Stack(
               children: [
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: Colors.black,
-                    inactiveTrackColor: Colors.black.withOpacity(0.3),
+                    activeTrackColor: Theme.of(context).colorScheme.primary,
+                    inactiveTrackColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                     trackShape: RoundedRectSliderTrackShape(),
                     trackHeight: 8.0,
                     thumbShape: RoundSliderThumbShape(enabledThumbRadius: 12.0),
-                    thumbColor: Colors.black,
-                    overlayColor: Colors.black.withAlpha(32),
+                    thumbColor: Theme.of(context).colorScheme.primary,
+                    overlayColor: Theme.of(context).colorScheme.primary.withAlpha(32),
                     overlayShape: RoundSliderOverlayShape(overlayRadius: 28.0),
                     tickMarkShape: RoundSliderTickMarkShape(),
-                    activeTickMarkColor: Colors.black,
-                    inactiveTickMarkColor: Colors.black.withOpacity(0.3),
+                    activeTickMarkColor: Theme.of(context).colorScheme.primary,
+                    inactiveTickMarkColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                     valueIndicatorShape: PaddleSliderValueIndicatorShape(),
-                    valueIndicatorColor: Colors.black,
-                    valueIndicatorTextStyle: TextStyle(color: Colors.white),
+                    valueIndicatorColor: Theme.of(context).colorScheme.primary,
+                    valueIndicatorTextStyle: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
                   ),
                   child: Slider(
                     value: currentIndex.toDouble(),
@@ -84,7 +84,7 @@ class LengthSlider extends StatelessWidget {
                                 Text('$length m',
                                     style: TextStyle(fontSize: 12)),
                                 Container(
-                                    width: 1, height: 8, color: Colors.black),
+                                    width: 1, height: 8, color: Theme.of(context).colorScheme.primary),
                               ],
                             ))
                         .toList(),

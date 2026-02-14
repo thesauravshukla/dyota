@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dyota/components/shared/app_image.dart';
 import 'package:dyota/pages/Category/category_page.dart';
 import 'package:dyota/services/image_cache_service.dart';
 import 'package:flutter/material.dart';
@@ -79,13 +80,9 @@ class CategoryItem extends StatelessWidget {
                                 ),
                               );
                             },
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                  15.0), // Set the border radius here
-                              child: Image.network(
-                                imageUrl,
-                                fit: BoxFit.cover,
-                              ),
+                            child: AppImage(
+                              url: imageUrl,
+                              borderRadius: BorderRadius.circular(15.0),
                             ),
                           ),
                         ),
@@ -94,7 +91,9 @@ class CategoryItem extends StatelessWidget {
                                 8.0), // Add space between the image and the text
                         Text(
                           categoryData[index]['name']!,
-                          style: TextStyle(fontSize: 12, color: Colors.black),
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurface),
                         ),
                         SizedBox(height: 18.0), // Add space below the text
                       ],

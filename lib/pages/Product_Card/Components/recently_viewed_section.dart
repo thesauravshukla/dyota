@@ -30,7 +30,7 @@ class _RecentlyViewedSectionState extends State<RecentlyViewedSection> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.grey[200],
+      color: Theme.of(context).colorScheme.surface,
       child: Column(
         children: [
           Padding(

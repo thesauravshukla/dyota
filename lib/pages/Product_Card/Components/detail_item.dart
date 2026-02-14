@@ -16,10 +16,10 @@ class DetailItem extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 2.0),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
+              color: Theme.of(context).colorScheme.outline,
               spreadRadius: 1,
               blurRadius: 2,
               offset: const Offset(0, 1),
@@ -57,7 +57,7 @@ class DetailItem extends StatelessWidget {
           color: Colors.red,
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
+              color: Theme.of(context).colorScheme.outline,
               spreadRadius: 1,
               blurRadius: 2,
               offset: const Offset(0, 1),
@@ -73,8 +73,7 @@ class DetailItem extends StatelessWidget {
                 'Error',
                 style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+                    fontWeight: FontWeight.bold),
               ),
             ),
             Expanded(
@@ -82,7 +81,7 @@ class DetailItem extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(0, 0, 8.0, 0),
                 child: Text(
                   'Failed to load',
-                  style: TextStyle(fontSize: 13, color: Colors.white),
+                  style: TextStyle(fontSize: 13),
                   textAlign: TextAlign.right,
                 ),
               ),

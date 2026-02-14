@@ -11,6 +11,8 @@ import 'package:decimal/decimal.dart';
 
 // App-wide components
 import 'package:dyota/components/generic_appbar.dart';
+import 'package:dyota/components/shared/app_empty_state.dart';
+import 'package:dyota/components/shared/app_loading_indicator.dart';
 
 // Local components and models
 import 'package:dyota/pages/Cart/Components/cart_data.dart';
@@ -164,10 +166,7 @@ class _CartState extends State<Cart> {
   }
 
   Widget _buildProgressIndicator() {
-    return LinearProgressIndicator(
-      backgroundColor: Colors.grey[200],
-      valueColor: const AlwaysStoppedAnimation<Color>(Colors.brown),
-    );
+    return const AppLoadingBar();
   }
 
   String _getCurrentUserEmail() {
@@ -221,11 +220,11 @@ class _CartState extends State<Cart> {
 
           if (snapshot.hasError) {
             _logger.severe('Error fetching cart data: ${snapshot.error}');
-            return const Center(child: Text('Error loading data'));
+            return const AppEmptyState(message: 'Error loading data');
           }
 
           if (_isCartEmpty(snapshot)) {
-            return const Center(child: Text('Your bag is empty.'));
+            return const AppEmptyState(message: 'Your bag is empty.');
           }
 
           final cartData = CartData(
@@ -236,7 +235,7 @@ class _CartState extends State<Cart> {
           return _buildCartContent(cartData);
         } catch (e) {
           _logger.severe('Error in cart items StreamBuilder: $e');
-          return const Center(child: Text('Error loading data'));
+          return const AppEmptyState(message: 'Error loading data');
         }
       },
     );

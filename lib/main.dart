@@ -1,6 +1,7 @@
 import 'package:dyota/firebase_options.dart';
 import 'package:dyota/pages/Authentication/auth_page.dart';
 import 'package:dyota/services/search_service.dart';
+import 'package:dyota/theme/app_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -22,9 +23,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AuthPage(),
+      theme: AppTheme.dark(),
+      home: const AuthPage(),
     );
   }
 }

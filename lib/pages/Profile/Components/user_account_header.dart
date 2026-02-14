@@ -38,61 +38,55 @@ class UserAccountHeader extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Show a loading indicator while waiting for the data
-          return const UserAccountsDrawerHeader(
+          return UserAccountsDrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.black,
+              color: Theme.of(context).colorScheme.surface,
             ),
             accountName: null, // Removed the name section
             accountEmail: Text(
               "Loading...",
-              style: TextStyle(color: Colors.white),
             ),
             currentAccountPicture: CircleAvatar(
-              backgroundColor: Colors.grey,
+              backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
               child: Icon(
                 Icons.person,
                 size: 40,
-                color: Colors.white,
               ),
             ),
           );
         } else if (snapshot.hasError) {
           // Handle the error state
-          return const UserAccountsDrawerHeader(
+          return UserAccountsDrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.black,
+              color: Theme.of(context).colorScheme.surface,
             ),
             accountName: null, // Removed the name section
             accountEmail: Text(
               "Error",
-              style: TextStyle(color: Colors.white),
             ),
             currentAccountPicture: CircleAvatar(
-              backgroundColor: Colors.grey,
+              backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
               child: Icon(
                 Icons.person,
                 size: 40,
-                color: Colors.white,
               ),
             ),
           );
         } else {
           // Use the retrieved name or a default value if the snapshot has data
           return UserAccountsDrawerHeader(
-            decoration: const BoxDecoration(
-              color: Colors.black,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
             ),
             accountName: null, // Removed the name section
             accountEmail: Text(
               userEmail,
-              style: const TextStyle(color: Colors.white),
             ),
-            currentAccountPicture: const CircleAvatar(
-              backgroundColor: Colors.grey,
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
               child: Icon(
                 Icons.person,
                 size: 40,
-                color: Colors.white,
               ),
             ),
           );

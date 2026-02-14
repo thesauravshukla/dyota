@@ -1,3 +1,4 @@
+import 'package:dyota/components/shared/app_image.dart';
 import 'package:dyota/pages/Cart/Components/delete_confirmation_dialog.dart';
 import 'package:dyota/pages/Cart/Components/fetch_data.dart';
 import 'package:dyota/pages/Cart/Components/image_loader.dart';
@@ -310,14 +311,11 @@ class _ItemCardState extends State<ItemCard> {
   }
 
   Widget _buildProductImage(String imageUrl) {
-    return ClipRRect(
+    return AppImage(
+      url: imageUrl,
+      width: 100,
+      height: 100,
       borderRadius: BorderRadius.circular(8),
-      child: Image.network(
-        imageUrl,
-        width: 100,
-        height: 100,
-        fit: BoxFit.cover,
-      ),
     );
   }
 
@@ -357,8 +355,9 @@ class _ItemCardState extends State<ItemCard> {
   Widget _buildDeleteButton(ItemCardData itemData) {
     return IconButton(
       icon: const Icon(Icons.delete),
+      tooltip: 'Remove item',
       onPressed: () => _showDeleteConfirmation(itemData),
-      color: Colors.black,
+      color: Theme.of(context).colorScheme.onSurface,
     );
   }
 

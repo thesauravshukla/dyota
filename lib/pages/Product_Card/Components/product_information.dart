@@ -5,18 +5,18 @@ class ProductInformation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(16.0),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Text('product name',
+          const Text('product name',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           Text('price',
               style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black)),
+                  color: Theme.of(context).colorScheme.onSurface)),
         ],
       ),
     );

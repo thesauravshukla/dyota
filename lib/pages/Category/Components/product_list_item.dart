@@ -1,3 +1,4 @@
+import 'package:dyota/components/shared/app_image.dart';
 import 'package:dyota/pages/Category/Components/product_item_data.dart';
 import 'package:dyota/pages/Product_Card/product_card.dart';
 import 'package:flutter/material.dart';
@@ -82,7 +83,7 @@ class _ProductListItemState extends State<ProductListItem>
       return Container(
         height: 150,
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
         ),
       );
@@ -139,11 +140,10 @@ class _ProductListItemState extends State<ProductListItem>
           Stack(
             alignment: Alignment.topRight,
             children: [
-              Image.network(
-                _productItemData.imageUrl!,
-                fit: BoxFit.cover,
+              AppImage(
+                url: _productItemData.imageUrl!,
                 width: double.infinity,
-                height: 96, // Fixed height for the image
+                height: 96,
               ),
               if (_productItemData.discount > 0)
                 Positioned(
@@ -183,7 +183,7 @@ class _ProductListItemState extends State<ProductListItem>
                     _productItemData.title,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   SizedBox(height: 1),

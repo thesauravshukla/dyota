@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dyota/components/shared/app_image.dart';
 import 'package:dyota/services/image_cache_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -95,10 +96,10 @@ class _OrderSwatchesButtonState extends State<OrderSwatchesButton> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline,
             spreadRadius: 1,
             blurRadius: 2,
             offset: const Offset(0, 1),
@@ -130,25 +131,24 @@ class _OrderSwatchesButtonState extends State<OrderSwatchesButton> {
                       decoration: BoxDecoration(
                         border: Border.all(
                           color: _selectedImages[index]
-                              ? Colors.black
-                              : Colors.grey,
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.outline,
                           width: 2,
                         ),
                       ),
                       child: Opacity(
                         opacity: _selectedImages[index] ? 0.5 : 1,
-                        child: Image.network(
-                          _imageUrls[index],
+                        child: AppImage(
+                          url: _imageUrls[index],
                           width: 100,
                           height: 100,
-                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
                     if (_selectedImages[index])
-                      Icon(Icons.check_circle, color: Colors.black, size: 30),
+                      Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 30),
                     if (_selectedImages[index])
-                      Icon(Icons.check, color: Colors.white, size: 24),
+                      Icon(Icons.check, color: Theme.of(context).colorScheme.onPrimary, size: 24),
                   ],
                 ),
               );
@@ -170,8 +170,8 @@ class _OrderSwatchesButtonState extends State<OrderSwatchesButton> {
                 },
                 child: const Text('Add Swatches To Cart'),
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.black,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   shape: StadiumBorder(),
                   padding: EdgeInsets.symmetric(horizontal: 32, vertical: 15),
                 ),

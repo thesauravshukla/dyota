@@ -469,6 +469,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: genericAppbar(title: 'Finalize Order'),
       body: Padding(
@@ -510,7 +511,7 @@ class _PaymentPageState extends State<PaymentPage> {
                       padding: EdgeInsets.all(16),
                       margin: EdgeInsets.only(top: 8, bottom: 8),
                       decoration: BoxDecoration(
-                        color: Colors.black87, // Blackish color
+                        color: colorScheme.surface,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Column(
@@ -520,8 +521,7 @@ class _PaymentPageState extends State<PaymentPage> {
                             'Items',
                             style: TextStyle(
                                 fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white), // White text
+                                fontWeight: FontWeight.bold),
                           ),
                           ...items.map((item) {
                             return Row(
@@ -529,20 +529,16 @@ class _PaymentPageState extends State<PaymentPage> {
                               children: [
                                 Text(
                                   '${item['productName']}',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white), // White text
+                                  style: TextStyle(fontSize: 16),
                                 ),
                                 Text(
                                   'Rs. ${item['price'].toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white), // White text
+                                  style: TextStyle(fontSize: 16),
                                 ),
                               ],
                             );
                           }).toList(),
-                          Divider(color: Colors.white), // White divider
+                          Divider(color: colorScheme.outline),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -550,18 +546,15 @@ class _PaymentPageState extends State<PaymentPage> {
                                 'Tax',
                                 style: TextStyle(
                                     fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white), // White text
+                                    fontWeight: FontWeight.bold),
                               ),
                               Text(
                                 'Rs. ${tax.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white), // White text
+                                style: TextStyle(fontSize: 16),
                               ),
                             ],
                           ),
-                          Divider(color: Colors.white), // White divider
+                          Divider(color: colorScheme.outline),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -569,15 +562,13 @@ class _PaymentPageState extends State<PaymentPage> {
                                 'Total',
                                 style: TextStyle(
                                     fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white), // White text
+                                    fontWeight: FontWeight.bold),
                               ),
                               Text(
                                 'Rs. ${totalAmount.toStringAsFixed(2)}',
                                 style: TextStyle(
                                     fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white), // White text
+                                    fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -602,12 +593,12 @@ class _PaymentPageState extends State<PaymentPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
-                    backgroundColor: Colors.black, // Button color
+                    backgroundColor: colorScheme.primary,
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   ),
                   child: Text(
                     'Add New Address',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
+                    style: TextStyle(color: colorScheme.onPrimary, fontSize: 12),
                   ),
                 ),
               ],
@@ -655,16 +646,16 @@ class _PaymentPageState extends State<PaymentPage> {
                     borderRadius: BorderRadius.circular(30.0),
                   ),
                   backgroundColor: addresses.isEmpty
-                      ? Colors.white
-                      : Colors.black, // Button color
+                      ? colorScheme.surfaceVariant
+                      : colorScheme.primary,
                   padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
                 child: Text(
                   'Pay Now',
                   style: TextStyle(
                     color: addresses.isEmpty
-                        ? Colors.black
-                        : Colors.white, // Text color
+                        ? colorScheme.onSurface
+                        : colorScheme.onPrimary,
                     fontSize: 16,
                   ),
                 ),

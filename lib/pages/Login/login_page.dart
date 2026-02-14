@@ -28,10 +28,7 @@ class _LoginPageState extends State<LoginPage> {
       context: context,
       builder: (context) {
         return const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(
-                Colors.black), // Change color to black
-          ),
+          child: CircularProgressIndicator(),
         );
       },
     );
@@ -53,7 +50,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       body: SafeArea(
         child: ListView(
           children: [
@@ -78,8 +74,7 @@ class _LoginPageState extends State<LoginPage> {
                         'dyota',
                         style: TextStyle(
                             fontFamily: 'AlfaSlab',
-                            fontSize: 25.0,
-                            color: Colors.white),
+                            fontSize: 25.0),
                       ),
                     ],
                   ),
@@ -89,7 +84,6 @@ class _LoginPageState extends State<LoginPage> {
                   const Text(
                     "Welcome to Dyota",
                     style: TextStyle(
-                        color: Color.fromARGB(255, 255, 255, 255),
                         fontSize: 16),
                   ),
 
@@ -115,11 +109,11 @@ class _LoginPageState extends State<LoginPage> {
 
                   // Invalid credentials message
                   if (showInvalidCredentials)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 25.0),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
                       child: Text(
                         'Invalid credentials',
-                        style: TextStyle(color: Colors.red),
+                        style: TextStyle(color: Theme.of(context).colorScheme.error),
                       ),
                     ),
                   const SizedBox(height: 10),
@@ -144,7 +138,6 @@ class _LoginPageState extends State<LoginPage> {
                           child: Text(
                             'Forgot Password?',
                             style: TextStyle(
-                                color: Colors.white,
                                 decoration: TextDecoration.underline),
                           ),
                         ),
@@ -157,8 +150,8 @@ class _LoginPageState extends State<LoginPage> {
                   // Sign-in button
                   MyButton(
                     onTap: signUserIn,
-                    buttonColor: Colors.black,
-                    textColor: Colors.white,
+                    buttonColor: Theme.of(context).colorScheme.primary,
+                    textColor: Theme.of(context).colorScheme.onPrimary,
                     buttonText: "Sign In",
                   ),
 
@@ -172,22 +165,18 @@ class _LoginPageState extends State<LoginPage> {
                         const Expanded(
                           child: Divider(
                             thickness: 0.5,
-                            color: Colors.white,
                           ),
                         ),
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 10.0),
                           child: Text(
                             'Or continue with',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
                           ),
                         ),
                         Expanded(
                           child: Divider(
                             thickness: 0.5,
-                            color: Colors.grey[400],
+                            color: Theme.of(context).colorScheme.outline,
                           ),
                         ),
                       ],
@@ -219,8 +208,6 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         Text(
                           'Not a member?',
-                          style: TextStyle(
-                              color: Color.fromARGB(255, 255, 255, 255)),
                         ),
                         SizedBox(width: 4),
                         Text(

@@ -1,4 +1,5 @@
 import 'package:dyota/components/generic_appbar.dart';
+import 'package:dyota/components/shared/app_loading_indicator.dart';
 import 'package:dyota/pages/Category/Components/category_data.dart';
 import 'package:dyota/pages/Category/Components/category_data_provider.dart';
 import 'package:dyota/pages/Category/Components/category_loading_state.dart';
@@ -108,10 +109,7 @@ class _CategoryPageState extends State<CategoryPage> {
             // Show loading indicator only when genuinely loading
             if (_loadingState.anyComponentLoading &&
                 _categoryData.itemDocumentIds.isEmpty)
-              LinearProgressIndicator(
-                backgroundColor: Colors.grey[200],
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
-              ),
+              const AppLoadingBar(),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -148,10 +146,7 @@ class _CategoryPageState extends State<CategoryPage> {
         appBar: genericAppbar(title: 'Error'),
         body: Column(
           children: [
-            LinearProgressIndicator(
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
-            ),
+            const AppLoadingBar(),
             Expanded(
               child: Center(
                 child: Text('Error loading content. Please try again.'),
@@ -177,14 +172,18 @@ class _CategoryPageState extends State<CategoryPage> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Icon(Icons.info_outline, size: 48, color: Colors.grey),
+              Icon(Icons.info_outline,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
               SizedBox(height: 16),
               Text(
                 _categoryData.selectedCategories.isEmpty
                     ? "Please select at least one subcategory to view items"
                     : "No items found for the selected subcategories",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ],
           ),

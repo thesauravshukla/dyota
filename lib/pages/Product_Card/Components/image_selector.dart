@@ -1,3 +1,4 @@
+import 'package:dyota/components/shared/app_image.dart';
 import 'package:flutter/material.dart';
 
 class ImageSelector extends StatelessWidget {
@@ -21,17 +22,16 @@ class ImageSelector extends StatelessWidget {
         children: [
           Container(
             margin: EdgeInsets.all(8),
-            child: Image.network(
-              imageUrl,
+            child: AppImage(
+              url: imageUrl,
               width: 150,
               height: 150,
-              fit: BoxFit.cover,
             ),
           ),
           if (isSelected)
             Container(
               decoration: BoxDecoration(
-                color: Colors.black,
+                color: Theme.of(context).colorScheme.surface,
                 shape: BoxShape.circle,
               ),
               child:

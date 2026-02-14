@@ -23,9 +23,9 @@ class AddressSection extends StatelessWidget {
               child: RichText(
                 text: TextSpan(
                   style: TextStyle(
-                    color: Colors.black, // Default text color
-                    height: 1.5, // Line height
-                    fontSize: 16, // Font size for address text
+                    color: Theme.of(context).colorScheme.onSurface,
+                    height: 1.5,
+                    fontSize: 16,
                   ),
                   children: [
                     TextSpan(
@@ -50,7 +50,7 @@ class AddressSection extends StatelessWidget {
                     top: 4.0), // Align with the first line of text
                 child: Text(
                   'Change',
-                  style: TextStyle(color: Colors.black),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 ),
               ),
             ),
