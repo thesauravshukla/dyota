@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dyota-postgres
+    environment:
+      POSTGRES_DB: dyota
+      POSTGRES_USER: dyota
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - "5432:5432"
+    volumes:
+      - dyota-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  dyota-postgres-data:
