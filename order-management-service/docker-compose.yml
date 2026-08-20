@@ -1,0 +1,60 @@
+# order-management-service and its database, deployed as their own unit.
+#
+# Project name is pinned so the volume is not orphaned if this directory is ever
+# renamed: compose otherwise prefixes volumes with the folder name.
+name: dyota-oms
+
+networks:
+  dyota-net:
+    external: true
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dyota-oms-postgres
+    environment:
+      POSTGRES_DB: order_management_system
+      POSTGRES_USER: loginsvc
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - dyota-oms-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loginsvc -d order_management_system"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  oms:
+    build: .
+    image: dyota/order-management-service:local
+    container_name: dyota-oms-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: order_management_system
+      DB_USER: loginsvc
+      DB_PASSWORD: changeme
+      SERVER_PORT: 8080
+      # Resolved over dyota-net by the alias authentication-service publishes there.
+      AUTH_SERVICE_BASE_URL: http://auth-service:8081
+      AUTH_SERVICE_API_KEY: ${SERVICE_API_KEY:-}
+    # This one is genuinely public: it is what the Flutter client talks to.
+    ports:
+      - "8080:8080"
+    networks:
+      default:
+      dyota-net:
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+
+volumes:
+  dyota-oms-pgdata:
