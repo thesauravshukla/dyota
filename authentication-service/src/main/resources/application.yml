@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: authentication-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:auth}
+    username: ${DB_USER:authsvc}
+    password: ${DB_PASSWORD:changeme}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:false}
+          starttls:
+            enable: ${SMTP_TLS:false}
+
+server:
+  port: ${SERVER_PORT:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    # SMTP reachability is not a liveness concern for this service: delivery happens
+    # after commit and a failed dispatch is recoverable through resend. Leaving this on
+    # makes the pod report DOWN whenever the mail host is merely unconfigured.
+    mail:
+      enabled: false
+
+auth:
+  service-api-key: ${SERVICE_API_KEY:}
+  otp:
+    length: 6
+    ttl: PT5M
+    resend-cooldown: PT30S
+    max-sends-per-session: 3
+    max-verify-attempts: 5
+    extend-ttl-on-resend: false
+    sender: ${OTP_SENDER:logging}
+    sms-enabled: ${SMS_ENABLED:false}
+    mail-from: ${MAIL_FROM:no-reply@dyota.shop}
+  session:
+    ttl: PT15M
+    post-terminal-retention: PT60S
+    cleanup-interval: PT5M
+    cleanup-batch-size: 500
+  rate-limit:
+    enabled: true
+    window: PT1H
+    per-identifier-sends: 5
+    per-ip-sends: 20
+
+logging:
+  level:
+    com.dyota.auth: INFO

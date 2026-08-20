@@ -1,0 +1,12 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder><pattern>%-5level %logger{20} - %msg%n</pattern></encoder>
+    </appender>
+    <!-- Testcontainers and Hibernate are chatty at INFO; raise these to DEBUG when
+         diagnosing container startup or SQL, not by default. -->
+    <logger name="org.testcontainers" level="WARN"/>
+    <logger name="com.github.dockerjava" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="com.dyota.auth" level="INFO"/>
+    <root level="WARN"><appender-ref ref="STDOUT"/></root>
+</configuration>

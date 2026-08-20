@@ -1,0 +1,88 @@
+# authentication-service and its database, deployed as their own unit.
+#
+# Postgres stays on this project's private network so nothing outside can reach it.
+# Only the service itself joins dyota-net, which is the shared network the
+# order-management-service uses to call it.
+name: dyota-auth
+
+networks:
+  dyota-net:
+    external: true
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dyota-auth-postgres
+    environment:
+      POSTGRES_DB: auth
+      POSTGRES_USER: authsvc
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - dyota-auth-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authsvc -d auth"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: dyota-mailpit
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      # 8025 is the web UI where delivered codes can be read.
+      - "127.0.0.1:8025:8025"
+    networks:
+      default:
+
+  auth-service:
+    build: .
+    image: dyota/authentication-service:local
+    container_name: dyota-auth-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: auth
+      DB_USER: authsvc
+      DB_PASSWORD: changeme
+      SERVER_PORT: 8081
+      OTP_SENDER: ${OTP_SENDER:-real}
+      SMS_ENABLED: ${SMS_ENABLED:-false}
+      # Defaults point at the local Mailpit sink. Put real values in
+      # authentication-service/.env and compose picks them up automatically —
+      # the credentials never enter this file or git.
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_AUTH: ${SMTP_AUTH:-false}
+      SMTP_TLS: ${SMTP_TLS:-false}
+      MAIL_FROM: ${MAIL_FROM:-no-reply@dyota.shop}
+      SERVICE_API_KEY: ${SERVICE_API_KEY:-}
+    # Bound to loopback only. This service is internal: order-management-service
+    # reaches it over dyota-net, and publishing here is purely for local debugging.
+    ports:
+      - "127.0.0.1:8081:8081"
+    networks:
+      default:
+      dyota-net:
+        aliases:
+          - auth-service
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+
+volumes:
+  dyota-auth-pgdata:

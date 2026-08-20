@@ -1,0 +1,11 @@
+# IDE
+.idea/
+.vscode/
+
+# Build output
+build/
+.gradle/
+
+# Local secrets — never commit
+.env
+*.log
