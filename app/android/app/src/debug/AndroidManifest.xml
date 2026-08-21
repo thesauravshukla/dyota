@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required to reach the dev machine's services from the emulator. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <application
+        android:label="Dyota"
+        android:networkSecurityConfig="@xml/network_security_config"
+        tools:replace="android:label"
+        xmlns:tools="http://schemas.android.com/tools">
+    </application>
+</manifest>
