@@ -1,24 +1,31 @@
 # Dyota — TODO
 
-Status: `authentication-service` and `order-management-service` built, containerised, 48 tests green. Nothing committed yet.
+Status: both services containerised and committed. Flutter app runs on Android with the full email login flow working end to end. Email-only until the business entity exists.
 
 ## Blockers before real users
 
 - [ ] Rotate the Resend API key — it was pasted into a chat transcript
+- [ ] Point auth-service back at Resend — `.env` is on Mailpit after testing
+- [ ] Write the real positioning line — the banner ships a `[ … ]` placeholder
+- [ ] Reconsider the weave mark: the interlace disappears at app-bar size
 
-- [ ] Wire an SMS provider (Twilio / MSG91) — `SmsOtpSender` currently throws
-- [ ] Start India DLT registration (entity + header + templates) — calendar time, start early
 - [ ] Set `SERVICE_API_KEY` — auth-service accepts any caller while blank
 - [ ] Replace plain SHA-256 in `rate_counter` with HMAC + server secret — phone hashes are brute-forceable today
 - [ ] Create least-privilege DB roles — `authsvc` and `loginsvc` are both superusers
 - [ ] Move DB passwords out of `docker-compose.yml` into a secret store
 
-## Email (unblocks login without SMS)
+## Email — the launch channel
 
 - [x] Add Mailpit to auth compose for local SMTP
 - [x] Switch `OTP_SENDER=real` + Resend SMTP — dyota.shop verified, sending live
 - [x] Return a clean `CHANNEL_UNAVAILABLE` when phone login is attempted email-only
-- [ ] Add a test-number bypass (fixed code) for dev and app-store review
+- [ ] Add a test-address bypass (fixed code) for dev and app-store review
+
+## Deferred — needs a registered business entity
+
+- [ ] India DLT: entity, header, then template registration (blocked on incorporation)
+- [ ] Wire an SMS provider (Twilio / MSG91) once DLT clears
+- [ ] Flip `SMS_ENABLED=true` — the phone channel already refuses cleanly until then
 
 ## authentication-service
 
@@ -36,10 +43,14 @@ Status: `authentication-service` and `order-management-service` built, container
 
 ## Flutter app
 
-- [ ] Login screen against `/auth/login/start` + `/verify`
-- [ ] Secure token storage (`flutter_secure_storage`, not SharedPreferences)
-- [ ] Auth interceptor + route guard
-- [ ] Route on `isNewUser` to onboarding vs home
+- [x] Install the Flutter SDK
+- [x] Android toolchain: Studio, cmdline-tools, licences, emulator
+- [ ] Install Xcode for iOS builds (needs your Apple ID)
+
+- [x] Login screen against `/auth/login/start` + `/verify`
+- [x] Secure token storage via the platform keystore
+- [x] Auth gate: splash / login / home, survives restart
+- [x] Welcome banner shows once on `isNewUser`
 
 ## Deploy / ops
 
@@ -54,6 +65,6 @@ Status: `authentication-service` and `order-management-service` built, container
 
 ## Housekeeping
 
-- [ ] Commit both services (nothing is in git yet)
+- [x] Commit both services
 - [ ] Remove orphaned volume `login-api_dyota-login-pgdata`
 - [ ] Write `DEPLOYMENT.md`

@@ -1,0 +1,35 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 470,
+      "h": 960
+    },
+    {
+      "file": "Hero.dc.html",
+      "x": 540,
+      "y": 0,
+      "w": 470,
+      "h": 960
+    },
+    {
+      "file": "Profile.dc.html",
+      "x": 1080,
+      "y": 0,
+      "w": 470,
+      "h": 960
+    },
+    {
+      "file": "Sheet.dc.html",
+      "x": 1620,
+      "y": 0,
+      "w": 470,
+      "h": 960
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}

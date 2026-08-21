@@ -1,0 +1,4 @@
+# Seeded canvas output — regenerated from the .dc.html sources by the design
+# helper, and already published as Artifacts. ~2.2MB each, so not worth carrying.
+*.html
+!*.dc.html

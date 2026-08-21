@@ -1,0 +1,35 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 900
+    },
+    {
+      "file": "Warp.dc.html",
+      "x": 550,
+      "y": 0,
+      "w": 480,
+      "h": 900
+    },
+    {
+      "file": "Fold.dc.html",
+      "x": 1100,
+      "y": 0,
+      "w": 480,
+      "h": 900
+    },
+    {
+      "file": "Monogram.dc.html",
+      "x": 1650,
+      "y": 0,
+      "w": 480,
+      "h": 900
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}

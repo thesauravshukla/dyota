@@ -1,0 +1,35 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 900,
+      "h": 990
+    },
+    {
+      "file": "Indigo.dc.html",
+      "x": 980,
+      "y": 0,
+      "w": 900,
+      "h": 990
+    },
+    {
+      "file": "Madder.dc.html",
+      "x": 1960,
+      "y": 0,
+      "w": 900,
+      "h": 990
+    },
+    {
+      "file": "Charcoal.dc.html",
+      "x": 2940,
+      "y": 0,
+      "w": 900,
+      "h": 990
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}
